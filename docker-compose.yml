@@ -1,0 +1,88 @@
+services:
+  # MySQL Database Service
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel_db
+      MYSQL_USER: laravel_user
+      MYSQL_PASSWORD: secret
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
+
+  # phpMyAdmin Service
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin_container
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: root
+      APACHE_SERVER_NAME: localhost # Fix Apache warning
+    ports:
+      - "8081:80"
+    networks:
+      - app_network
+
+  # Laravel Backend Service
+  backend:
+    build: ./backend
+    container_name: laravel_container
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+      - /var/www/vendor # Avoid overriding vendor directory
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - app_network
+    command: >
+      sh -c "composer install && php artisan serve --host=0.0.0.0 --port=8000"
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_URL=http://localhost:8000
+
+  # Next.js Frontend Service
+  frontend:
+    build: ./frontend
+    container_name: nextjs_container
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # Prevent node_modules override issue
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - app_network
+    command: "npm run dev"
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=true # Ensures hot-reloading works
+      - CHOKIDAR_USEPOLLING=true # Fix for Docker volume watching
+
+networks:
+  app_network:
+
+volumes:
+  mysql_data:
