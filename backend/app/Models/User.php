@@ -12,15 +12,19 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    protected $primaryKey = 'user_id';
+
     /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'emp_id',
         'email',
         'password',
+        'role',
+        'status',
     ];
 
     /**
@@ -32,6 +36,26 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class, 'emp_id');
+    }
+
+    public function auditLogs()
+    {
+        return $this->hasMany(AuditLogs::class, 'user_id');
+    }
+
+    public function approvedTimesheets()
+    {
+        return $this->hasMany(Timesheets::class, 'approved_by');
+    }
+
+    public function reviewedManualRequests()
+    {
+        return $this->hasMany(ManualTimeRequests::class, 'reviewed_by');
+    }
 
     /**
      * Get the attributes that should be cast.
