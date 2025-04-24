@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+import { Bell, Menu, ChevronDown } from "lucide-react";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
-import { Bell, Menu, User } from "lucide-react";
 import { useState } from "react";
 import Notification from "@/components/notification";
 
@@ -13,11 +12,22 @@ export default function Navbar() {
   const pathname = usePathname(); // Get the current route
   const [showNotifications, setShowNotifications] = useState(false);
 
-  const notifications: { title: string; description: string; type: "info" | "success" | "error" | "warning" }[] = [
-    { title: "New Message", description: "You have a new message from HR.", type: "info" },
-    { title: "Shift Reminder", description: "Your shift starts at 9:00 AM.", type: "success" },
-    { title: "System Alert", description: "System maintenance at midnight.", type: "warning" },
-  ];
+  // Initial notifications
+  const [notifications, setNotifications] = useState<{
+    id: number;
+    title: string;
+    description: string;
+    type: "info" | "success" | "error" | "warning";
+  }[]>([
+    { id: 1, title: "New Message", description: "You have a new message from HR.", type: "info" },
+    { id: 2, title: "Shift Reminder", description: "Your shift starts at 9:00 AM.", type: "success" },
+    { id: 3, title: "System Alert", description: "System maintenance at midnight.", type: "warning" },
+  ]);
+
+  // Function to dismiss a notification
+  const dismissNotification = (id: number) => {
+    setNotifications((prev) => prev.filter((notification) => notification.id !== id));
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white dark:border-gray-800 dark:bg-gray-950">
@@ -81,24 +91,37 @@ export default function Navbar() {
           {/* Notifications */}
           {showNotifications && (
             <div className="absolute top-16 right-4 w-80 bg-white shadow-lg rounded-lg p-4 z-50">
-              {notifications.map((notification, index) => (
-                <Notification
-                  key={index}
-                  title={notification.title}
-                  description={notification.description}
-                  type={notification.type}
-                />
-              ))}
+              {notifications.length > 0 ? (
+                notifications.map((notification) => (
+                  <Notification
+                    key={notification.id}
+                    id={notification.id}
+                    title={notification.title}
+                    description={notification.description}
+                    type={notification.type}
+                    onClose={dismissNotification}
+                  />
+                ))
+              ) : (
+                <div className="text-center text-gray-500 py-4">Empty notifications</div>
+              )}
             </div>
           )}
 
           {/* Employee Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center space-x-1 text-gray-600 hover:text-gray-900">
-                <User size={20} />
+              <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
+                {/* Profile Picture */}
+                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                  <img
+                    src="/avatar.svg" // Replace with the actual profile picture path
+                    alt="Employee Profile"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
                 <span className="hidden md:inline">Employee</span>
-                <span>▼</span>
+                <ChevronDown size={16} />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -110,10 +133,10 @@ export default function Navbar() {
 
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full md:hidden">
+              <button className="rounded-full md:hidden">
                 <Menu className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                 <span className="sr-only">Toggle navigation menu</span>
-              </Button>
+              </button>
             </SheetTrigger>
             <SheetContent side="left" className="md:hidden">
               <div className="grid gap-4 p-4">

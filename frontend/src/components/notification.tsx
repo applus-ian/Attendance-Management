@@ -4,16 +4,14 @@ import { useState } from "react";
 import { Bell, X } from "lucide-react";
 
 interface NotificationProps {
+  id: number;
   title: string;
   description: string;
   type?: "info" | "success" | "error" | "warning";
+  onClose: (id: number) => void; // Callback to handle closing the notification
 }
 
-export default function Notification({ title, description, type = "info" }: NotificationProps) {
-  const [visible, setVisible] = useState(true);
-
-  if (!visible) return null;
-
+export default function Notification({ id, title, description, type = "info", onClose }: NotificationProps) {
   const typeStyles = {
     info: "bg-blue-100 text-blue-700 border-blue-300",
     success: "bg-green-100 text-green-700 border-green-300",
@@ -34,7 +32,7 @@ export default function Notification({ title, description, type = "info" }: Noti
         <p className="text-sm">{description}</p>
       </div>
       <button
-        onClick={() => setVisible(false)}
+        onClick={() => onClose(id)}
         className="ml-auto text-gray-500 hover:text-gray-700"
         aria-label="Close"
       >
