@@ -1,22 +1,15 @@
 "use client";
 
 import Navbar from "@/components/navbar";
-import { EmployeeDataTable } from "@/components/employee-data-table";
+import { RequestDataTable } from "@/components/request-data-table";
 import { useState } from "react";
 
-const timesheetData = [
-  { date: "January 2, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 3, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 6, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 7, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 8, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 9, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 10, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 13, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 14, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 15, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
+const requestData = [
+  { dateSubmitted: "January 2, 2025", requestType: "Clockin",requestDate: "January 2, 2025",requestComment: "request for clockin", requestStatus: "Approved"},
+  { dateSubmitted: "January 2, 2025", requestType: "Clockin",requestDate: "January 2, 2025",requestComment: "request for clockin", requestStatus: "Approved"},
+  { dateSubmitted: "January 2, 2025", requestType: "Clockin",requestDate: "January 2, 2025",requestComment: "request for clockin", requestStatus: "Approved"},
 ];
-export default function TimesheetsPage() {
+export default function EmployeeRequestPage() {
     const [selectedPeriod, setSelectedPeriod] = useState("Jan 1 - 15, 2025");
   
     const handlePeriodChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -27,7 +20,7 @@ export default function TimesheetsPage() {
       <>
         <Navbar />
         <main className="p-6 bg-gray-100 min-h-screen">
-          <h1 className="text-2xl font-bold mb-6">Timesheets</h1>
+          <h1 className="text-2xl font-bold mb-6">Request</h1>
           <div className="bg-white shadow-md rounded-lg p-4">
             {/* Pay Period Section */}
             <div className="flex justify-end items-center mb-4">
@@ -57,7 +50,7 @@ export default function TimesheetsPage() {
               </div>
             </div>
             {/* Employee Data Table */}
-            <EmployeeDataTable data={timesheetData} />
+            <RequestDataTable data={requestData} />
           </div>
           
         </main>

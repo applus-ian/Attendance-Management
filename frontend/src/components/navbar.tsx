@@ -1,16 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation"; // Import usePathname hook
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent } from "@/components/ui/dropdown-menu";
+import { usePathname } from "next/navigation";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Toggle } from "@/components/ui/toggle";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
-import { Search, Moon, Menu } from "lucide-react";
+import { Bell, Menu, User } from "lucide-react";
+import { useState } from "react";
+import Notification from "@/components/notification";
 
 export default function Navbar() {
   const pathname = usePathname(); // Get the current route
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  const notifications: { title: string; description: string; type: "info" | "success" | "error" | "warning" }[] = [
+    { title: "New Message", description: "You have a new message from HR.", type: "info" },
+    { title: "Shift Reminder", description: "Your shift starts at 9:00 AM.", type: "success" },
+    { title: "System Alert", description: "System maintenance at midnight.", type: "warning" },
+  ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white dark:border-gray-800 dark:bg-gray-950">
@@ -63,24 +70,44 @@ export default function Navbar() {
         </nav>
 
         {/* Right Section */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center space-x-4">
+          <button
+            className="text-gray-600 hover:text-gray-900"
+            onClick={() => setShowNotifications(!showNotifications)}
+          >
+            <Bell size={20} />
+          </button>
+
+          {/* Notifications */}
+          {showNotifications && (
+            <div className="absolute top-16 right-4 w-80 bg-white shadow-lg rounded-lg p-4 z-50">
+              {notifications.map((notification, index) => (
+                <Notification
+                  key={index}
+                  title={notification.title}
+                  description={notification.description}
+                  type={notification.type}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Employee Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Search className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                <span className="sr-only">Search</span>
-              </Button>
+              <button className="flex items-center space-x-1 text-gray-600 hover:text-gray-900">
+                <User size={20} />
+                <span className="hidden md:inline">Employee</span>
+                <span>▼</span>
+              </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-[300px] p-4">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
-                <Input type="search" placeholder="Search..." className="pl-8 w-full" />
-              </div>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Toggle aria-label="Toggle dark mode" className="text-gray-500 rounded-full">
-            <Moon className="h-5 w-5 text-gray-500 dark:text-gray-400" /> Employee
-          </Toggle>
+
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full md:hidden">
@@ -131,4 +158,3 @@ export default function Navbar() {
     </header>
   );
 }
-
