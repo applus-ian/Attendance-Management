@@ -15,11 +15,8 @@ return new class extends Migration
             $table->id('assigned_id');
             $table->unsignedBigInteger('emp_id');
             $table->unsignedBigInteger('sched_id');
-            $table->timestamp('assigned_at')->useCurrent();
-            $table->timestamps(0);
-
-            $table->foreign('emp_id')->references('emp_id')->on('employees')->onDelete('cascade');
-            $table->foreign('sched_id')->references('sched_id')->on('schedules')->onDelete('cascade');
+            $table->timestamp('assigned_at');
+            $table->timestamps();
         });
     }
 
