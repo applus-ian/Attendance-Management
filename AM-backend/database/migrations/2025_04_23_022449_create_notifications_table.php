@@ -11,14 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('notifications', function (Blueprint $table) {
+        Schema::create('notification', function (Blueprint $table) {
             $table->id('notif_id');
             $table->unsignedBigInteger('emp_id');
-            $table->string('notif_type', 100);
-            $table->enum('notif_status', ['read', 'unread'])->default('unread');
-            $table->timestamps(0);
-
-            $table->foreign('emp_id')->references('emp_id')->on('employees')->onDelete('cascade');
+            $table->string('title');
+            $table->string('notif_type');
+            $table->text('message');
+            $table->timestamp('read_at')->nullable();
+            $table->boolean('is_seen')->default(false);
+            $table->string('action_url')->nullable();
+            $table->unsignedBigInteger('sender_id');
+            $table->timestamps();
         });
     }
 
@@ -27,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('notifications');
+        Schema::dropIfExists('notification');
     }
 };
