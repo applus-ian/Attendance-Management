@@ -69,18 +69,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [activeItem, setActiveItem] = React.useState("Dashboard"); 
 
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
+    <Sidebar collapsible="offcanvas" {...props} >
       <SidebarHeader>
         <div className="flex justify-center items-center w-full h-full">
           <img
             src="/LOGO1.svg"
             alt="Company Logo"
-            className="h-10 w-auto"
+            className="h-8 w-auto"
           />
+         
         </div>
-        <hr />
+      <hr></hr>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent >
         <NavMain
           items={data.navMain}
           activeItem={activeItem}
@@ -96,6 +97,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             alt="Together Beyond Logo"
             className="h-10 w-auto"
           />
+          
         </div>
       </SidebarFooter>
     </Sidebar>

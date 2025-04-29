@@ -8,10 +8,12 @@ import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { useState } from "react";
 import Notification from "@/components/notification";
 
+
 export default function Navbar() {
   const pathname = usePathname(); // Get the current route
   const [showNotifications, setShowNotifications] = useState(false);
 
+  
   // Initial notifications
   const [notifications, setNotifications] = useState<{
     id: number;
@@ -39,7 +41,7 @@ export default function Navbar() {
             alt="Acme Inc Logo"
             className="h-10 w-auto"
           />
-          <span className="sr-only">Acme Inc</span>
+          
         </Link>
 
         {/* Navigation Links */}
@@ -125,8 +127,12 @@ export default function Navbar() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
+              
+              <DropdownMenuItem asChild>
+                <Link href="/employee/profile">Profile</Link>
+              </DropdownMenuItem>
+
+      
               <DropdownMenuItem>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
