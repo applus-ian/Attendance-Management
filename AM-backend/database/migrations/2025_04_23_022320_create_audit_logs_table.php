@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('audit_logs', function (Blueprint $table) {
             $table->id('log_id');
             $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('role_id');
             $table->enum('role', ['employee', 'admin', 'super_admin']);
             $table->enum('action_type', [
                 'Manual Request Approval',
@@ -30,10 +31,7 @@ return new class extends Migration
             $table->unsignedBigInteger('target_id');
             $table->text('description');
             $table->string('ip_address', 45)->nullable();
-            $table->string('device', 100)->nullable();
-            $table->timestamps(0);
-
-            $table->foreign('user_id')->references('user_id')->on('users')->onDelete('cascade');
+            $table->timestamps();
         });
     }
 
