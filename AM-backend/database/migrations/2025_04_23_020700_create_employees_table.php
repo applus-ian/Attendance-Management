@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('dept_id');
             $table->unsignedBigInteger('job_position_id');
-            $table->unsignedBigInteger('address_id')->nullable();
+            $table->unsignedBigInteger('address_id');
             $table->string('first_name');
             $table->string('middle_name')->nullable();
             $table->string('last_name');
@@ -25,7 +25,7 @@ return new class extends Migration
             $table->date('dob');
             $table->string('civil_status');
             $table->string('nationality');
-            $table->string('phone_number')->nullable();
+            $table->string('phone_number');
             $table->string('emergency_contact1');
             $table->string('emergency_contact2')->nullable();
             $table->date('date_hired');
