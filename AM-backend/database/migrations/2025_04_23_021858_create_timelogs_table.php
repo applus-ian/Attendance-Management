@@ -12,16 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('timelogs', function (Blueprint $table) {
-            $table->id('log_id');
+            $table->id('timelog_id');
             $table->unsignedBigInteger('emp_id');
-            $table->enum('log_type', ['clock_in', 'clock_out']);
-            $table->timestamp('log_time');
+            $table->string('timelog_type');
+            $table->timestamp('time');
             $table->unsignedBigInteger('created_by');
             $table->boolean('is_absent')->default(false);
-            $table->timestamps(0);
-
-            $table->foreign('emp_id')->references('emp_id')->on('employees')->onDelete('cascade');
-            $table->foreign('created_by')->references('user_id')->on('users')->onDelete('cascade');
+            $table->timestamps();
         });
     }
 
