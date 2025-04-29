@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('schedules', function (Blueprint $table) {
             $table->id('sched_id');
-            $table->time('sched_start');
-            $table->time('sched_end');
-            $table->time('sched_break');
-            $table->enum('day', ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'everyday']);
-            $table->integer('num_assigned')->default(0);
-            $table->timestamps(0);
+            $table->time('start');
+            $table->time('end');
+            $table->time('break');
+            $table->string('day');
+            $table->integer('num_assigned');
+            $table->timestamps();
         });
     }
 
