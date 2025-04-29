@@ -15,15 +15,12 @@ return new class extends Migration
             $table->id('timesheet_id');
             $table->unsignedBigInteger('emp_id');
             $table->date('date');
-            $table->time('total_work_hrs')->nullable();
-            $table->time('break_duration')->nullable();
-            $table->time('overtime_hrs')->nullable();
-            $table->integer('total_lates')->default(0);
+            $table->decimal('total_hrs_work', 5, 2);
+            $table->decimal('break_duration', 5, 2);
+            $table->decimal('overtime_hrs', 5, 2)->nullable();
+            $table->integer('total_lates');
             $table->unsignedBigInteger('approved_by')->nullable();
-            $table->timestamps(0);
-
-            $table->foreign('emp_id')->references('emp_id')->on('employees')->onDelete('cascade');
-            $table->foreign('approved_by')->references('user_id')->on('users')->onDelete('set null');
+            $table->timestamps();
         });
     }
 
