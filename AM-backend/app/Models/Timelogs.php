@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Timelogs extends Model
 {
@@ -12,12 +13,12 @@ class Timelogs extends Model
 
     protected $fillable = ['emp_id', 'log_type', 'log_time', 'created_by', 'is_absent'];
 
-    public function employee()
+    public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'emp_id');
     }
 
-    public function creator()
+    public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
