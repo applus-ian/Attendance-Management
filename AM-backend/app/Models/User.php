@@ -3,16 +3,25 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasApiTokens;
+
+    protected $table = 'user';
 
     protected $primaryKey = 'user_id';
+
+    public $timestamps = true;
 
     /**
      * The attributes that are mass assignable.
@@ -20,11 +29,10 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'emp_id',
-        'email',
+        'username',
         'password',
-        'role',
-        'status',
+        'email',
+        'status'
     ];
 
     /**
@@ -37,26 +45,20 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    public function employee()
+    public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'emp_id');
     }
 
-    public function auditLogs()
+    public function roles(): BelongsToMany
     {
-        return $this->hasMany(AuditLogs::class, 'user_id');
+        return $this->belongsToMany(Role::class, 'user_role', 'user_id', 'role_id');
     }
 
-    public function approvedTimesheets()
+    public function auditLogs(): HasMany
     {
-        return $this->hasMany(Timesheets::class, 'approved_by');
+        return $this->hasMany(AuditLog::class, 'user_id');
     }
-
-    public function reviewedManualRequests()
-    {
-        return $this->hasMany(ManualTimeRequests::class, 'reviewed_by');
-    }
-
     /**
      * Get the attributes that should be cast.
      *
