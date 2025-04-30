@@ -63,4 +63,14 @@ class Employee extends Model
     {
         return $this->hasMany(Notifications::class, 'emp_id');
     }
+
+    public function jobPosition()
+    {
+        return $this->belongsTo(JobPosition::class, 'job_position_id', 'job_position_id');
+    }
+
+    public function address()
+    {
+        return $this->belongsTo(EmployeeAddress::class, 'address_id', 'address_id');
+    }
 }
