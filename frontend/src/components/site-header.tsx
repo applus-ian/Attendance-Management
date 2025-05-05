@@ -32,9 +32,6 @@ export function SiteHeader() {
 
           {/* Separator */}
           <Separator orientation="vertical" className="mx-2 h-4" />
-
-          {/* Title */}
-          <h1 className="text-base font-medium">Documents</h1>
         </div>
 
         {/* Right Section: Always visible */}

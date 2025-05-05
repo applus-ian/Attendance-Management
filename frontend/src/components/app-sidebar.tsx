@@ -1,6 +1,7 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
+import { usePathname } from "next/navigation"; 
 import {
   LayoutDashboard,
   FileQuestion,
@@ -9,95 +10,88 @@ import {
   Users,
   CalendarCheck,
   User,
-} from "lucide-react"
+} from "lucide-react";
 
-import { NavMain } from "@/components/nav-main"
+import { NavMain } from "@/components/nav-main";
 
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
-      icon: LayoutDashboard, 
+      url: "/admin/dashboard", 
+      icon: LayoutDashboard,
     },
     {
       title: "Requests",
-      url: "#",
+      url: "/admin/requests", 
       icon: FileQuestion,
     },
     {
       title: "Time Logs",
-      url: "#",
-      icon: CalendarClock, 
+      url: "/admin/time-logs", 
+      icon: CalendarClock,
     },
     {
       title: "Schedule",
-      url: "#",
-      icon: Coins, 
+      url: "/admin/schedule", 
+      icon: Coins,
     },
     {
       title: "Users",
-      url: "#",
-      icon: Users, 
+      url: "/admin/users",
+      icon: Users,
     },
     {
       title: "Timesheets",
-      url: "#",
-      icon: CalendarCheck, 
+      url: "/admin/timesheets",
+      icon: CalendarCheck,
     },
     {
       title: "Account Settings",
-      url: "#",
+      url: "/admin/account-settings", 
       icon: User,
     },
   ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [activeItem, setActiveItem] = React.useState("Dashboard"); 
+  const pathname = usePathname(); 
+  const [activeItem, setActiveItem] = React.useState("");
+
+  React.useEffect(() => {
+   
+    const currentItem = data.navMain.find((item) => pathname.startsWith(item.url));
+    if (currentItem) {
+      setActiveItem(currentItem.title);
+    }
+  }, [pathname]); 
 
   return (
-    <Sidebar collapsible="offcanvas" {...props} >
+    <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <div className="flex justify-center items-center w-full h-full">
-          <img
-            src="/LOGO1.svg"
-            alt="Company Logo"
-            className="h-8 w-auto"
-          />
-         
+          <img src="/LOGO1.svg" alt="Company Logo" className="h-8 w-auto" />
         </div>
-      <hr></hr>
+        <hr />
       </SidebarHeader>
-      <SidebarContent >
+      <SidebarContent>
         <NavMain
           items={data.navMain}
           activeItem={activeItem}
-          onItemSelect={(item: string) => setActiveItem(item)} // Update active item on selection
+          onItemSelect={(item: string) => setActiveItem(item)} 
         />
-  
       </SidebarContent>
-      <hr />   
+      <hr />
       <SidebarFooter>
         <div className="flex justify-center items-center w-full h-full">
-          <img
-            src="/togetherbeyond.svg"
-            alt="Together Beyond Logo"
-            className="h-10 w-auto"
-          />
-          
+          <img src="/togetherbeyond.svg" alt="Together Beyond Logo" className="h-10 w-auto" />
         </div>
       </SidebarFooter>
     </Sidebar>
