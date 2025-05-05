@@ -3,6 +3,10 @@
 import { useState } from "react"
 import RequestModal from "@/components/admin-modals/request-modal/reqmodal-page"
 import TimeLogModal from "@/components/admin-modals/time-logs/time-logs-modal"
+import SchedulePage from "@/components/shifts-management/schedule-button"
+import ShiftAssignmentPage from "@/components/shifts-management/shift-assignment-button"
+import { YourComponent } from "@/components/shifts-management/confirm-delete-modal"
+import { ScheduleManager } from "@/components/remove-manually-schedule/remove-manually"
 
 export default function Modals() {
     const [isTimeLogOpen, setIsTimeLogOpen] = useState(false)
@@ -27,6 +31,18 @@ export default function Modals() {
                 </div>
 
                 {/* Container for Time Log Modal */}
+                <div className="w-full">
+                    <SchedulePage />
+                </div>
+                <div className="w-full">
+                    <ShiftAssignmentPage />
+                </div>
+                <div className="w-full">
+                    <YourComponent />
+                </div>
+                <div className="w-full">
+                    <ScheduleManager />
+                </div>
                 <div className="w-full">
                     <button
                         onClick={() => setIsTimeLogOpen(true)}
