@@ -12,8 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('assigned_schedules', function (Blueprint $table) {
-            $table->foreign('emp_id')->references('emp_id')->on('employee')->onDelete('cascade');
+            $table->foreign('emp_id')->references('emp_id')->on('employees')->onDelete('cascade');
             $table->foreign('sched_id')->references('sched_id')->on('schedules')->onDelete('cascade');
+            $table->foreign('created_by')->references('user_id')->on('users')->nullOnDelete();
+            $table->foreign('updated_by')->references('user_id')->on('users')->nullOnDelete();
         });
     }
 

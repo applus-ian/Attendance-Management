@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('notification', function (Blueprint $table) {
-            $table->foreign('emp_id')->references('emp_id')->on('employee')->onDelete('cascade');
-            $table->foreign('sender_id')->references('user_id')->on('user')->onDelete('cascade');
+        Schema::table('notifications', function (Blueprint $table) {
+            $table->foreign('emp_id')->references('emp_id')->on('employees')->onDelete('cascade');
+            $table->foreign('sender_id')->references('user_id')->on('users')->onDelete('cascade');
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('notification', function (Blueprint $table) {
+        Schema::table('notifications', function (Blueprint $table) {
             $table->dropForeign(['emp_id']);
             $table->dropForeign(['sender_id']);
         });
