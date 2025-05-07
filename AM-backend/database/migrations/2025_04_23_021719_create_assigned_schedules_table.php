@@ -16,6 +16,8 @@ return new class extends Migration
             $table->unsignedBigInteger('emp_id');
             $table->unsignedBigInteger('sched_id');
             $table->timestamp('assigned_at');
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
         });
     }

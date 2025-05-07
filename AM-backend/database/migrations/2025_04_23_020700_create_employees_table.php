@@ -6,21 +6,18 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('employees', function (Blueprint $table) {
-            $table->id('emp_id');
-            $table->unsignedBigInteger('user_id')->nullable();
-            $table->unsignedBigInteger('dept_id');
-            $table->unsignedBigInteger('job_position_id');
-            $table->unsignedBigInteger('address_id');
+            $table->bigIncrements('emp_id');
+            $table->unsignedBigInteger('dept_id')->nullable();
+            $table->unsignedBigInteger('job_position_id')->nullable();
+            $table->unsignedBigInteger('address_id')->nullable();
             $table->string('first_name');
             $table->string('middle_name')->nullable();
             $table->string('last_name');
             $table->string('suffix')->nullable();
+            $table->string('email')->unique();
             $table->string('gender');
             $table->date('dob');
             $table->string('civil_status');
@@ -35,9 +32,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('employees');
