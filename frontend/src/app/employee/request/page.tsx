@@ -1,7 +1,7 @@
 "use client";
 
-import Navbar from "@/components/navbar";
-import { RequestDataTable } from "@/components/request-data-table";
+import Navbar from "@/components/employee/navbar";
+import { RequestDataTable } from "@/components/admin/request/request-data-table";
 import { useState } from "react";
 
 const requestData = [

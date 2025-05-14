@@ -1,7 +1,7 @@
 "use client";
 
-import Navbar from "@/components/navbar";
-import { EmployeeDataTable } from "@/components/employee-data-table";
+import Navbar from "@/components/employee/navbar";
+import { EmployeeDataTable } from "@/components/employee/employee-data-table";
 import { useState } from "react";
 
 const timesheetData = [

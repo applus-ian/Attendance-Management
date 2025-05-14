@@ -1,6 +1,6 @@
 "use client";
 
-import Navbar from "@/components/navbar";
+import Navbar from "@/components/employee/navbar";
 import ProfileSettings from "@/components/profile-settings";
 
 export default function EmployeeProfilePage() {

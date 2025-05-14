@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 @custom-variant dark (&:is(.dark *));
 @theme inline {
     --color-background: var(--background);
@@ -122,5 +123,6 @@
     }
     body {
         @apply bg-background text-foreground;
+        font-family: var(--font-sans);
     }
 }

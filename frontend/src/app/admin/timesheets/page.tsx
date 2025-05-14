@@ -1,7 +1,7 @@
-import { AppSidebar } from "@/components/app-sidebar";
-import { SiteHeader } from "@/components/site-header";
+import { AppSidebar } from "@/components/admin/sidebar/app-sidebar";
+import { SiteHeader } from "@/components/admin/dashboard/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { TimesheetsTable } from "@/components/timesheets/timesheets-table"
+import { TimesheetsTable } from "@/components/admin/timesheets/timesheets-table"
 export default function RequestPage() {
   return (
     <SidebarProvider

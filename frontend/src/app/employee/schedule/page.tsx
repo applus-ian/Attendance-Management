@@ -4,9 +4,9 @@ import { Bell, FileText, Menu, User, Clock } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import Navbar from "@/components/navbar";
-import { CircularClock } from "@/components/Clock"; 
-import Footer from "@/components/Footer";
+import Navbar from "@/components/employee/navbar";
+import { CircularClock } from "@/components/employee/Clock"; 
+import Footer from "@/components/employee/Footer";
 import "../../globals.css";
 
 export default function MySchedulePage() {

@@ -6,14 +6,14 @@ import { Search, Clock, Users, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
-import { UserList } from "@/components/user-list"
-import { TimeLogTable } from "@/components/time-log-table"
-import { TimeLogFilters } from "@/components/time-logs/time-log-filters"
+import { UserList } from "@/components/admin/time-logs/user-list"
+import { TimeLogTable } from "@/components/admin/time-logs/time-log-table"
+import { TimeLogFilters } from "@/components/admin/time-logs/time-log-filters"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { SiteHeader } from "@/components/site-header"
+import { AppSidebar } from "@/components/admin/sidebar/app-sidebar"
+import { SiteHeader } from "@/components/admin/dashboard/site-header"
 
-// Mock user summary data
+
 const userSummaryData = {
   "1": {
     name: "Valey Austine Senoy",
