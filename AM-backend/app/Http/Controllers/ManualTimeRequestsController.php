@@ -2,64 +2,129 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Models\Employee;
 use App\Models\ManualTimeRequests;
-use Illuminate\Http\Request;
+use App\Services\AuditLogsService;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\ManualTimeRequest;
+use App\Services\ManualTimeRequestService;
+use App\Http\Resources\ManualTimeRequestResource;
 
 class ManualTimeRequestsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    private ManualTimeRequestService $service;
+    private AuditLogsService $auditLogsService;
+
+
+    public function __construct(ManualTimeRequestService $service, AuditLogsService $auditLogsService)
+    {
+        $this->service = $service;
+        $this->auditLogsService = $auditLogsService;
+    }
+
     public function index()
     {
-        //
+        /** @var User $user */
+        $user = Auth::user();
+
+        if (!$user->user_permissions()->contains('name', 'view_all_request')) {
+            return response()->json(['message' => 'Ops! Forbidden.'], 403);
+        }
+
+        $this->auditLogsService->log(
+            action: 'View All Request',
+            type: 'Manual Time Request',
+            targetId: null,
+            description: "View all Requests."
+        );
+
+        return ManualTimeRequestResource::collection(ManualTimeRequests::all());
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function store(ManualTimeRequest $request)
     {
-        //
+        /** @var User $user */
+        $user = Auth::user();
+
+        if (!$user->user_permissions()->contains('name', 'create_request')) {
+            return response()->json(['message' => 'Ops! Forbidden.'], 403);
+        }
+
+        $manualRequest = $this->service->create($request);
+
+        $this->auditLogsService->log(
+            action: 'Submit Request',
+            type: 'Manual Time Request',
+            targetId: $manualRequest->request_id,
+            description: $manualRequest->reason
+        );
+
+        return new ManualTimeRequestResource($manualRequest);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function show(ManualTimeRequests $manualRequest)
     {
-        //
+        /** @var User $user */
+        $user = Auth::user();
+
+        if (!$user->user_permissions()->contains('name', 'view_request')) {
+            return response()->json(['message' => 'Ops! Forbidden.'], 403);
+        }
+
+        $this->auditLogsService->log(
+            action: 'View All Request',
+            type: 'Manual Time Request',
+            targetId: $manualRequest->request_id,
+            description: 'View Specific Request.'
+        );
+
+        return new ManualTimeRequestResource($manualRequest);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(ManualTimeRequests $manualTimeRequests)
+    public function approve(ManualTimeRequests $manualTimeRequest)
     {
-        //
+        /** @var User $user */
+        $user = Auth::user();
+        /** @var Employee $employee */
+        $employee = Auth::user()->employee;
+
+        if (!$user->user_permissions()->contains('name', 'approve_request')) {
+            return response()->json(['message' => 'Ops! Forbidden.'], 403);
+        }
+
+        $updated = $this->service->approve($manualTimeRequest, $employee);
+
+        $this->auditLogsService->log(
+            action: 'Manual Request Approval',
+            type: 'Manual Time Request',
+            targetId: $manualTimeRequest->request_id,
+            description: 'Request Approved.'
+        );
+
+        return new ManualTimeRequestResource($updated);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(ManualTimeRequests $manualTimeRequests)
+    public function reject(ManualTimeRequests $manualTimeRequest)
     {
-        //
-    }
+        /** @var User $user */
+        $user = Auth::user();
+        /** @var Employee $employee */
+        $employee = Auth::user()->employee;
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, ManualTimeRequests $manualTimeRequests)
-    {
-        //
-    }
+        if (!$user->user_permissions()->contains('name', 'reject_request')) {
+            return response()->json(['message' => 'Ops! Forbidden.'], 403);
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(ManualTimeRequests $manualTimeRequests)
-    {
-        //
+        $updated = $this->service->reject($manualTimeRequest, $employee);
+
+        $this->auditLogsService->log(
+            action: 'Manual Request Disapproval',
+            type: 'Manual Time Request',
+            targetId: $manualTimeRequest->request_id,
+            description: 'Request Rejected.'
+        );
+
+        return new ManualTimeRequestResource($updated);
     }
 }

@@ -2,64 +2,77 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Timelogs;
-use Illuminate\Http\Request;
+use App\Models\User;
+use App\Services\TimelogService;
+use Illuminate\Http\JsonResponse;
+use App\Services\AuditLogsService;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\TimelogRequest;
 
 class TimelogsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+
+    public function __construct(protected TimelogService $timelogService, protected AuditLogsService $auditLogsService)
     {
-        //
+        $this->timelogService = $timelogService;
+        $this->auditLogsService = $auditLogsService;
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Clock in an employee.
      */
-    public function create()
+    public function clockIn(TimelogRequest $request)
     {
-        //
+        /** @var User $user */
+        $user = Auth::user();
+
+        // Manually check if the user has the 'create_timelog' permission
+        if (!$user->user_permissions()->contains('name', 'create_timelog')) {
+            return response()->json(['message' => 'Ops! Forbidden.'], 403);
+        }
+
+        $timelog = $this->timelogService->clockIn($request->validated());
+
+        $this->auditLogsService->log(
+            action: 'Clock In',
+            type: 'Timelog',
+            targetId: $timelog->timelog_id,
+            description: 'Clocked in'
+        );
+
+        return response()->json([
+            'message' => 'Clocked in successfully',
+            'data' => $timelog,
+        ], 201);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
 
     /**
-     * Display the specified resource.
+     * Clock out an employee.
      */
-    public function show(Timelogs $timelogs)
+    public function clockOut(TimelogRequest $request): JsonResponse
     {
-        //
-    }
+        /** @var User $user */
+        $user = Auth::user();
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Timelogs $timelogs)
-    {
-        //
-    }
+        // Manually check if the user has the 'create_timelog' permission
+        if (!$user->user_permissions()->contains('name', 'create_timelog')) {
+            return response()->json(['message' => 'Ops! Forbidden.'], 403);
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Timelogs $timelogs)
-    {
-        //
-    }
+        $timelog = $this->timelogService->clockIn($request->validated());
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Timelogs $timelogs)
-    {
-        //
+
+        $this->auditLogsService->log(
+            action: 'Clock Out',
+            type: 'Timelog',
+            targetId: $timelog->timelog_id,
+            description: 'Clocked out'
+        );
+
+        return response()->json([
+            'message' => 'Clocked out successfully',
+            'data' => $timelog,
+        ], 201);
     }
 }

@@ -4,60 +4,59 @@ namespace App\Http\Controllers;
 
 use App\Models\Timesheets;
 use Illuminate\Http\Request;
+use App\Services\AuditLogsService;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\TimesheetResource;
+use App\Services\TimesheetService;
 
 class TimesheetsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
+
+    public function __construct(protected AuditLogsService $auditLogsService, protected TimesheetService $timesheetService)
+    {
+        $this->auditLogsService = $auditLogsService;
+        $this->timesheetService = $timesheetService;
+    }
+
     public function index()
     {
-        //
+        /** @var User $user */
+        $user = Auth::user();
+
+        if (!$user->user_permissions()->contains('name', 'view_all_timesheet')) {
+            return response()->json(['message' => 'Ops! Forbidden.'], 403);
+        }
+
+        $this->auditLogsService->log(
+            action: 'View All Timesheets',
+            type: 'Timesheets',
+            targetId: null,
+            description: "View all Timesheets."
+        );
+
+        return TimesheetResource::collection(Timesheets::all());
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function show(Request $request)
     {
-        //
+        /** @var User $user */
+        $user = Auth::user();
+
+        if (!$user->user_permissions()->contains('name', 'view_own_timesheet')) {
+            return response()->json(['message' => 'Ops! Forbidden.'], 403);
+        }
+
+        $this->auditLogsService->log(
+            action: 'View Own Timesheet',
+            type: 'Timesheets',
+            targetId: null,
+            description: "View Own Timesheets."
+        );
+
+        return new TimesheetResource($request);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Timesheets $timesheets)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Timesheets $timesheets)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Timesheets $timesheets)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Timesheets $timesheets)
     {
         //
