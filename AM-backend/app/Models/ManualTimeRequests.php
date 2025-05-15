@@ -3,16 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class ManualTimeRequests extends Model
 {
+    use HasFactory;
     protected $primaryKey = 'request_id';
 
     protected $fillable = [
         'emp_id',
         'request_type',
-        'request_time',
-        'request_end',
+        'time',
         'reason',
         'approval_status',
         'reviewed_by',

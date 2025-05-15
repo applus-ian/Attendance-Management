@@ -4,9 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class AuditLogs extends Model
 {
+    use HasFactory;
     protected $primaryKey = 'log_id';
 
     protected $fillable = [
@@ -17,7 +19,6 @@ class AuditLogs extends Model
         'target_id',
         'description',
         'ip_address',
-        'device',
     ];
 
     public function user()

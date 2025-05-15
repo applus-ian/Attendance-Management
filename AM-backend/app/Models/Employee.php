@@ -3,30 +3,32 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Employee extends Model
 {
+
+    use Notifiable, HasFactory;
+
     protected $primaryKey = 'emp_id';
 
     protected $fillable = [
         'first_name',
         'middle_name',
         'last_name',
-        'gender',
-        'civil_status',
+        'suffix',
         'email',
-        'phone_number',
+        'gender',
         'dob',
-        'dept_id',
-        'position',
-        'status',
+        'civil_status',
+        'nationality',
+        'phone_number',
+        'emergency_contact1',
+        'emergency_contact2',
         'date_hired',
-        'address_line1',
-        'address_line2',
-        'city',
-        'state',
-        'country',
-        'postal_code',
+        'status',
+        'profile_pic_url'
     ];
 
     public function user()
