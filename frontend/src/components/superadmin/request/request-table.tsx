@@ -16,12 +16,12 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { RequestDetailsModal } from "@/components/admin/request/request-details-modal"
-import { MobileRequestView } from "@/components/admin/request/mobile-request-view"
+import RequestModal from "../modal/request-modal/page"
+import ApprovalModal from "../modal/approval-modal/page"
+import RejectModal from "../modal/reject-modal/page"
 import { RequestFilters } from "./request-filter"
 
-// Define the request data type
+
 export type Request = {
   id: string
   dateSubmitted: string
@@ -33,7 +33,7 @@ export type Request = {
   feedback: string
 }
 
-// Sample data
+
 const requests: Request[] = [
   {
     id: "1",
@@ -117,18 +117,21 @@ const requests: Request[] = [
   },
 ]
 
+
 interface RequestTableProps {
-  searchQuery: string; // Add the searchQuery prop
+  searchQuery: string
 }
 
 export function RequestTable({ searchQuery }: RequestTableProps) {
-  const isMobile = useIsMobile()
+  // const isMobile = useIsMobile() // <-- Remove mobile detection
   const [currentPage, setCurrentPage] = useState(0)
   const [sorting, setSorting] = useState<SortingState>([])
   const [sortField, setSortField] = useState<string>("dateSubmitted")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [showApprovalModal, setShowApprovalModal] = useState(false)
+  const [showRejectModal, setShowRejectModal] = useState(false)
   const [filters, setFilters] = useState({
     status: "all",
     type: "all",
@@ -143,52 +146,57 @@ export function RequestTable({ searchQuery }: RequestTableProps) {
     setIsModalOpen(true)
   }
 
+  const handleApprove = (request: Request) => {
+    setSelectedRequest(request)
+    setShowApprovalModal(true)
+  }
+
+  const handleReject = (request: Request) => {
+    setSelectedRequest(request)
+    setShowRejectModal(true)
+  }
+
+  const handleApproveContinue = (feedback: string) => {
+    setShowApprovalModal(false)
+    setSelectedRequest(null)
+  }
+
+  const handleRejectContinue = (feedback: string) => {
+    setShowRejectModal(false)
+    setSelectedRequest(null)
+  }
+
   // Filter and sort requests using useMemo to prevent unnecessary recalculations
   const filteredAndSortedRequests = useMemo(() => {
-    // First filter the requests
     const filtered = requests.filter((request) => {
-      // Search query filter
       if (searchQuery && !request.member.toLowerCase().includes(searchQuery.toLowerCase())) {
         return false
       }
-
-      // Status filter
       if (filters.status !== "all" && request.status !== filters.status) {
         return false
       }
-
-      // Type filter
       if (filters.type !== "all" && request.type !== filters.type) {
         return false
       }
-
-      // Date range filter
       if (filters.dateRange.from || filters.dateRange.to) {
         const requestDate = new Date(request.dateSubmitted)
-
         if (filters.dateRange.from && requestDate < filters.dateRange.from) {
           return false
         }
-
         if (filters.dateRange.to) {
-          // Set the end of day for the to date
           const endDate = new Date(filters.dateRange.to)
           endDate.setHours(23, 59, 59, 999)
-
           if (requestDate > endDate) {
             return false
           }
         }
       }
-
       return true
     })
 
-    // Then sort the filtered results
     return [...filtered].sort((a, b) => {
       const aValue = a[sortField as keyof Request]
       const bValue = b[sortField as keyof Request]
-
       if (sortDirection === "asc") {
         return aValue > bValue ? 1 : -1
       } else {
@@ -231,8 +239,13 @@ export function RequestTable({ searchQuery }: RequestTableProps) {
         const status = row.getValue("status") as string
         return (
           <Badge
-            variant={status === "Approved" ? "secondary" : status === "Pending" ? "default" : "destructive"}
-            className="rounded-md"
+            className={`rounded-md ${
+              status === "Approved"
+                ? "bg-green-100 text-green-800"
+                : status === "Pending"
+                ? "bg-orange-100 text-orange-800"
+                : "bg-red-100 text-red-800"
+            }`}
           >
             {status}
           </Badge>
@@ -255,7 +268,7 @@ export function RequestTable({ searchQuery }: RequestTableProps) {
               <Button
                 variant="ghost"
                 className="h-8 w-8 p-0"
-                onClick={(e) => e.stopPropagation()} // Prevent row click when clicking dropdown
+                onClick={(e) => e.stopPropagation()}
               >
                 <span className="sr-only">Open menu</span>
                 <MoreHorizontal className="h-4 w-4" />
@@ -266,7 +279,7 @@ export function RequestTable({ searchQuery }: RequestTableProps) {
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation()
-                  console.log("Approve", request.id)
+                  handleApprove(request)
                 }}
               >
                 Approve Request
@@ -274,7 +287,7 @@ export function RequestTable({ searchQuery }: RequestTableProps) {
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation()
-                  console.log("Deny", request.id)
+                  handleReject(request)
                 }}
               >
                 Deny Request
@@ -321,49 +334,46 @@ export function RequestTable({ searchQuery }: RequestTableProps) {
         />
       </div>
 
-      {isMobile ? (
-        <MobileRequestView requests={displayedData} onViewRequest={handleViewRequest} />
-      ) : (
-        <div className="rounded-md border overflow-hidden">
-          <div className="w-full overflow-auto">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
+      {/* Desktop/tablet view only */}
+      <div className="rounded-md border overflow-hidden">
+        <div className="w-full overflow-auto">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleViewRequest(row.original)}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                     ))}
                   </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      data-state={row.getIsSelected() && "selected"}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleViewRequest(row.original)}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center">
-                      No results.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
-      )}
+      </div>
 
       <div className="flex items-center justify-between space-x-2 py-4">
         <div className="text-sm text-muted-foreground">
@@ -380,21 +390,19 @@ export function RequestTable({ searchQuery }: RequestTableProps) {
           >
             Previous
           </Button>
-          {!isMobile && (
-            <div className="flex items-center gap-1">
-              {Array.from({ length: pageCount }).map((_, i) => (
-                <Button
-                  key={i}
-                  variant={i === currentPage ? "default" : "outline"}
-                  size="sm"
-                  className="w-8 h-8"
-                  onClick={() => setCurrentPage(i)}
-                >
-                  {i + 1}
-                </Button>
-              ))}
-            </div>
-          )}
+          <div className="flex items-center gap-1">
+            {Array.from({ length: pageCount }).map((_, i) => (
+              <Button
+                key={i}
+                variant={i === currentPage ? "default" : "outline"}
+                size="sm"
+                className="w-8 h-8"
+                onClick={() => setCurrentPage(i)}
+              >
+                {i + 1}
+              </Button>
+            ))}
+          </div>
           <Button
             variant="outline"
             size="sm"
@@ -407,7 +415,32 @@ export function RequestTable({ searchQuery }: RequestTableProps) {
       </div>
 
       {selectedRequest && (
-        <RequestDetailsModal request={selectedRequest} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+        <RequestModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          requestData={{
+            dateSubmitted: selectedRequest.dateSubmitted,
+            name: selectedRequest.member,
+            requestType: selectedRequest.type,
+            dateRequested: selectedRequest.dateRequested,
+            comment: selectedRequest.comment,
+          }}
+        />
+      )}
+      {showApprovalModal && selectedRequest && (
+        <ApprovalModal
+          isOpen={showApprovalModal}
+          onClose={() => setShowApprovalModal(false)}
+          onContinue={handleApproveContinue}
+          isReject={false}
+        />
+      )}
+      {showRejectModal && selectedRequest && (
+        <RejectModal
+          isOpen={showRejectModal}
+          onClose={() => setShowRejectModal(false)}
+          onContinue={handleRejectContinue}
+        />
       )}
     </div>
   )

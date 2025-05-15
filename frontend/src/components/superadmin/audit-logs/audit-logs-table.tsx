@@ -10,7 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useIsMobile } from "@/hooks/use-mobile"
 import { AuditLogFilters } from "./audit-log-filters"
 
-// Define the audit log data type
+
 export type AuditLog = {
   id: string
   actionType: string

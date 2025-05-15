@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import TimeLogModal from "../../time-logs/time-logs-modal"
+import TimeLogModal from "./time-logs/time-logs-modal"
 
 export default function AddTimeLogButton() {
     const [isModalOpen, setIsModalOpen] = useState(false)

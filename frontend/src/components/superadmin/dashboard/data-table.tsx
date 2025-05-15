@@ -244,7 +244,7 @@ export function RequestTableComponent() {
               <th className="py-3 px-4 text-left font-medium">Type</th>
               <th className="py-3 px-4 text-left font-medium">Date Requested</th>
               <th className="py-3 px-4 text-left font-medium">Comment</th>
-              <th className="py-3 px-4 text-center font-medium">Status</th>
+              <th className="py-3 px-4 text-center font-medium">Action</th>
               
             </tr>
           </thead>
