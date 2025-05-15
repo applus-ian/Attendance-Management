@@ -5,12 +5,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { MoreHorizontal, ChevronLeft, ChevronRight, Users, Filter } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { EditScheduleDialog } from "@/components/admin/schedule/edit-schedule-dialog"
-import { DeleteScheduleDialog } from "@/components/admin/schedule/delete-schedule-dialog"
-import { AssignMembersDialog } from "@/components/admin/schedule/assign-members-dialog"
+import { EditScheduleDialog } from "@/components/superadmin/schedule/edit-schedule-dialog"
+import { DeleteScheduleDialog } from "@/components/superadmin/schedule/delete-schedule-dialog"
+import { AssignShiftModal } from "@/components/superadmin/schedule/assign-members-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { ScheduleFilters } from "@/components/admin/schedule/schedule-filters"
+import { ScheduleFilters } from "@/components/superadmin/schedule/schedule-filters"
 
 
 const schedules = [
@@ -303,10 +303,9 @@ export function ScheduleList() {
       )}
 
       {assigningSchedule && (
-        <AssignMembersDialog
+        <AssignShiftModal
           open={!!assigningSchedule}
           onOpenChange={() => setAssigningSchedule(null)}
-          scheduleId={assigningSchedule}
         />
       )}
     </div>

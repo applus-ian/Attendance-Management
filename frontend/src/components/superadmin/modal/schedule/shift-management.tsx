@@ -40,8 +40,12 @@ type ScheduleData = {
   };
 };
 
-export function ShiftManagementModal() {
-  const [open, setOpen] = useState(false);
+type ShiftManagementModalProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+};
+
+export function ShiftManagementModal({ open, onOpenChange }: ShiftManagementModalProps) {
   const [schedule, setSchedule] = useState<ScheduleData>({
     name: "",
     type: "day",
@@ -100,104 +104,115 @@ export function ShiftManagementModal() {
   const handleSubmit = () => {
     // Here you would handle submission to your backend
     console.log("Schedule submitted:", schedule);
-    setOpen(false);
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>Add Schedule</Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px] px-8 py-6">
         <DialogHeader>
-          <DialogTitle>Add Schedule</DialogTitle>
+          <DialogTitle className="text-2xl font-bold mb-2">Add Schedule</DialogTitle>
         </DialogHeader>
-        <div className="py-4">
+        <div className="py-2">
+          {/* Schedule Type */}
           <div className="mb-6">
             <h3 className="font-medium mb-2">Schedule Type</h3>
-            <div className="flex gap-4">
+            <div className="flex gap-6">
               <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="day-shift" 
-                  checked={schedule.type === "day"} 
+                <Checkbox
+                  id="day-shift"
+                  checked={schedule.type === "day"}
                   onCheckedChange={(checked: boolean | "indeterminate") => checked === true && handleTypeChange("day")}
+                  className="data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 rounded"
                 />
-                <Label htmlFor="day-shift">Day Shift</Label>
+                <Label htmlFor="day-shift" className="text-base">Day Shift</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="night-shift" 
-                  checked={schedule.type === "night"} 
+                <Checkbox
+                  id="night-shift"
+                  checked={schedule.type === "night"}
                   onCheckedChange={(checked: boolean | "indeterminate") => checked === true && handleTypeChange("night")}
+                  className="data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 rounded"
                 />
-                <Label htmlFor="night-shift">Night Shift</Label>
+                <Label htmlFor="night-shift" className="text-base">Night Shift</Label>
               </div>
             </div>
           </div>
 
+          {/* Schedule Name */}
           <div className="mb-6">
             <h3 className="font-medium mb-2">Schedule Name</h3>
-            <Input 
-              placeholder="e.g., Holy Week Special" 
+            <Input
+              placeholder="Holy Week Special"
               value={schedule.name}
               onChange={handleNameChange}
+              className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-base"
             />
           </div>
 
+          {/* Days and Times */}
           <div>
             <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr] gap-2 items-center mb-2">
               <div className="w-24"></div>
-              <div className="text-center text-sm">Start</div>
-              <div className="text-center text-sm">End</div>
-              <div className="text-center text-sm">Lunch Break</div>
-              <div></div>
+              <div className="text-center text-sm font-medium">Start</div>
+              <div className="text-center text-sm font-medium">End</div>
+              <div className="text-center text-sm font-medium col-span-2">Lunch Break</div>
             </div>
-
             {Object.entries(schedule.days).map(([day, dayData]) => (
-              <div key={day} className="grid grid-cols-[auto_1fr_1fr_1fr_1fr] gap-2 items-center mb-3">
+              <div key={day} className="grid grid-cols-[auto_1fr_1fr_1fr_1fr] gap-2 items-center mb-2">
                 <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={`${day}-toggle`} 
+                  <Checkbox
+                    id={`${day}-toggle`}
                     checked={dayData.enabled}
                     onCheckedChange={(checked: boolean | "indeterminate") => handleDayToggle(day as keyof typeof schedule.days, checked)}
+                    className="data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 rounded"
                   />
-                  <Label htmlFor={`${day}-toggle`} className="capitalize">{day}</Label>
+                  <Label htmlFor={`${day}-toggle`} className="capitalize text-base">{day}</Label>
                 </div>
-                <Input 
-                  type="time" 
+                <Input
+                  type="time"
                   value={dayData.times.start}
                   onChange={(e) => handleTimeChange(day as keyof typeof schedule.days, "start", e.target.value)}
+                  className="bg-gray-50 border border-gray-200 rounded-lg px-2 py-1"
                 />
-                <Input 
-                  type="time" 
+                <Input
+                  type="time"
                   value={dayData.times.end}
                   onChange={(e) => handleTimeChange(day as keyof typeof schedule.days, "end", e.target.value)}
+                  className="bg-gray-50 border border-gray-200 rounded-lg px-2 py-1"
                 />
-                <div className="grid grid-cols-2 gap-1">
-                  <Input 
-                    type="time" 
-                    value={dayData.times.lunchStart}
-                    onChange={(e) => handleTimeChange(day as keyof typeof schedule.days, "lunchStart", e.target.value)}
-                  />
-                  <Input 
-                    type="time" 
-                    value={dayData.times.lunchEnd}
-                    onChange={(e) => handleTimeChange(day as keyof typeof schedule.days, "lunchEnd", e.target.value)}
-                  />
-                </div>
+                <Input
+                  type="time"
+                  value={dayData.times.lunchStart}
+                  onChange={(e) => handleTimeChange(day as keyof typeof schedule.days, "lunchStart", e.target.value)}
+                  className="bg-gray-50 border border-gray-200 rounded-lg px-2 py-1"
+                />
+                <Input
+                  type="time"
+                  value={dayData.times.lunchEnd}
+                  onChange={(e) => handleTimeChange(day as keyof typeof schedule.days, "lunchEnd", e.target.value)}
+                  className="bg-gray-50 border border-gray-200 rounded-lg px-2 py-1"
+                />
               </div>
             ))}
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit}>
+        <DialogFooter className="flex flex-row justify-center gap-4 mt-4">
+          <Button
+            onClick={handleSubmit}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-2 rounded-lg text-base font-medium"
+          >
             Add
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="px-10 py-2 rounded-lg text-base font-medium border-gray-300"
+          >
+            Cancel
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-} 
+}

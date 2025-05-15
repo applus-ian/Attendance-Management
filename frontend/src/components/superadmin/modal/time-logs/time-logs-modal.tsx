@@ -1,127 +1,162 @@
 "use client"
 
-import { useState } from "react"
-import { Calendar } from "@/components/ui/calendar"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
-import { format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
-import { cn } from "@/lib/utils"
+import type React from "react"
 
-interface TimeLogModalProps {
-    isOpen: boolean
-    onClose: () => void
-    onSubmit: (data: { date: Date; time: string; logType: string; comment: string }) => void
+import { useState } from "react"
+import { X } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+interface AddTimeLogModalProps {
+  userId: string
+  isOpen: boolean
+  onClose: () => void
 }
 
-export default function TimeLogModal({ isOpen, onClose, onSubmit }: TimeLogModalProps) {
-    const [date, setDate] = useState<Date>(new Date())
-    const [time, setTime] = useState<string>("00:00")
-    const [logType, setLogType] = useState<string>("")
-    const [comment, setComment] = useState<string>("")
+export function AddTimeLogModal({ userId, isOpen, onClose }: AddTimeLogModalProps) {
+  const [formData, setFormData] = useState({
+    logType: "Clock In",
+    date: new Date().toISOString().split("T")[0],
+    time: new Date().toTimeString().split(" ")[0].substring(0, 5),
+    comment: "",
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
-    return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                    <DialogTitle className="text-xl font-semibold">Add Time Log</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-3 gap-4">
-                        {/* Date Field */}
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Date</label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button variant="outline" className="w-full justify-start text-left">
-                                        {format(date, "MMM dd, yyyy")}
-                                        <CalendarIcon className="ml-auto h-4 w-4" />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                    <Calendar
-                                        mode="single"
-                                        selected={date}
-                                        onSelect={(date) => date && setDate(date)}
-                                        initialFocus
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                        </div>
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+    field: string,
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: e.target.value }))
+    // Clear error when field is edited
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }))
+    }
+  }
 
-                        {/* Time Field */}
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Time</label>
-                            <Select value={time} onValueChange={setTime}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select time" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {Array.from({ length: 24 }).map((_, hour) =>
-                                        Array.from({ length: 4 }).map((_, minute) => {
-                                            const timeValue = `${String(hour).padStart(2, '0')}:${String(minute * 15).padStart(2, '0')}`
-                                            return (
-                                                <SelectItem key={timeValue} value={timeValue}>
-                                                    {timeValue}
-                                                </SelectItem>
-                                            )
-                                        })
-                                    )}
-                                </SelectContent>
-                            </Select>
-                        </div>
+  const handleSelectChange = (value: string, field: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+    // Clear error when field is edited
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }))
+    }
+  }
 
-                        {/* Log Type Field */}
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Log Type</label>
-                            <Select value={logType} onValueChange={setLogType}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select Log Type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Clock In">Clock In</SelectItem>
-                                    <SelectItem value="Clock Out">Clock Out</SelectItem>
-                                    <SelectItem value="Late Clock In">Late Clock In</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
+  const validate = () => {
+    const newErrors: Record<string, string> = {}
 
-                    {/* Comment Field */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Comment</label>
-                        <textarea
-                            value={comment}
-                            onChange={(e) => setComment(e.target.value)}
-                            className="w-full min-h-[100px] rounded-md border border-input px-3 py-2 text-sm"
-                            placeholder="Enter a comment..."
-                        />
-                    </div>
-                </div>
+    if (!formData.logType) {
+      newErrors.logType = "Log type is required"
+    }
 
-                <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>
-                        Cancel
-                    </Button>
-                    <Button
-                        className="bg-orange-500 hover:bg-orange-600 text-white"
-                        onClick={() => {
-                            onSubmit({ date, time, logType, comment })
-                            onClose()
-                        }}
-                    >
-                        Add
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    )
+    if (!formData.date) {
+      newErrors.date = "Date is required"
+    }
+
+    if (!formData.time) {
+      newErrors.time = "Time is required"
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = async () => {
+    if (!validate()) return
+
+    try {
+      setIsSubmitting(true)
+      // Here you would typically make an API call to add the time log
+      console.log("Adding time log for user:", userId, formData)
+
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      onClose()
+    } catch (error) {
+      console.error("Error adding time log:", error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add Time Log</DialogTitle>
+          <Button variant="ghost" size="icon" className="absolute right-4 top-4" onClick={onClose}>
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </Button>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="logType">Log Type</Label>
+            <Select value={formData.logType} onValueChange={(value) => handleSelectChange(value, "logType")}>
+              <SelectTrigger id="logType" className={errors.logType ? "border-red-500" : ""}>
+                <SelectValue placeholder="Select log type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Clock In">Clock In</SelectItem>
+                <SelectItem value="Clock Out">Clock Out</SelectItem>
+                <SelectItem value="Break Start">Break Start</SelectItem>
+                <SelectItem value="Break End">Break End</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.logType && <p className="text-sm text-red-500">{errors.logType}</p>}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="date">Date</Label>
+              <Input
+                id="date"
+                type="date"
+                value={formData.date}
+                onChange={(e) => handleChange(e, "date")}
+                className={errors.date ? "border-red-500" : ""}
+              />
+              {errors.date && <p className="text-sm text-red-500">{errors.date}</p>}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="time">Time</Label>
+              <Input
+                id="time"
+                type="time"
+                value={formData.time}
+                onChange={(e) => handleChange(e, "time")}
+                className={errors.time ? "border-red-500" : ""}
+              />
+              {errors.time && <p className="text-sm text-red-500">{errors.time}</p>}
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="comment">Comment (Optional)</Label>
+            <Textarea
+              id="comment"
+              placeholder="Add any additional information"
+              value={formData.comment}
+              onChange={(e) => handleChange(e, "comment")}
+              rows={3}
+            />
+          </div>
+        </div>
+        <DialogFooter className="sm:justify-between gap-2">
+          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+            Cancel
+          </Button>
+          <Button variant="default" onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? "Adding..." : "Add Time Log"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
 }

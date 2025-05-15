@@ -8,7 +8,8 @@ import { MoreHorizontal, ChevronLeft, ChevronRight, Filter, Search } from "lucid
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Card, CardContent } from "@/components/ui/card"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { TimesheetsFilters } from "@/components/admin/timesheets/timesheets-filters"
+import { TimesheetsFilters } from "@/components/superadmin/timesheets/timesheets-filters"
+import { TimesheetDetailsModal } from "@/components/superadmin/timesheets/timesheet-details-modal"
 
 // Mock timesheet data
 const timesheetData = [
@@ -127,6 +128,10 @@ export function TimesheetsTable() {
     status: "all",
   })
 
+  // Add modal state
+  const [selectedTimesheet, setSelectedTimesheet] = useState<typeof timesheetData[number] | null>(null)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+
   const pageSize = 10
   const totalItems = timesheetData.length
   const totalPages = Math.ceil(totalItems / pageSize)
@@ -189,6 +194,12 @@ export function TimesheetsTable() {
 
   // Paginate the filtered timesheets
   const paginatedTimesheets = filteredTimesheets.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+
+  // Handle row click: open modal with details
+  const handleRowClick = (timesheet: typeof timesheetData[number]) => {
+    setSelectedTimesheet(timesheet)
+    setDetailsOpen(true)
+  }
 
   return (
     <div>
@@ -290,7 +301,11 @@ export function TimesheetsTable() {
             <TableBody>
               {paginatedTimesheets.length > 0 ? (
                 paginatedTimesheets.map((timesheet) => (
-                  <TableRow key={timesheet.id}>
+                  <TableRow
+                    key={timesheet.id}
+                    className="cursor-pointer hover:bg-orange-50"
+                    onClick={() => handleRowClick(timesheet)}
+                  >
                     <TableCell>{timesheet.date}</TableCell>
                     <TableCell className="font-medium">{timesheet.name}</TableCell>
                     <TableCell>{timesheet.timeIn}</TableCell>
@@ -299,22 +314,7 @@ export function TimesheetsTable() {
                     <TableCell>{timesheet.scheduled}</TableCell>
                     <TableCell>{timesheet.overtime}</TableCell>
                     <TableCell>{timesheet.late}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => console.log("Edit", timesheet.id)}>Edit</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => console.log("View Details", timesheet.id)}>
-                            View Details
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+                    <TableCell></TableCell>
                   </TableRow>
                 ))
               ) : (
@@ -328,6 +328,13 @@ export function TimesheetsTable() {
           </Table>
         </div>
       )}
+
+      {/* Modal for timesheet details */}
+      <TimesheetDetailsModal
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        timesheet={selectedTimesheet}
+      />
 
       <div className="flex items-center justify-between space-x-2 py-4">
         <div className="text-sm text-muted-foreground">

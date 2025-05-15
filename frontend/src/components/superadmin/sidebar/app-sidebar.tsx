@@ -12,7 +12,7 @@ import {
   User,
 } from "lucide-react";
 
-import { NavMain } from "@/components/admin/sidebar/nav-main";
+import { NavMain } from "@/components/superadmin/sidebar/nav-main";
 
 import {
   Sidebar,
@@ -50,7 +50,7 @@ const data = {
     },
     {
       title: "Timesheets",
-      url: "/admin/timesheets",
+      url: "/super-admin/timesheets",
       icon: CalendarCheck,
     },
     {

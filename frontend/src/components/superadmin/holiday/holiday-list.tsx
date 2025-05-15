@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button"
 import { MoreHorizontal, ChevronLeft, ChevronRight, Filter } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { EditHolidayDialog } from "@/components/admin/holiday/edit-holiday-dialog"
-import { DeleteHolidayDialog } from "@/components/admin/holiday/delete-holiday-dialog"
+import { EditHolidayDialog } from "@/components/superadmin/holiday/edit-holiday-dialog"
+import { DeleteHolidayDialog } from "@/components/superadmin/holiday/delete-holiday-dialog"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent } from "@/components/ui/card"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { HolidayFilters } from "@/components/admin/holiday/holiday-filters"
+import { HolidayFilters } from "@/components/superadmin/holiday/holiday-filters"
 
 // Mock holiday data
 const holidays = [
