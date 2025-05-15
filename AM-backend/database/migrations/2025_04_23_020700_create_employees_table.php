@@ -10,9 +10,9 @@ return new class extends Migration
     {
         Schema::create('employees', function (Blueprint $table) {
             $table->bigIncrements('emp_id');
-            $table->unsignedBigInteger('dept_id')->nullable();
-            $table->unsignedBigInteger('job_position_id')->nullable();
-            $table->unsignedBigInteger('address_id')->nullable();
+            $table->string('department')->nullable();
+            $table->string('job_position')->nullable();
+            $table->string('address')->nullable();
             $table->string('first_name');
             $table->string('middle_name')->nullable();
             $table->string('last_name');

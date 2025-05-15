@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::table('timesheets', function (Blueprint $table) {
             $table->foreign('emp_id')->references('emp_id')->on('employees')->onDelete('cascade');
-            $table->foreign('approved_by')->references('user_id')->on('users')->onDelete('set null');
         });
     }
 
@@ -24,7 +23,6 @@ return new class extends Migration
     {
         Schema::table('timesheets', function (Blueprint $table) {
             $table->dropForeign(['emp_id']);
-            $table->dropForeign(['approved_by']);
         });
     }
 };

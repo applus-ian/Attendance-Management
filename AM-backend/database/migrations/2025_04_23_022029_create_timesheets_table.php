@@ -14,12 +14,12 @@ return new class extends Migration
         Schema::create('timesheets', function (Blueprint $table) {
             $table->id('timesheet_id');
             $table->unsignedBigInteger('emp_id');
-            $table->date('date');
             $table->decimal('total_hrs_work', 5, 2);
-            $table->decimal('break_duration', 5, 2);
-            $table->decimal('overtime_hrs', 5, 2)->nullable();
+            $table->decimal('total_overtime_hrs', 5, 2)->nullable();
             $table->integer('total_lates');
-            $table->unsignedBigInteger('approved_by')->nullable();
+            $table->integer('total_absent');
+            $table->integer('total_present');
+            $table->decimal('scheduled_hrs');
             $table->timestamps();
         });
     }

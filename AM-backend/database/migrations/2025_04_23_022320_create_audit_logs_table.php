@@ -14,9 +14,11 @@ return new class extends Migration
         Schema::create('audit_logs', function (Blueprint $table) {
             $table->id('log_id');
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('role_id');
             $table->enum('role', ['employee', 'admin', 'super_admin']);
             $table->enum('action_type', [
+                'View All Request',
+                'View Request',
+                'Submit Request',
                 'Manual Request Approval',
                 'Manual Request Disapproval',
                 'Clock In',
@@ -24,11 +26,12 @@ return new class extends Migration
                 'Create Schedule',
                 'Edit Schedule',
                 'Assign Schedule',
+                'Delete Schedule',
                 'Add Timelog',
                 'Account Configuration'
             ]);
-            $table->string('target_type', 50);
-            $table->unsignedBigInteger('target_id');
+            $table->string('target_type', 50)->nullable();
+            $table->unsignedBigInteger('target_id')->nullable();
             $table->text('description');
             $table->string('ip_address', 45)->nullable();
             $table->timestamps();
