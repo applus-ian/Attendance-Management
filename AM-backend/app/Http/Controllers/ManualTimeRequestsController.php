@@ -16,7 +16,6 @@ class ManualTimeRequestsController extends Controller
     private ManualTimeRequestService $service;
     private AuditLogsService $auditLogsService;
 
-
     public function __construct(ManualTimeRequestService $service, AuditLogsService $auditLogsService)
     {
         $this->service = $service;
@@ -28,7 +27,7 @@ class ManualTimeRequestsController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        if (!$user->user_permissions()->contains('name', 'view_all_request')) {
+        if (!$user->hasPermissionTo('view_all_request')) {
             return response()->json(['message' => 'Ops! Forbidden.'], 403);
         }
 
@@ -47,7 +46,7 @@ class ManualTimeRequestsController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        if (!$user->user_permissions()->contains('name', 'create_request')) {
+        if (!$user->hasPermissionTo('create_request')) {
             return response()->json(['message' => 'Ops! Forbidden.'], 403);
         }
 
@@ -68,12 +67,12 @@ class ManualTimeRequestsController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        if (!$user->user_permissions()->contains('name', 'view_request')) {
+        if (!$user->hasPermissionTo('view_request')) {
             return response()->json(['message' => 'Ops! Forbidden.'], 403);
         }
 
         $this->auditLogsService->log(
-            action: 'View All Request',
+            action: 'View Specific Request',
             type: 'Manual Time Request',
             targetId: $manualRequest->request_id,
             description: 'View Specific Request.'
@@ -87,9 +86,9 @@ class ManualTimeRequestsController extends Controller
         /** @var User $user */
         $user = Auth::user();
         /** @var Employee $employee */
-        $employee = Auth::user()->employee;
+        $employee = $user->employee;
 
-        if (!$user->user_permissions()->contains('name', 'approve_request')) {
+        if (!$user->hasPermissionTo('approve_request')) {
             return response()->json(['message' => 'Ops! Forbidden.'], 403);
         }
 
@@ -110,9 +109,9 @@ class ManualTimeRequestsController extends Controller
         /** @var User $user */
         $user = Auth::user();
         /** @var Employee $employee */
-        $employee = Auth::user()->employee;
+        $employee = $user->employee;
 
-        if (!$user->user_permissions()->contains('name', 'reject_request')) {
+        if (!$user->hasPermissionTo('reject_request')) {
             return response()->json(['message' => 'Ops! Forbidden.'], 403);
         }
 

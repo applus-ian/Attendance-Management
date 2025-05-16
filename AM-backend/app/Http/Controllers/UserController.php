@@ -2,65 +2,45 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\UserRequest;
-use App\Services\UserService;
-use Illuminate\Http\JsonResponse;
 use App\Models\User;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use App\Services\AuditLogsService;
+use App\Services\UserService;
+use App\Http\Resources\UserResource;
 
 class UserController extends Controller
 {
-    use AuthorizesRequests;
-
-    protected $userService;
-    protected $auditLogsService;
-
-    public function __construct(UserService $userService, AuditLogsService $auditLogsService)
+    public function __construct(protected UserService $service)
     {
-        $this->userService = $userService;
-        $this->auditLogsService = $auditLogsService;
+        $this->authorizeResource(User::class, 'user');
     }
 
-    public function index(): JsonResponse
+    public function index()
     {
         $this->authorize('viewAny', User::class);
-        $users = $this->userService->getAll();
-        $this->auditLogsService->log('viewAny', 'User', null, 'Viewed all users');
-        return response()->json($users);
+        return UserResource::collection($this->service->getAllUsers());
     }
 
-    public function store(UserRequest $request): JsonResponse
+    public function show(User $user)
     {
-        $this->authorize('create', User::class);
-        $user = $this->userService->create($request->validated());
-        $this->auditLogsService->log('create', 'User', $user->id, 'Created user');
-        return response()->json($user, 201);
-    }
-
-    public function show($id): JsonResponse
-    {
-        $user = $this->userService->getById($id);
         $this->authorize('view', $user);
-        $this->auditLogsService->log('view', 'User', $user->id, 'Viewed user');
-        return response()->json($user);
+        return new UserResource($user);
     }
 
-    public function update(UserRequest $request, $id): JsonResponse
+    public function setActive(User $user)
     {
-        $user = $this->userService->getById($id);
-        $this->authorize('update', $user);
-        $updatedUser = $this->userService->update($id, $request->validated());
-        $this->auditLogsService->log('update', 'User', $user->id, 'Updated user');
-        return response()->json($updatedUser);
+        $this->authorize('setActive', User::class);
+        return new UserResource($this->service->setActive($user));
     }
 
-    public function destroy($id): JsonResponse
+    public function setInactive(User $user)
     {
-        $user = $this->userService->getById($id);
+        $this->authorize('setInactive', User::class);
+        return new UserResource($this->service->setInactive($user));
+    }
+
+    public function destroy(User $user)
+    {
         $this->authorize('delete', $user);
-        $this->userService->delete($id);
-        $this->auditLogsService->log('delete', 'User', $user->id, 'Deleted user');
-        return response()->json(['message' => 'User deleted']);
+        $this->service->deleteUser($user);
+        return response()->json(['message' => 'User deleted successfully']);
     }
 }
