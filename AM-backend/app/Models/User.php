@@ -2,24 +2,26 @@
 
 namespace App\Models;
 
-use App\Models\Role;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, Notifiable, HasFactory;
+    use HasApiTokens, Notifiable, HasFactory, HasRoles;
 
     protected $primaryKey = 'user_id';
 
     protected $fillable = [
         'email',
         'password',
+        'emp_id',
+        'is_active',
+        'name',
     ];
 
     protected $hidden = [
@@ -27,28 +29,42 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    public function employee(): BelongsTo
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
+    // Optional if you're using api guard for permissions
+    // protected $guard_name = 'api';
+
+    /**
+     * Relationship with Employee
+     */
+    public function employee(): HasOne
     {
-        return $this->belongsTo(Employee::class, 'emp_id');
+        return $this->hasOne(Employee::class, 'emp_id', 'emp_id');
     }
 
-    public function roles(): BelongsToMany
-    {
-        return $this->belongsToMany(Role::class, 'user_role', 'user_id', 'role_id');
-    }
-
-    public function user_permissions()
-    {
-        return $this->roles()
-            ->with('permissions')
-            ->get()
-            ->pluck('permissions')
-            ->flatten()
-            ->unique('permission_id');
-    }
-
+    /**
+     * Relationship with Audit Logs
+     */
     public function auditLogs(): HasMany
     {
         return $this->hasMany(AuditLogs::class, 'user_id');
+    }
+
+    /**
+     * Shortcut: Get all permissions from assigned roles and direct permissions.
+     */
+    public function allPermissions()
+    {
+        return $this->getAllPermissions();
+    }
+
+    /**
+     * Optional Shortcut: Check permission.
+     */
+    public function hasPermission(string $permission): bool
+    {
+        return $this->hasPermissionTo($permission);
     }
 }

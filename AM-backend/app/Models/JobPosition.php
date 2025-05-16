@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class JobPosition extends Model
 {
     use HasFactory;
+
     protected $primaryKey = 'job_position_id';
 
     public function employees(): HasMany

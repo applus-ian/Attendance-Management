@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Employee extends Model
 {
-
     use Notifiable, HasFactory;
 
     protected $primaryKey = 'emp_id';
@@ -34,9 +33,12 @@ class Employee extends Model
         'profile_pic_url'
     ];
 
+    /**
+     * Relationship to the associated User.
+     */
     public function user()
     {
-        return $this->hasOne(User::class, 'emp_id');
+        return $this->belongsTo(User::class, 'emp_id', 'emp_id');
     }
 
     public function department()
@@ -77,5 +79,23 @@ class Employee extends Model
     public function address()
     {
         return $this->belongsTo(EmployeeAddress::class, 'address_id', 'address_id');
+    }
+
+    /**
+     * Spatie Role Helpers (delegated to User model)
+     */
+    public function getRoleNamesAttribute()
+    {
+        return $this->user?->getRoleNames() ?? collect();
+    }
+
+    public function getAllPermissionsAttribute()
+    {
+        return $this->user?->getAllPermissions() ?? collect();
+    }
+
+    public function hasPermissionTo($permission)
+    {
+        return $this->user?->hasPermissionTo($permission) ?? false;
     }
 }

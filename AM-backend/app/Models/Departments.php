@@ -10,7 +10,7 @@ class Departments extends Model
     use HasFactory;
     protected $primaryKey = 'dept_id';
 
-    protected $fillable = ['dept_name', 'manager_id'];
+    protected $fillable = ['emp_id', 'name', 'manager'];
 
     public function manager()
     {

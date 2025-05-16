@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Permission extends Model
-{   
+{
     use HasFactory;
 
     protected $primaryKey = 'permission_id';
@@ -20,6 +20,6 @@ class Permission extends Model
 
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class, 'role_permissions', 'permission_id', 'role_id');
+        return $this->belongsToMany(Role::class, 'role_permissions', 'permission_id', 'id');
     }
 }

@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Permission\Traits\HasRoles;
 
 class AuditLogs extends Model
 {
-    use HasFactory;
+    use HasFactory, HasRoles;
     protected $primaryKey = 'log_id';
 
     protected $fillable = [
@@ -28,6 +29,6 @@ class AuditLogs extends Model
 
     public function role(): BelongsTo
     {
-        return $this->belongsTo(Role::class, 'role_id');
+        return $this->belongsTo(Role::class, 'id');
     }
 }

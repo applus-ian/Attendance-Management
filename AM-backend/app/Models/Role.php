@@ -12,7 +12,7 @@ class Role extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'role_id';
+    protected $primaryKey = 'id';
 
     protected $fillable = [
         'name',
@@ -21,16 +21,16 @@ class Role extends Model
 
     public function permissions(): BelongsToMany
     {
-        return $this->belongsToMany(Permission::class, 'role_permissions', 'role_id', 'permission_id');
+        return $this->belongsToMany(Permission::class, 'role_permissions', 'id', 'permission_id');
     }
 
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'user_role', 'role_id', 'user_id');
+        return $this->belongsToMany(User::class, 'user_role', 'id', 'user_id');
     }
 
     public function auditLogs(): HasMany
     {
-        return $this->hasMany(AuditLogs::class, 'role_id');
+        return $this->hasMany(AuditLogs::class, 'id');
     }
 }

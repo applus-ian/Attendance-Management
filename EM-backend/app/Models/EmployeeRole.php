@@ -19,6 +19,6 @@ class EmployeeRole extends Model
      */
     protected $fillable = [
         'employee_id',
-        'role_id',
+        'id',
     ];
 }
