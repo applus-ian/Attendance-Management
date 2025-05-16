@@ -14,9 +14,9 @@ class EmployeeResource extends JsonResource
         return [
             'emp_id' => $this->emp_id,
             'user_id' => $this->user_id,
-            'dept_id' => $this->dept_id,
-            'job_position_id' => $this->job_position_id,
-            'address_id' => $this->address_id,
+            'department' => $this->name,
+            'job_position' => $this->title,
+            'address' => $this->city_or_municipality,
             'first_name' => $this->first_name,
             'middle_name' => $this->middle_name,
             'last_name' => $this->last_name,
