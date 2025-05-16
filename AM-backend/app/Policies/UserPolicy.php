@@ -6,28 +6,28 @@ use App\Models\User;
 
 class UserPolicy
 {
-    public function viewAll(User $user): bool
+    public function viewAny(User $user): bool
     {
-        return $user->permissions->contains('name', 'view_all_user');
+        return $user->can('view users');
     }
 
     public function view(User $user, User $model): bool
     {
-        return $user->permissions->contains('name', 'view_user') || $user->id === $model->id;
+        return $user->can('view user') || $user->id === $model->id;
     }
 
-    public function create(User $user): bool
+    public function setActive(User $user): bool
     {
-        return $user->permissions->contains('name', 'create_user');
+        return $user->can('set active');
     }
 
-    public function update(User $user, User $model): bool
+    public function setInactive(User $user): bool
     {
-        return $user->permissions->contains('name', 'update_user') && $user->id !== $model->id;
+        return $user->can('set inactive');
     }
 
     public function delete(User $user, User $model): bool
     {
-        return $user->permissions->contains('name', 'delete_user') && $user->id !== $model->id;
+        return $user->can('delete user') && $model->is_active === false;
     }
 }

@@ -9,16 +9,16 @@ class TimesheetPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->permissions->contains('name', 'view_any_timesheet');
+        return $user->can('view timesheets');
     }
 
     public function view(User $user, Timesheets $timesheet): bool
     {
-        return $user->permissions->contains('name', 'view_timesheet') || $user->id === $timesheet->emp_id;
+        return $user->can('view timesheet') || $user->id === $timesheet->emp_id;
     }
 
     public function create(User $user): bool
     {
-        return $user->permissions->contains('name', 'create_timesheet');
+        return $user->can('create timesheet');
     }
 }

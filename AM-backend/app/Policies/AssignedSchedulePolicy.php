@@ -9,26 +9,26 @@ class AssignedSchedulePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->permissions->contains('name', 'view_any_assigned_schedule');
+        return $user->can('view assigned schedules');
     }
 
     public function view(User $user, AssignedSchedules $assignedSchedule): bool
     {
-        return $user->permissions->contains('name', 'view_assigned_schedule');
+        return $user->can('view assigned schedule');
     }
 
     public function create(User $user): bool
     {
-        return $user->permissions->contains('name', 'create_assigned_schedule');
+        return $user->can('create assigned schedule');
     }
 
     public function update(User $user, AssignedSchedules $assignedSchedule): bool
     {
-        return $user->permissions->contains('name', 'update_assigned_schedule');
+        return $user->can('update assigned schedule');
     }
 
     public function delete(User $user, AssignedSchedules $assignedSchedule): bool
     {
-        return $user->permissions->contains('name', 'delete_assigned_schedule');
+        return $user->can('delete assigned schedule');
     }
 }

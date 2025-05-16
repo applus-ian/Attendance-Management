@@ -9,26 +9,26 @@ class TimelogPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->permissions->contains('name', 'view_any_timelog');
+        return $user->can('view timelogs');
     }
 
     public function view(User $user, Timelogs $timelog): bool
     {
-        return $user->permissions->contains('name', 'view_timelog');
+        return $user->can('view timelog');
     }
 
     public function create(User $user): bool
     {
-        return $user->permissions->contains('name', 'create_timelog');
+        return $user->can('create timelog');
     }
 
     public function update(User $user, Timelogs $timelog): bool
     {
-        return $user->permissions->contains('name', 'update_timelog');
+        return $user->can('update timelog');
     }
 
     public function delete(User $user, Timelogs $timelog): bool
     {
-        return $user->permissions->contains('name', 'delete_timelog');
+        return $user->can('delete timelog');
     }
 }

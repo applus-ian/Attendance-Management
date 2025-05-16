@@ -9,26 +9,26 @@ class ManualTimeRequestPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->user_permissions()->contains('name', 'view_all_request');
+        return $user->can('view requests');
     }
 
     public function view(User $user, ManualTimeRequests $timerequest): bool
     {
-        return $user->user_permissions->contains('name', 'view_request');
+        return $user->can('view request');
     }
 
     public function create(User $user): bool
     {
-        return $user->user_permissions()->contains('name', 'create_request');
+        return $user->can('create requests');
     }
 
     public function approve(User $user, ManualTimeRequests $timerequest): bool
     {
-        return $user->user_permissions->contains('name', 'approve_request');
+        return $user->can('approve requests');
     }
 
     public function reject(User $user, ManualTimeRequests $timerequest): bool
     {
-        return $user->user_permissions->contains('name', 'reject_request');
+        return $user->can('reject requests');
     }
 }
