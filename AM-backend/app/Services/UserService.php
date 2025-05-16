@@ -6,32 +6,30 @@ use App\Models\User;
 
 class UserService
 {
-    public function getAll()
+    public function getAllUsers()
     {
-        return User::with(['employee', 'roles'])->get();
+        return User::all();
     }
 
-    public function create(array $data)
+    public function getUserById(int $id): ?User
     {
-        return User::create($data);
+        return User::findOrFail($id);
     }
 
-    public function getById($id)
+    public function setActive(User $user): User
     {
-        return User::with(['employee', 'roles'])->findOrFail($id);
-    }
-
-    public function update($id, array $data)
-    {
-        $user = User::findOrFail($id);
-        $user->update($data);
+        $user->update(['is_active' => true]);
         return $user;
     }
 
-    public function delete($id)
+    public function setInactive(User $user): User
     {
-        $user = User::findOrFail($id);
+        $user->update(['is_active' => false]);
+        return $user;
+    }
+
+    public function deleteUser(User $user): void
+    {
         $user->delete();
-        return $user;
     }
 }
