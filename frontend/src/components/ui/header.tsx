@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { FaUserTie, FaUser } from "react-icons/fa";
 import Image from "next/image";
+import { ModeToggle } from "./light-dark-mode";
 
 interface SiteHeaderProps {
     role: string;
@@ -30,7 +31,7 @@ export function SiteHeader({ role, setRole }: SiteHeaderProps) {
     }, []);
 
     return (
-        <header className="flex items-center justify-between px-6 py-4 bg-white shadow-sm">
+        <header className="flex items-center justify-between px-6 py-4 text-black dark:text-white">
             <div className="flex items-center">
                 <Image
                     src="/logo.svg"
@@ -39,47 +40,49 @@ export function SiteHeader({ role, setRole }: SiteHeaderProps) {
                     height={32}
                 />
             </div>
-
-            <div className="relative" ref={dropdownRef}>
-                <button
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="flex items-center justify-between w-32 px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
-                >
-                    <span className="text-sm">{role || "Employee"}</span>
-                    <svg
-                        className={`w-4 h-4 ml-2 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+            <div className="flex items-center gap-4">
+                <ModeToggle />
+                <div className="relative" ref={dropdownRef}>
+                    <button
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="flex items-center justify-between w-32 px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
                     >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                </button>
+                        <span className="text-sm">{role || "Employee"}</span>
+                        <svg
+                            className={`w-4 h-4 ml-2 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
 
-                {isOpen && (
-                    <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg py-1 z-10">
-                        <button
-                            className={`flex items-center w-full px-4 py-2 text-sm ${role === "Employee" ? 'text-orange-500 bg-orange-50' : 'text-gray-700 hover:bg-gray-50'}`}
-                            onClick={() => {
-                                setRole("Employee");
-                                setIsOpen(false);
-                            }}
-                        >
-                            <FaUser className="mr-2" />
-                            Employee
-                        </button>
-                        <button
-                            className={`flex items-center w-full px-4 py-2 text-sm ${role === "Admin" ? 'text-orange-500 bg-orange-50' : 'text-gray-700 hover:bg-gray-50'}`}
-                            onClick={() => {
-                                setRole("Admin");
-                                setIsOpen(false);
-                            }}
-                        >
-                            <FaUserTie className="mr-2" />
-                            Admin
-                        </button>
-                    </div>
-                )}
+                    {isOpen && (
+                        <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg py-1 z-10">
+                            <button
+                                className={`flex items-center w-full px-4 py-2 text-sm ${role === "Employee" ? 'text-orange-500 bg-orange-50' : 'text-gray-700 hover:bg-gray-50'}`}
+                                onClick={() => {
+                                    setRole("Employee");
+                                    setIsOpen(false);
+                                }}
+                            >
+                                <FaUser className="mr-2" />
+                                Employee
+                            </button>
+                            <button
+                                className={`flex items-center w-full px-4 py-2 text-sm ${role === "Admin" ? 'text-orange-500 bg-orange-50' : 'text-gray-700 hover:bg-gray-50'}`}
+                                onClick={() => {
+                                    setRole("Admin");
+                                    setIsOpen(false);
+                                }}
+                            >
+                                <FaUserTie className="mr-2" />
+                                Admin
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </header>
     );

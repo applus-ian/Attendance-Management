@@ -24,7 +24,7 @@ export function ResetForm({
                 </Button>
             </div>
             <a
-                href="#"
+                href=""
                 className="text-sm underline-offset-4 hover:underline text-center"
             >
                 Sign in

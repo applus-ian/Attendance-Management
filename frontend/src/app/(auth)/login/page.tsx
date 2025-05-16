@@ -9,7 +9,7 @@ export default function LoginPage() {
     const [role, setRole] = useState("");
 
     return (
-        <div className="flex min-h-screen flex-col bg-white">
+        <div className="bg-white text-black dark:bg-zinc-900 dark:text-white">
             <SiteHeader role={role} setRole={setRole} />
             <main className="flex-1">
                 <div className="grid min-h-screen lg:grid-cols-2">
@@ -17,8 +17,8 @@ export default function LoginPage() {
                         <div className="flex flex-1 items-center justify-center">
                             {role && (
                                 <div className="w-full max-w-sm text-center">
-                                    <h1 className="text-2xl font-bold">Login</h1>
-                                    <p className="text-muted-foreground text-sm text-balance">
+                                    <h1 className="text-3xl font-bold text-black dark:text-white">Login</h1>
+                                    <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
                                         Enter your {role.toLowerCase()} credentials
                                     </p>
                                     {role === "Employee" ? (

@@ -47,7 +47,7 @@ export function EmployeeForm({
         </Button>
       </div>
       <a
-        href="#"
+        href="/reset"
         className="text-sm underline-offset-4 hover:underline text-center"
       >
         Forgot your password?

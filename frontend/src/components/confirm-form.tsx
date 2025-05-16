@@ -30,7 +30,7 @@ export function ConfirmForm({
                 </Button>
             </div>
             <a
-                href="#"
+                href="/login"
                 className="text-sm underline-offset-4 hover:underline text-center"
             >
                 Sign in
