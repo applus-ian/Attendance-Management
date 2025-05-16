@@ -23,7 +23,7 @@ return new class extends Migration
     {
         Schema::table('audit_logs', function (Blueprint $table) {
             $table->dropForeign(['user_id']);
-            $table->dropForeign(['role_id']);
+            $table->dropForeign(['id']);
         });
     }
 };
