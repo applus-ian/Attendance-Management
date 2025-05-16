@@ -5,18 +5,16 @@ namespace Database\Factories;
 use App\Models\Employee;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Departments>
- */
-class DepartmentsFactory extends Factory
+class DepartmentFactory extends Factory
 {
-    protected $model = \App\Models\Departments::class;
-
     public function definition(): array
     {
+        $employee = Employee::inRandomOrder()->first();
+
         return [
-            'name' => $this->faker->company,
-            // 'manager_id' => Employee::factory(),
+            'emp_id' => $employee->emp_id,
+            'manager' => "{$employee->first_name} {$employee->last_name}",
+            'name' => $this->faker->unique()->company(),
         ];
     }
 }
