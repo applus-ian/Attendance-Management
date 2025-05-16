@@ -31,7 +31,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
 #User Management
 Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('users', UserController::class);
+    Route::get('/users', [UserController::class, 'index']);
+    Route::get('/users/{user}', [UserController::class, 'show']);
+    Route::delete('/users/{user}', [UserController::class, 'destroy']);
+    Route::patch('/users/{user}/activate', [UserController::class, 'setActive']);
+    Route::patch('/users/{user}/deactivate', [UserController::class, 'setInactive']);
 });
 
 # Manual Time Requests
