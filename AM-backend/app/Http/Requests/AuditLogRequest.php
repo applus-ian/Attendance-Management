@@ -23,7 +23,7 @@ class AuditLogRequest extends FormRequest
     {
         return [
             'user_id'     => 'required|exists:users,user_id',
-            'role_id'     => 'required|exists:roles,role_id',
+            'id'     => 'required|exists:roles,id',
             'role'        => 'required|in:employee,admin,super_admin',
             'action_type' => 'required|in:Manual Request Approval,Manual Request Disapproval,Clock In,Clock Out,Create Schedule,Edit Schedule,Assign Schedule,Add Timelog,Account Configuration',
             'target_type' => 'required|string|max:50',
