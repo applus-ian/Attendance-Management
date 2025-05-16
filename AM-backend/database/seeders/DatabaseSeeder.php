@@ -27,13 +27,13 @@ class DatabaseSeeder extends Seeder
             EmployeeAddressSeeder::class,
             DepartmentSeeder::class,
             EmployeeSeeder::class,
-            UserSeeder::class,
-            RoleSeeder::class,
             PermissionSeeder::class,
-            RolePermissionSeeder::class,
-            UserRoleSeeder::class,
             ScheduleSeeder::class,
             AssignedScheduleSeeder::class,
+            // UserSeeder::class,
+            // RoleSeeder::class,
+            // RolePermissionSeeder::class,
+            // UserRoleSeeder::class,
             // NotificationSeeder::class,
         ]);
     }

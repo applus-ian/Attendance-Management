@@ -15,6 +15,6 @@ class UserRoleSeeder extends Seeder
 
         $role = Role::where('name', 'admin')->first();
 
-        $user->roles()->attach($role->role_id);
+        $user->roles()->attach($role->id);
     }
 }

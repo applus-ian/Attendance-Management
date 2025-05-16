@@ -2,37 +2,51 @@
 
 namespace Database\Seeders;
 
-use App\Models\Permission;
 use Illuminate\Database\Seeder;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+use App\Models\User;
 
 class PermissionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        Permission::factory()->create([
-            'name' => 'create_timelog'
+
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        $permissions = [
+            'view users',
+            'view user',
+            'delete users',
+            'set active',
+            'set inactive',
+            'view roles',
+            'assign roles',
+            'create request',
+            'approve request',
+            'reject request',
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
+        }
+
+        $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
+        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+        $employeeRole = Role::firstOrCreate(['name' => 'employee']);
+
+
+        $superAdminRole->syncPermissions(Permission::all());
+        $adminRole->syncPermissions([
+            'view users',
+            'set active',
+            'set inactive',
+            'view roles',
         ]);
-        Permission::factory()->create([
-            'name' => 'view_all_request'
-        ]);
-        Permission::factory()->create([
-            'name' => 'view_request'
-        ]);
-        Permission::factory()->create([
-            'name' => 'create_request'
-        ]);
-        Permission::factory()->create([
-            'name' => 'approve_request'
-        ]);
-        Permission::factory()->create([
-            'name' => 'reject_request'
-        ]);
-        Permission::factory()->create([
-            'name' => 'update_schedule'
-        ]);
+        $employeeRole->syncPermissions(['view user']);
+
+        $superAdmin = User::where('email', 'john1@example.com')->first();
+
+        $superAdmin->assignRole($superAdminRole);
     }
 }

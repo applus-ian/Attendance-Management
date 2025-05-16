@@ -2,42 +2,67 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use App\Models\Employee;
 use App\Models\Departments;
 use App\Models\JobPosition;
 use App\Models\EmployeeAddress;
 use Illuminate\Database\Seeder;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class EmployeeSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $department = Departments::where('name', 'IT')->first();
-        $jobPosition = JobPosition::where('title', 'Manager')->first();
-        $address = EmployeeAddress::where('province', 'Cebu')->first();
-        Employee::factory()->create([
-            'first_name' => 'John',
-            'middle_name' => 'Doe',
-            'last_name' => 'Smith',
-            'suffix' => 'Jr.',
-            'email' => 'john1@example.com',
+        // Ensure required Role exists (or create one)
+        $role = Role::firstOrCreate(['name' => 'super_admin']);
+
+        // Ensure JobPosition exists
+        $backendDev = JobPosition::firstOrCreate(['title' => 'Backend Developer']);
+
+        // Ensure Department exists
+        $engineeringDept = Departments::firstOrCreate(['name' => 'Engineering']);
+
+        // Create Address
+        $address = EmployeeAddress::create([
+            'province' => 'Metro Manila',
+            'city_or_municipality' => 'Quezon City',
+            'barangay' => 'Commonwealth',
+            'street' => '123 Main St',
+            'postal_code' => '1121',
+        ]);
+
+        // Create Employee
+        $employee = Employee::create([
+            'department' => $engineeringDept->name,
+            'job_position' => $backendDev->title,
+            'address' => $address->city_or_municipality,
+            'first_name' => 'Juan',
+            'middle_name' => 'Santos',
+            'last_name' => 'Dela Cruz',
+            'suffix' => null,
             'gender' => 'male',
-            'dob' => '1990-01-01',
+            'dob' => '1990-05-15',
             'civil_status' => 'single',
-            'nationality' => 'American',
-            'phone_number' => '123-456-7890',
-            'emergency_contact1' => '987-654-3210',
-            'emergency_contact2' => '654-321-0987',
-            'date_hired' => '2020-01-01',
+            'nationality' => 'Filipino',
+            'phone_number' => '09171234567',
+            'emergency_contact1' => '09181234567',
+            'emergency_contact2' => '09191234567',
+            'date_hired' => '2023-01-10',
             'status' => 'active',
-            'profile_pic_url' => 'https://example.com/profile-pic.jpg',
-            'dept_id' => $department->dept_id,
-            'job_position_id' => $jobPosition->job_position_id,
-            'address_id' => $address->id,
+            'email' => 'john1@example.com',
+            'profile_pic_url' => null,
+        ]);
+
+        // Create associated User account with role attribute set
+        $user = User::create([
+            'emp_id' => $employee->emp_id,
+            'email' => $employee->email,
+            'password' => Hash::make('password123'),
+            'is_active' => true,
+            'name' => $employee->first_name,
+            'role' => $role->name,
         ]);
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+use App\Models\Department;
 use App\Models\Departments;
 use Illuminate\Database\Seeder;
 
@@ -10,10 +10,24 @@ class DepartmentSeeder extends Seeder
 {
     public function run(): void
     {
-        // $employee = User::where('role', 'admin')->first();
+        Departments::create([
+            'manager' => 'Juan Dela Cruz',
+            'name' => 'Engineering',
+        ]);
 
-        Departments::factory()->create([
-            'name' => 'IT'
+        Departments::create([
+            'manager' => 'Maria Clara',
+            'name' => 'HR',
+        ]);
+
+        Departments::create([
+            'manager' => 'Jose Rizal',
+            'name' => 'Admin',
+        ]);
+
+        Departments::create([
+            'manager' => 'Andres Bonifacio',
+            'name' => 'IT Support',
         ]);
     }
 }
