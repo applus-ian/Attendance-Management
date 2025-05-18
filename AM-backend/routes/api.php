@@ -19,6 +19,7 @@ Route::controller(AuthController::class)
         Route::post('/login', 'login');
         Route::middleware('auth:sanctum')->group(function () {
             Route::post('/logout', 'logout');
+            Route::get('/me', 'me');
         });
     });
 

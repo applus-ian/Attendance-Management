@@ -21,9 +21,12 @@ class AuthService
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        $role = $user->getRoleNames();
+
         return [
             'user' => $user,
-            'token' => $token
+            'token' => $token,
+            'role' => $role
         ];
     }
 
@@ -31,5 +34,18 @@ class AuthService
     {
         $user->currentAccessToken()->delete();
         return ['message' => 'User logged out'];
+    }
+
+    public function me()
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        return response()->json([
+            'id' => $user->user_id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->getRoleNames()
+        ]);
     }
 }
