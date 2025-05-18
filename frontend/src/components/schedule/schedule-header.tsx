@@ -2,9 +2,8 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { PlusCircle } from "lucide-react"
-import { AddScheduleDialog } from "@/components/schedule/add-schedule-dialog"
+import { ShiftManagementModal } from "@/components/modal/schedule/shift-management"
 import { ScheduleList } from "@/components/schedule/schedule-list"
 import { HolidayList } from "@/components/holiday/holiday-list"
 import { AddHolidayDialog } from "@/components/holiday/add-holiday-dialog"
@@ -16,48 +15,58 @@ export function ScheduleHeader() {
 
   return (
     <div className="mb-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold">Schedule</h1>
+      {/* Tabs and Button in one row */}
+      <h1 className="text-2xl font-semibold mb-6">Schedules</h1>
+      <div className="flex items-center justify-between mb-6">
+        {/* Custom Tab Bar */}
+        <div className="bg-gray-100 rounded-xl flex p-1">
+          <button
+            onClick={() => setActiveTab("schedules")}
+            className={`px-6 py-2 rounded-xl transition-all font-semibold ${
+              activeTab === "schedules"
+                ? "bg-white shadow text-black"
+                : "bg-transparent text-gray-500"
+            }`}
+          >
+            Schedules
+          </button>
+          <button
+            onClick={() => setActiveTab("holidays")}
+            className={`px-6 py-2 rounded-xl transition-all font-semibold ${
+              activeTab === "holidays"
+                ? "bg-white shadow text-black"
+                : "bg-transparent text-gray-500"
+            }`}
+          >
+            Holidays
+          </button>
+        </div>
+        {/* Add New Button */}
         {activeTab === "schedules" ? (
           <Button
             onClick={() => setIsAddScheduleDialogOpen(true)}
-            className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto"
+            className="bg-orange-500 hover:bg-orange-600 text-white font-medium ml-4"
           >
             <PlusCircle className="mr-2 h-4 w-4" /> Add New Schedule
           </Button>
         ) : (
           <Button
             onClick={() => setIsAddHolidayDialogOpen(true)}
-            className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto"
+            className="bg-orange-500 hover:bg-orange-600 text-white font-medium ml-4"
           >
             <PlusCircle className="mr-2 h-4 w-4" /> Add New Holiday
           </Button>
         )}
       </div>
 
-      <Tabs defaultValue="schedules" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="mb-6 w-full sm:w-auto">
-          <TabsTrigger
-            value="schedules"
-            className={`flex-1 sm:flex-none ${activeTab === "schedules" ? "bg-muted" : ""}`}
-          >
-            Schedules
-          </TabsTrigger>
-          <TabsTrigger value="holidays" className={`flex-1 sm:flex-none ${activeTab === "holidays" ? "bg-muted" : ""}`}>
-            Holidays
-          </TabsTrigger>
-        </TabsList>
+      {/* Tab Content */}
+      {activeTab === "schedules" ? (
+        <ScheduleList />
+      ) : (
+        <HolidayList />
+      )}
 
-        <TabsContent value="schedules">
-          <ScheduleList />
-        </TabsContent>
-
-        <TabsContent value="holidays">
-          <HolidayList />
-        </TabsContent>
-      </Tabs>
-
-      <AddScheduleDialog open={isAddScheduleDialogOpen} onOpenChange={setIsAddScheduleDialogOpen} />
+      <ShiftManagementModal />
       <AddHolidayDialog open={isAddHolidayDialogOpen} onOpenChange={setIsAddHolidayDialogOpen} />
     </div>
   )
