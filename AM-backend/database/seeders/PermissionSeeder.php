@@ -1,0 +1,96 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+use App\Models\User;
+
+class PermissionSeeder extends Seeder
+{
+    public function run(): void
+    {
+
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        $permissions = [
+            'view users',
+            'view user',
+            'set active',
+            'set inactive',
+            'delete user',
+            'view timelogs',
+            'view timelog',
+            'clock in',
+            'clock out',
+            'view timesheets',
+            'view timesheet',
+            'create timesheet',
+            'view schedules',
+            'view schedule',
+            'create schedule',
+            'update schedule',
+            'delete schedule',
+            'view requests',
+            'view request',
+            'create requests',
+            'approve requests',
+            'reject requests',
+            'view auditlogs',
+            'view auditlog',
+            'create auditlogs',
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
+        }
+
+        $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
+        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+        $employeeRole = Role::firstOrCreate(['name' => 'employee']);
+
+
+        $superAdminRole->syncPermissions(Permission::all());
+        $adminRole->syncPermissions([
+            'view users',
+            'view user',
+            'set active',
+            'set inactive',
+            'delete user',
+            'view timelogs',
+            'view timelog',
+            'clock in',
+            'clock out',
+            'view timesheets',
+            'view timesheet',
+            'create timesheet',
+            'view schedules',
+            'view schedule',
+            'create schedule',
+            'update schedule',
+            'delete schedule',
+            'view requests',
+            'view request',
+            'create requests',
+            'approve requests',
+            'reject requests',
+            'create auditlogs'
+
+        ]);
+        $employeeRole->syncPermissions([
+            'view user',
+            'clock in',
+            'clock out',
+            'view timesheet',
+            'view request',
+            'create requests',
+            'view timelog',
+            'create auditlogs'
+        ]);
+
+        $superAdmin = User::where('email', 'john1@example.com')->first();
+
+        $superAdmin->assignRole($superAdminRole);
+    }
+}

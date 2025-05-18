@@ -1,14 +1,14 @@
 services:
-  # MySQL Database Service
+  # MySQL Database Service (shared by both backends)
   mysql:
     image: mysql:8.0
     container_name: mysql_container
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: laravel_db
-      MYSQL_USER: laravel_user
-      MYSQL_PASSWORD: secret
+      MYSQL_DATABASE: attendance_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
     ports:
       - "3306:3306"
     volumes:
@@ -20,7 +20,7 @@ services:
       interval: 10s
       retries: 5
 
-  # phpMyAdmin Service
+  # phpMyAdmin Service (shared for both DBs)
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin_container
@@ -31,21 +31,21 @@ services:
     environment:
       PMA_HOST: mysql
       MYSQL_ROOT_PASSWORD: root
-      APACHE_SERVER_NAME: localhost # Fix Apache warning
+      APACHE_SERVER_NAME: localhost
     ports:
       - "8081:80"
     networks:
       - app_network
 
-  # Laravel Backend Service
-  backend:
-    build: ./backend
-    container_name: laravel_container
+  # Attendance Management Backend
+  am-backend:
+    build: ./am-backend
+    container_name: am_backend_container
     restart: unless-stopped
     working_dir: /var/www
     volumes:
-      - ./backend:/var/www
-      - /var/www/vendor # Avoid overriding vendor directory
+      - ./am-backend:/var/www
+      - /var/www/vendor
     ports:
       - "8000:8000"
     depends_on:
@@ -59,27 +59,62 @@ services:
       - APP_ENV=local
       - APP_DEBUG=true
       - APP_URL=http://localhost:8000
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=attendance_db
+      - DB_USERNAME=laravel_user
+      - DB_PASSWORD=secret
 
-  # Next.js Frontend Service
+  # Employee Management Backend
+  em-backend:
+    build: ./em-backend
+    container_name: em_backend_container
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./em-backend:/var/www
+      - /var/www/vendor
+    ports:
+      - "8001:8001"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - app_network
+    command: >
+      sh -c "composer install && php artisan serve --host=0.0.0.0 --port=8001"
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_URL=http://localhost:8001
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=employee_db
+      - DB_USERNAME=laravel_user
+      - DB_PASSWORD=secret
+
+  # Frontend (Next.js)
   frontend:
-    build: ./frontend
+    build: ./am-frontend
     container_name: nextjs_container
     restart: unless-stopped
     working_dir: /app
     volumes:
-      - ./frontend:/app
-      - /app/node_modules # Prevent node_modules override issue
+      - ./am-frontend:/app
+      - /app/node_modules
     ports:
       - "3000:3000"
     depends_on:
-      - backend
+      - am-backend
     networks:
       - app_network
     command: "npm run dev"
     environment:
       - NODE_ENV=development
-      - WATCHPACK_POLLING=true # Ensures hot-reloading works
-      - CHOKIDAR_USEPOLLING=true # Fix for Docker volume watching
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
 
 networks:
   app_network:

@@ -1,0 +1,68 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\User;
+use App\Models\Employee;
+use App\Models\Departments;
+use App\Models\JobPosition;
+use App\Models\EmployeeAddress;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
+
+class EmployeeSeeder extends Seeder
+{
+    public function run(): void
+    {
+        // Ensure required Role exists (or create one)
+        $role = Role::firstOrCreate(['name' => 'super_admin']);
+
+        // Ensure JobPosition exists
+        $backendDev = JobPosition::firstOrCreate(['title' => 'Backend Developer']);
+
+        // Ensure Department exists
+        $engineeringDept = Departments::firstOrCreate(['name' => 'Engineering']);
+
+        // Create Address
+        $address = EmployeeAddress::create([
+            'province' => 'Metro Manila',
+            'city_or_municipality' => 'Quezon City',
+            'barangay' => 'Commonwealth',
+            'street' => '123 Main St',
+            'postal_code' => '1121',
+        ]);
+
+        // Create Employee
+        $employee = Employee::create([
+            'department' => $engineeringDept->name,
+            'job_position' => $backendDev->title,
+            'address' => $address->city_or_municipality,
+            'first_name' => 'Juan',
+            'middle_name' => 'Santos',
+            'last_name' => 'Dela Cruz',
+            'suffix' => null,
+            'gender' => 'male',
+            'dob' => '1990-05-15',
+            'civil_status' => 'single',
+            'nationality' => 'Filipino',
+            'phone_number' => '09171234567',
+            'emergency_contact1' => '09181234567',
+            'emergency_contact2' => '09191234567',
+            'date_hired' => '2023-01-10',
+            'status' => 'active',
+            'email' => 'john1@example.com',
+            'profile_pic_url' => null,
+        ]);
+
+        // Create associated User account with role attribute set
+        $user = User::create([
+            'emp_id' => $employee->emp_id,
+            'email' => $employee->email,
+            'password' => Hash::make('password123'),
+            'is_active' => true,
+            'name' => $employee->first_name,
+            'role' => $role->name,
+        ]);
+    }
+}
