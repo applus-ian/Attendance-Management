@@ -18,12 +18,19 @@ class AuthController extends Controller
     public function login(AuthRequest $request)
     {
         $data = $this->authService->login($request->validated());
+
         return response()->json($data, 200);
     }
 
     public function logout(Request $request)
     {
         $data = $this->authService->logout($request->user());
+        return response()->json($data, 200);
+    }
+
+    public function me(Request $request)
+    {
+        $data = $this->authService->me($request->user());
         return response()->json($data, 200);
     }
 }
