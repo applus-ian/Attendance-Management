@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('audit_logs', function (Blueprint $table) {
             $table->id('log_id');
             $table->unsignedBigInteger('user_id');
+            $table->string('first_name');
+            $table->string('last_name');
             $table->enum('role', ['employee', 'admin', 'super_admin']);
             $table->enum('action_type', [
                 'View All Users',
@@ -38,7 +40,11 @@ return new class extends Migration
                 'View All Assigned Schedules',
                 'Assigned Schedule',
                 'Update Assigned Schedule',
-                'Remove Assigned Schedule'
+                'Remove Assigned Schedule',
+                'Sync Holiday',
+                'Delete Holiday',
+                'Update Holiday',
+                'Create Holiday',
             ]);
             $table->string('target_type', 50)->nullable();
             $table->unsignedBigInteger('target_id')->nullable();
