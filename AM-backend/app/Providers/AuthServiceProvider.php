@@ -3,10 +3,12 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Models\Holiday;
 use App\Models\Timelogs;
 use App\Models\AuditLogs;
 use App\Models\Timesheets;
 use App\Policies\UserPolicy;
+use App\Policies\HolidayPolicy;
 use App\Policies\TimelogPolicy;
 use App\Policies\AuditLogPolicy;
 use App\Models\AssignedSchedules;
@@ -26,6 +28,7 @@ class AuthServiceProvider extends ServiceProvider
         Timesheets::class => TimesheetPolicy::class,
         AssignedSchedules::class => AssignedSchedulePolicy::class,
         ManualTimeRequests::class => ManualTimeRequestPolicy::class,
+        Holiday::class => HolidayPolicy::class,
     ];
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Models\Employee;
 use App\Models\AuditLogs;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
@@ -22,6 +23,8 @@ class AuditLogsService
         /** @var User $user */
         $user = Auth::user();
 
+        $employee = Employee::where('emp_id', $user?->emp_id)->first();
+
         // Get role from parameter or fallback to user's first assigned role
         $resolvedRole = $role ?? $user?->getRoleNames()?->first() ?? 'employee';
 
@@ -32,6 +35,8 @@ class AuditLogsService
 
         AuditLogs::create([
             'user_id'     => $userId ?? $user?->user_id,
+            'first_name'  => $employee->first_name,
+            'last_name'   => $employee->last_name,
             'role'        => $resolvedRole,
             'action_type' => $action,
             'target_type' => $type,

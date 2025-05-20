@@ -40,6 +40,11 @@ class PermissionSeeder extends Seeder
             'view auditlogs',
             'view auditlog',
             'create auditlogs',
+            'view holidays',
+            'create custom holiday',
+            'edit holiday',
+            'remove holidays',
+            'sync holidays'
         ];
 
         foreach ($permissions as $permission) {

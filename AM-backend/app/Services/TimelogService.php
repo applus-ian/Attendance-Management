@@ -3,28 +3,51 @@
 namespace App\Services;
 
 use Carbon\Carbon;
+use App\Models\Holiday;
 use App\Models\Employee;
 use App\Models\Timelogs;
 use App\Models\AssignedSchedules;
 use App\Models\ManualTimeRequests;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class TimelogService
 {
-    protected TimesheetService $timesheetService;
-
-    public function __construct(TimesheetService $timesheetService)
+    public function __construct(protected TimesheetService $timesheetService,  protected AuditLogsService $auditLogsService)
     {
         $this->timesheetService = $timesheetService;
+        $this->auditLogsService = $auditLogsService;
     }
 
     public function clockIn(array $data): Timelogs
     {
-        $employee  = Employee::findOrFail($data['emp_id']);
-        $createdBy = $employee ? $employee->first_name . ' ' . $employee->last_name : 'Unknown';
-        $now  = Carbon::now();
-        $today = $now->toDateString();
+        $employee = Employee::findOrFail($data['emp_id']);
+        $today    = Carbon::today()->toDateString();
 
-        $schedule = AssignedSchedules::where('emp_id', $employee->emp_id)
+        // Holiday check: block clock‑in on non‑working holidays
+        $isHoliday = Holiday::whereDate('date', $today)
+            ->where('active', true)
+            ->whereIn('type', [
+                'Regular Holiday',
+                'Special Non‑working Holiday',
+            ])
+            ->exists();
+
+        if ($isHoliday) {
+            $this->auditLogsService->log(
+                action: 'Clock In Blocked',
+                type: 'Timelog',
+                targetId: $employee->emp_id,
+                description: "Attempted clock‑in on holiday {$today}"
+            );
+
+            throw ValidationException::withMessages([
+                'timelog' => ["Cannot clock in on a holiday ({$today})."],
+            ]);
+        }
+
+        $now       = Carbon::now();
+        $schedule  = AssignedSchedules::where('emp_id', $employee->emp_id)
             ->whereDate('assigned_at', $today)
             ->with('schedule')
             ->first()?->schedule;
@@ -36,16 +59,23 @@ class TimelogService
         $timelog = Timelogs::create([
             'emp_id'       => $employee->emp_id,
             'timelog_type' => 'clock_in',
-            'time'        => $now,
-            'created_by'  => $createdBy,
-            'is_present'  => true,
-            'is_absent'   => false,
-            'is_late'     => $isLate,
-            'hrs_worked'  => 0,
+            'time'         => $now,
+            'created_by'   => Auth::user()->user_id,
+            'is_present'   => true,
+            'is_absent'    => false,
+            'is_late'      => $isLate,
+            'hrs_worked'   => 0,
             'overtime_hrs' => 0,
         ]);
 
         $this->timesheetService->store($employee->emp_id);
+
+        $this->auditLogsService->log(
+            action: 'Clock In',
+            type: 'Timelog',
+            targetId: $timelog->timelog_id,
+            description: 'Clocked in successfully'
+        );
 
         return $timelog;
     }
