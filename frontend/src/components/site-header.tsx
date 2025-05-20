@@ -20,9 +20,8 @@ export function SiteHeader() {
 
   return (
     <header
-      className={`sticky top-0 z-50 flex w-full items-center border-b bg-white px-4 lg:px-6 transition-all duration-300 ${
-        isScrolled ? "h-14" : "h-12"
-      }`}
+      className={`sticky top-0 z-50 flex w-full items-center border-b bg-white px-4 lg:px-6 transition-all duration-300 ${isScrolled ? "h-14" : "h-12"
+        }`}
     >
       <div className="flex w-full items-center justify-between">
         {/* Left Section: Sidebar Trigger and Title */}
