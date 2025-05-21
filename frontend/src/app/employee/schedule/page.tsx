@@ -1,15 +1,36 @@
 "use client";
 
+import { useState } from "react";
 import { Bell, FileText, Menu, User, Clock } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import Navbar from "@/components/navbar";
-import { CircularClock } from "@/components/Clock"; 
+import { CircularClock } from "@/components/Clock";
 import Footer from "@/components/Footer";
 import "../../globals.css";
+import ManualRequestModal from "@/components/employee/manual-clock-in/manual-request-clokin";
 
 export default function MySchedulePage() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleManualRequest = async (formData: {
+    requestType: string;
+    startTime: string;
+    endTime: string;
+    date: string;
+    comment: string;
+  }) => {
+    try {
+      console.log('Form submitted:', formData);
+      // Add your form submission logic here
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      // Add error handling (e.g., showing an error toast)
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
@@ -43,11 +64,18 @@ export default function MySchedulePage() {
               <Button
                 variant="outline"
                 className="w-full border hover:bg-orange-600 text-white border-orange-500 text-gray-700 py-3 rounded-md flex items-center justify-center text-lg font-medium"
+                onClick={() => setIsModalOpen(true)}
               >
                 <FileText className="w-6 h-6 mr-2" />
                 Manual Request
               </Button>
             </div>
+            {isModalOpen && (
+              <ManualRequestModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+              />
+            )}
           </div>
         </div>
       </main>
