@@ -41,7 +41,7 @@ class SchedulesController extends Controller
         $this->auditLogsService->log(
             action: 'Create Schedule',
             type: 'Schedule',
-            targetId: $request->sched_id,
+            targetId: $schedule->sched_id,
             description: "Create a Schedule"
         );
         return new ScheduleResource($schedule);

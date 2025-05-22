@@ -6,7 +6,7 @@ use App\Models\Schedules;
 
 class ScheduleService
 {
-    public function store(array $data): Schedules
+    public function store($data): Schedules
     {
         $days = $data['day'] === 'everyday'
             ? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']

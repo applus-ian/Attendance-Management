@@ -8,16 +8,20 @@ use App\Services\AuditLogsService;
 use App\Http\Requests\ManualTimeRequest;
 use App\Services\ManualTimeRequestService;
 use App\Http\Resources\ManualTimeRequestResource;
+use App\Services\TimelogService;
 
 class ManualTimeRequestsController extends Controller
 {
-    private ManualTimeRequestService $service;
-    private AuditLogsService $auditLogsService;
+    protected ManualTimeRequestService $service;
+    protected AuditLogsService $auditLogsService;
+    protected TimelogService $timelogsService;
 
-    public function __construct(ManualTimeRequestService $service, AuditLogsService $auditLogsService)
+
+    public function __construct(ManualTimeRequestService $service, AuditLogsService $auditLogsService, TimelogService $timelogsService)
     {
         $this->service = $service;
         $this->auditLogsService = $auditLogsService;
+        $this->timelogsService = $timelogsService;
     }
 
     public function index()
@@ -51,7 +55,7 @@ class ManualTimeRequestsController extends Controller
 
     public function show(ManualTimeRequests $manualRequest)
     {
-        $this->authorize('view', ManualTimeRequests::class);
+        $this->authorize('view', $manualRequest);
 
         $this->auditLogsService->log(
             action: 'View Specific Request',
@@ -65,9 +69,17 @@ class ManualTimeRequestsController extends Controller
 
     public function approve(ManualTimeRequests $manualTimeRequest, Employee $reviewer)
     {
-        $this->authorize('approve', ManualTimeRequests::class);
+        $this->authorize('approve', $manualTimeRequest);
 
         $updated = $this->service->approve($manualTimeRequest, $reviewer);
+
+        if (in_array($updated->request_type, ['clock_in', 'clock_out'])) {
+            $this->timelogsService->clockIn([
+                'emp_id' => $updated->emp_id,
+                'time'   => $updated->requested_time,
+                'type'   => $updated->request_type,
+            ]);
+        }
 
         $this->auditLogsService->log(
             action: 'Manual Request Approval',
@@ -78,6 +90,7 @@ class ManualTimeRequestsController extends Controller
 
         return new ManualTimeRequestResource($updated);
     }
+
 
     public function reject(ManualTimeRequests $manualTimeRequest, Employee $reviewer)
     {
