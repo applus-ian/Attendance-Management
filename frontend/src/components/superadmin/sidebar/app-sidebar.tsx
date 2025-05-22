@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { usePathname } from "next/navigation"; 
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   FileQuestion,
@@ -25,22 +25,22 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "/super-admin/dashboard", 
+      url: "/super-admin/dashboard",
       icon: LayoutDashboard,
     },
     {
       title: "Requests",
-      url: "/super-admin/requests", 
+      url: "/super-admin/requests",
       icon: FileQuestion,
     },
     {
       title: "Time Logs",
-      url: "/super-admin/time-logs", 
+      url: "/super-admin/time-logs",
       icon: CalendarClock,
     },
     {
       title: "Schedule",
-      url: "/super-admin/schedule", 
+      url: "/super-admin/schedule",
       icon: Coins,
     },
     {
@@ -55,28 +55,29 @@ const data = {
     },
     {
       title: "Account Settings",
-      url: "/super-admin/account-settings", 
+      url: "/super-admin/account-settings",
       icon: User,
     },
-        {
+    {
       title: "Audit Logs",
-      url: "/super-admin/audit-logs", 
+      url: "/super-admin/audit-logs",
       icon: User,
     },
   ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const pathname = usePathname(); 
+  const pathname = usePathname();
   const [activeItem, setActiveItem] = React.useState("");
 
   React.useEffect(() => {
-   
-    const currentItem = data.navMain.find((item) => pathname.startsWith(item.url));
+    const currentItem = data.navMain.find((item) =>
+      pathname.startsWith(item.url)
+    );
     if (currentItem) {
       setActiveItem(currentItem.title);
     }
-  }, [pathname]); 
+  }, [pathname]);
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -90,13 +91,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain
           items={data.navMain}
           activeItem={activeItem}
-          onItemSelect={(item: string) => setActiveItem(item)} 
+          onItemSelect={(item: string) => setActiveItem(item)}
         />
       </SidebarContent>
       <hr />
       <SidebarFooter>
         <div className="flex justify-center items-center w-full h-full">
-          <img src="/togetherbeyond.svg" alt="Together Beyond Logo" className="h-10 w-auto" />
+          <img
+            src="/togetherbeyond.svg"
+            alt="Together Beyond Logo"
+            className="h-10 w-auto"
+          />
         </div>
       </SidebarFooter>
     </Sidebar>
