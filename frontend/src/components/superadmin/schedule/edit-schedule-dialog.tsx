@@ -1,52 +1,81 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "../../ui/radio-group"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useSchedules } from "@/hooks/useSchedules"
 
-interface Schedule {
-  id: string
-  name: string
-  days: string
-  hours: string
-  assigned: number
-  break: string
-}
-
-interface EditScheduleDialogProps {
+export interface EditScheduleDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  schedule: Schedule
-}
-
-interface TimeInputsProps {
-  day: string
-}
-
-function TimeInputs({ day }: TimeInputsProps) {
-  return (
-    <div className="grid grid-cols-4 gap-2 items-center mb-2">
-      <div className="text-sm font-medium">{day}</div>
-      <Input type="time" defaultValue="00:30" className="col-span-1" />
-      <Input type="time" defaultValue="05:00" className="col-span-1" />
-      <div className="flex gap-2">
-        <Input type="time" defaultValue="00:30" className="flex-1" />
-        <Input type="time" defaultValue="00:00" className="flex-1" />
-      </div>
-    </div>
-  )
+  schedule: {
+    id: string
+    name: string
+    days: string[]
+    start: string
+    end: string
+  }
 }
 
 export function EditScheduleDialog({ open, onOpenChange, schedule }: EditScheduleDialogProps) {
-  const [scheduleType, setScheduleType] = useState("day")
+  const { updateSchedule } = useSchedules();
 
-  const handleSubmit = () => {
-    // Handle form submission
-    console.log("Updating schedule:", schedule.id)
-    onOpenChange(false)
+  const [scheduleName, setScheduleName] = useState(schedule.name)
+  const [selectedDays, setSelectedDays] = useState<Record<string, boolean>>({})
+  const [start, setStart] = useState(schedule.start)
+  const [end, setEnd] = useState(schedule.end)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Reset local state whenever `schedule` changes
+  useEffect(() => {
+    setScheduleName(schedule.name)
+    const dayMap: Record<string, boolean> = {
+      monday: false,
+      tuesday: false,
+      wednesday: false,
+      thursday: false,
+      friday: false,
+      saturday: false,
+      sunday: false,
+    }
+    schedule.days.forEach(day => {
+      dayMap[day.toLowerCase()] = true
+    })
+    setSelectedDays(dayMap)
+    setStart(schedule.start)
+    setEnd(schedule.end)
+  }, [schedule])
+
+  const handleDayChange = (day: string, checked: boolean) => {
+    setSelectedDays((prev) => ({ ...prev, [day.toLowerCase()]: checked }))
+  }
+
+  const handleSubmit = async () => {
+    try {
+      setIsSubmitting(true)
+
+      // Gather selected days as capitalized strings
+      const days = Object.entries(selectedDays)
+        .filter(([_, checked]) => checked)
+        .map(([day]) => day.charAt(0).toUpperCase() + day.slice(1))
+
+      // Send updated schedule data
+      await updateSchedule(Number(schedule.id), {
+        title: scheduleName,  // use 'title' to match backend
+        day: days,            // use 'day' to match backend
+        start,
+        end,
+      })
+
+      onOpenChange(false)
+    } catch (error) {
+      console.error("Error updating schedule:", error)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -55,50 +84,51 @@ export function EditScheduleDialog({ open, onOpenChange, schedule }: EditSchedul
         <DialogHeader>
           <DialogTitle>Edit Schedule</DialogTitle>
         </DialogHeader>
-
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="schedule-type">Schedule Type</Label>
-            <RadioGroup id="schedule-type" defaultValue="day" className="flex gap-4" onValueChange={setScheduleType}>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="day" id="edit-day" />
-                <Label htmlFor="edit-day">Day Shift</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="night" id="edit-night" />
-                <Label htmlFor="edit-night">Night Shift</Label>
-              </div>
-            </RadioGroup>
-          </div>
-
-          <div className="grid gap-2">
             <Label htmlFor="schedule-name">Schedule Name</Label>
-            <Input id="schedule-name" defaultValue={schedule.name} />
+            <Input id="schedule-name" value={scheduleName} onChange={e => setScheduleName(e.target.value)} />
           </div>
-
           <div className="grid gap-4 mt-2">
             <div className="grid grid-cols-4 gap-2 items-center mb-2">
-              <div></div>
+              <div>Day</div>
               <div className="text-sm text-center">Start</div>
               <div className="text-sm text-center">End</div>
-              <div className="text-sm text-center">Lunch Break</div>
+              <div></div>
             </div>
-
-            <TimeInputs day="Monday" />
-            <TimeInputs day="Monday" />
-            <TimeInputs day="Monday" />
-            <TimeInputs day="Monday" />
-            <TimeInputs day="Monday" />
-            <TimeInputs day="Monday" />
+            {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(day => (
+              <div className="grid grid-cols-4 gap-2 items-center mb-2" key={day}>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`day-${day.toLowerCase()}`}
+                    checked={selectedDays[day.toLowerCase()] || false}
+                    onCheckedChange={checked => handleDayChange(day, !!checked)}
+                  />
+                  <Label htmlFor={`day-${day.toLowerCase()}`} className="text-sm font-medium">{day}</Label>
+                </div>
+                <Input
+                  type="time"
+                  value={start}
+                  onChange={e => setStart(e.target.value)}
+                  disabled={!selectedDays[day.toLowerCase()]}
+                />
+                <Input
+                  type="time"
+                  value={end}
+                  onChange={e => setEnd(e.target.value)}
+                  disabled={!selectedDays[day.toLowerCase()]}
+                />
+                <div></div>
+              </div>
+            ))}
           </div>
         </div>
-
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} className="bg-orange-500 hover:bg-orange-600">
-            Update
+          <Button onClick={handleSubmit} className="bg-orange-500 hover:bg-orange-600" disabled={isSubmitting}>
+            {isSubmitting ? "Updating..." : "Update"}
           </Button>
         </DialogFooter>
       </DialogContent>

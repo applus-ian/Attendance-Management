@@ -65,7 +65,7 @@ export function LoginForm({
 
         <Button
           type="submit"
-          className="w-full"
+          className="w-full bg-orange-500 hover:bg-orange-600 text-white"
           disabled={loading || isLoggingOut}
         >
           {loading ? "Logging in…" : "Login"}

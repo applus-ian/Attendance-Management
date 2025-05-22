@@ -26,8 +26,7 @@ Route::controller(AuthController::class)
 # Schedules
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('schedules', SchedulesController::class);
-    Route::put('schedules/{schedules}/update', [SchedulesController::class, 'update']);
-    Route::delete('schedules/{schedules}/delete', [SchedulesController::class, 'destroy']);
+
 });
 
 #User Management

@@ -1,15 +1,35 @@
 "use client";
 
 import { Bell, FileText, Menu, User, Clock } from "lucide-react";
-import Link from "next/link";
+import { useState } from "react";
+import ClockInModal from "@/components/employee/clock-in-modal";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import Navbar from "@/components/navbar";
-import { CircularClock } from "@/components/Clock"; 
+import Navbar from "@/components/employee/navbar";
+import { CircularClock } from "@/components/employee/Clock"; 
 import Footer from "@/components/Footer";
 import "../../globals.css";
 
 export default function MySchedulePage() {
+  const [showClockIn, setShowClockIn] = useState(false);
+  const [isClockedIn, setIsClockedIn] = useState(false); // Track clock-in status
+
+  const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const shiftTime = "9:00 AM";
+
+  // Handle clock in/out action
+  const handleClockIn = (comment: string) => {
+    if (!isClockedIn) {
+      // TODO: Send clock-in request to backend here
+      alert(`Clocked in!\nComment: ${comment}`);
+      setIsClockedIn(true);
+    } else {
+      // TODO: Send clock-out request to backend here
+      alert(`Clocked out!\nComment: ${comment}`);
+      setIsClockedIn(false);
+    }
+    setShowClockIn(false);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
@@ -22,7 +42,6 @@ export default function MySchedulePage() {
           <div className="order-1 md:order-2 md:mr-8 lg:mr-">
             <div className="bg-white rounded-lg shadow p-6 mb-6">
               <h2 className="text-lg font-medium mb-4">Your Upcoming Shift</h2>
-
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center mr-4">
                   <Clock className="w-8 h-8 text-pink-500" />
@@ -35,9 +54,12 @@ export default function MySchedulePage() {
             </div>
 
             <div className="space-y-4">
-              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-md flex items-center justify-center text-lg font-medium">
+              <Button
+                className={`w-full ${isClockedIn ? "bg-green-500 hover:bg-green-600" : "bg-orange-500 hover:bg-orange-600"} text-white py-3 rounded-md flex items-center justify-center text-lg font-medium`}
+                onClick={() => setShowClockIn(true)}
+              >
                 <Clock className="w-6 h-6 mr-2" />
-                Clock In
+                {isClockedIn ? "Clock Out" : "Clock In"}
               </Button>
 
               <Button
@@ -50,6 +72,12 @@ export default function MySchedulePage() {
             </div>
           </div>
         </div>
+        <ClockInModal
+          show={showClockIn}
+          onHide={() => setShowClockIn(false)}
+          onClockIn={handleClockIn}
+          currentTime={currentTime}
+          shiftTime={shiftTime} isClockedIn={false}        />
       </main>
       <Footer />
     </div>
