@@ -13,13 +13,13 @@ class EmployeeResource extends JsonResource
     {
         return [
             'emp_id' => $this->emp_id,
-            'user_id' => $this->user_id,
-            'department' => $this->name,
-            'job_position' => $this->title,
-            'address' => $this->city_or_municipality,
+            'user_id' => $this->user,
             'first_name' => $this->first_name,
             'middle_name' => $this->middle_name,
             'last_name' => $this->last_name,
+            'department' => $this->department,
+            'job_position' => $this->job_position,
+            'address' => $this->address,
             'suffix' => $this->suffix,
             'gender' => $this->gender,
             'dob' => $this->dob,

@@ -8,7 +8,7 @@ class EmployeeService
 {
     public function getAll()
     {
-        return Employee::with(['user', 'department', 'job_position', 'address'])->get();
+        return Employee::with(['user', 'department', 'jobPosition', 'address'])->get();
     }
 
     public function create(array $data)
@@ -18,7 +18,7 @@ class EmployeeService
 
     public function getById($id)
     {
-        return Employee::with(['user', 'department', 'job_position', 'address'])->findOrFail($id);
+        return Employee::with(['user', 'department', 'jobPosition', 'address'])->findOrFail($id);
     }
 
     public function update($id, array $data)

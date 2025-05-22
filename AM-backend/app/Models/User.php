@@ -67,4 +67,9 @@ class User extends Authenticatable
     {
         return $this->hasPermissionTo($permission);
     }
+
+    public function schedules()
+    {
+        return $this->belongsTo(Schedules::class);
+    }
 }

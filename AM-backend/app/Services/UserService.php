@@ -3,17 +3,23 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Http\Resources\UserResource;
 
 class UserService
 {
     public function getAllUsers()
     {
-        return User::all();
+        $users = User::with(['employee.assignedSchedule.schedule', 'roles:name'])->get();
+
+        return UserResource::collection($users);
     }
 
-    public function getUserById(int $id): ?User
+    public function getUserById(int $id)
     {
-        return User::findOrFail($id);
+        $user = User::with(['employee.assignedSchedule.schedule', 'roles:name'])
+            ->findOrFail($id);
+
+        return new UserResource($user);
     }
 
     public function setActive(User $user): User
