@@ -1,20 +1,99 @@
 "use client";
 
-import { Bell, FileText, Menu, User, Clock } from "lucide-react";
-import Link from "next/link";
+import {
+  FileText,
+  Clock,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
+import { useState, useEffect } from "react";
+import ClockInModal from "@/components/employee/Clock-in-modal";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import Navbar from "@/components/navbar";
-import { CircularClock } from "@/components/Clock"; 
+import Navbar from "@/components/employee/navbar";
+import { CircularClock } from "@/components/employee/Clock";
 import Footer from "@/components/Footer";
 import { useEmployeeSchedule } from "@/hooks/useEmployeeSchedule";
 import { useAuth } from "@/hooks/useAuth";
-import api from "@/lib/api";
 import { toast } from "sonner";
 import "../../globals.css";
-import ManualRequestModal from "@/components/employee/manual-clock-in/manual-request-clokin";
 
 export default function MySchedulePage() {
+  const [showClockIn, setShowClockIn] = useState(false);
+  const [isClockedIn, setIsClockedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { schedules, loading, error, refreshSchedule } = useEmployeeSchedule();
+  const { user } = useAuth();
+  const [lastClockInTime, setLastClockInTime] = useState<string | null>(null);
+
+  // Simplified clock-in status (no backend check)
+  useEffect(() => {
+    // Check local storage for clock-in status
+    const savedStatus = localStorage.getItem('clockInStatus');
+    if (savedStatus) {
+      const parsed = JSON.parse(savedStatus);
+      setIsClockedIn(parsed.status);
+      setLastClockInTime(parsed.timestamp);
+    }
+  }, []);
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) {
+      const today = new Date();
+      return today.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    }
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const formatTime = (time24h: string) => {
+    if (!time24h) return "";
+    const [hours, minutes] = time24h.split(":");
+    const hour = parseInt(hours, 10);
+    const period = hour >= 12 ? "P.M" : "A.M";
+    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${hour12}:${minutes} ${period}`;
+  };
+
+  // Simplified clock-in/out handling (no backend)
+  const handleClockIn = async (comment: string) => {
+    setIsLoading(true);
+    
+    // Simulate a delay for better UX
+    setTimeout(() => {
+      // Toggle clock-in status
+      const newStatus = !isClockedIn;
+      setIsClockedIn(newStatus);
+      
+      // Save to local storage
+      const timestamp = new Date().toISOString();
+      localStorage.setItem('clockInStatus', JSON.stringify({
+        status: newStatus,
+        timestamp,
+        comment
+      }));
+      
+      if (newStatus) {
+        setLastClockInTime(timestamp);
+      }
+      
+      toast.success(
+        isClockedIn
+          ? "You have successfully clocked out"
+          : "You have successfully clocked in"
+      );
+      
+      setIsLoading(false);
+      setShowClockIn(false);
+    }, 800);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
@@ -22,6 +101,14 @@ export default function MySchedulePage() {
         <div className="md:grid md:grid-cols-2 md:gap-12">
           <div className="flex flex-col items-center md:items-start mb-8 md:mb-0 order-2 md:order-1 md:pl-20">
             <CircularClock greeting="Good Morning, Employee!" />
+            
+            {isClockedIn && lastClockInTime && (
+              <div className="mt-4 bg-green-100 p-3 rounded-md text-green-700">
+                <p className="text-sm">
+                  You clocked in at {new Date(lastClockInTime).toLocaleTimeString()}
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="order-1 md:order-2 md:mr-8">
@@ -97,18 +184,12 @@ export default function MySchedulePage() {
 
               <Button
                 variant="outline"
-                className="w-full border hover:bg-orange-600 text-white border-orange-500 text-gray-700 py-3 rounded-md flex items-center justify-center text-lg font-medium"
+                className="w-full border hover:bg-orange-600 hover:text-white border-orange-500 text-gray-700 py-3 rounded-md flex items-center justify-center text-lg font-medium group"
               >
                 <FileText className="w-6 h-6 mr-2 group-hover:text-white" />
                 Manual Request
               </Button>
             </div>
-            {isModalOpen && (
-              <ManualRequestModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-              />
-            )}
           </div>
         </div>
 

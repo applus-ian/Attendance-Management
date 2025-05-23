@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import api from "@/lib/api";
 import { toast } from "sonner";
 
 interface ClockInModalProps {
@@ -11,7 +10,7 @@ interface ClockInModalProps {
   currentTime: string;
   shiftTime: string;
   isClockedIn: boolean;
-  userId?: number; // Added user ID for API calls
+  userId?: string | number;
 }
 
 export default function ClockInModal({
@@ -20,40 +19,29 @@ export default function ClockInModal({
   onClockIn,
   currentTime,
   shiftTime,
-  isClockedIn,
-  userId
+  isClockedIn
 }: ClockInModalProps) {
   const [comment, setComment] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleClockAction = async () => {
-    if (!userId) {
-      toast.error("User ID is required");
-      return;
-    }
-
+  const handleClockAction = () => {
     setIsSubmitting(true);
-    try {
-      const endpoint = isClockedIn ? '/timelogs/clock-out' : '/timelogs/clock-in';
-      const response = await api.post(endpoint, {
-        emp_id: userId,
-        comment
-      });
-
-      if (response.data && response.data.data) {
-        toast.success(isClockedIn ? "Clocked out successfully" : "Clocked in successfully");
-        onClockIn(comment);
-      }
-    } catch (error: any) {
-      console.error("Error during clock action:", error);
-      toast.error(error.response?.data?.message || "Failed to process your request");
-      return;
-    } finally {
+    
+    // Simulate processing time
+    setTimeout(() => {
+      // Notify parent component of clock in/out
+      onClockIn(comment);
+      
+      // Show success message
+      toast.success(isClockedIn ? "Clocked out successfully" : "Clocked in successfully");
+      
+      // Reset state
+      setComment("");
       setIsSubmitting(false);
-    }
-
-    setComment("");
-    onClose();
+      
+      // Close modal
+      onClose();
+    }, 800);
   };
 
   if (!show) return null;
@@ -66,14 +54,27 @@ export default function ClockInModal({
       <div className="bg-white rounded-lg shadow-lg w-full max-w-md relative">
         <div className="p-5">
           <h2 className="text-lg font-normal">
-            {isClockedIn ? `Clock out at ${currentTime}` : `Clock in at ${currentTime}`}
+            {isClockedIn ? "Clock out" : "Clock in"} at {currentTime}
           </h2>
 
           <div className="border-t border-gray-200 my-3"></div>
 
-          <p className="text-sm text-gray-600 mb-4">Your shift starts at {shiftTime}</p>
+          {!isClockedIn && <p className="text-sm text-gray-600 mb-4">Your shift starts at {shiftTime}</p>}
+          {isClockedIn && <p className="text-sm text-gray-600 mb-4">You've been clocked in since your shift started.</p>}
 
-
+          {/* Optional: Add a comment field */}
+          <div className="mt-4">
+            <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-1">
+              Comment (optional)
+            </label>
+            <Textarea
+              id="comment"
+              placeholder={isClockedIn ? "Add a comment about your clock out..." : "Add a comment about your clock in..."}
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md"
+            />
+          </div>
 
           <div className="flex justify-end gap-2 mt-6">
             <Button 
@@ -86,9 +87,9 @@ export default function ClockInModal({
             </Button>
             <Button
               onClick={handleClockAction}
-              className={`${
-                isClockedIn ? "bg-green-500 hover:bg-green-600" : "bg-[#FF7A45] hover:bg-[#F05E21]"
-              } text-white border-0 rounded-md px-4`}
+              className={`${isClockedIn ? 
+                "bg-green-500 hover:bg-green-600" : 
+                "bg-[#FF7A45] hover:bg-[#F05E21]"} text-white border-0 rounded-md px-4`}
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -99,9 +100,7 @@ export default function ClockInModal({
                   </svg>
                   Processing...
                 </span>
-              ) : (
-                isClockedIn ? "Clock Out" : "Clock In"
-              )}
+              ) : isClockedIn ? "Clock Out" : "Clock In"}
             </Button>
           </div>
         </div>
