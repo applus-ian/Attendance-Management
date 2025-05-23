@@ -1,92 +1,20 @@
 "use client";
 
-import {
-  FileText,
-  Clock,
-  AlertCircle,
-  RefreshCw,
-} from "lucide-react";
-import { useState, useEffect } from "react";
-import ClockInModal from "@/components/employee/Clock-in-modal";
+import { Bell, FileText, Menu, User, Clock } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import Navbar from "@/components/employee/navbar";
-import { CircularClock } from "@/components/employee/Clock";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import Navbar from "@/components/navbar";
+import { CircularClock } from "@/components/Clock"; 
 import Footer from "@/components/Footer";
 import { useEmployeeSchedule } from "@/hooks/useEmployeeSchedule";
 import { useAuth } from "@/hooks/useAuth";
 import api from "@/lib/api";
 import { toast } from "sonner";
 import "../../globals.css";
+import ManualRequestModal from "@/components/employee/manual-clock-in/manual-request-clokin";
 
 export default function MySchedulePage() {
-  const [showClockIn, setShowClockIn] = useState(false);
-  const [isClockedIn, setIsClockedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { schedules, loading, error, refreshSchedule } = useEmployeeSchedule();
-  const { user } = useAuth();
-
-  useEffect(() => {
-    checkClockInStatus();
-  }, []);
-
-  const checkClockInStatus = async () => {
-    try {
-      const response = await api.get('/timelogs/status');
-      if (response.data && response.data.isClockedIn !== undefined) {
-        setIsClockedIn(response.data.isClockedIn);
-      }
-    } catch (error) {
-      console.error("Error checking clock-in status:", error);
-    }
-  };
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) {
-      const today = new Date();
-      return today.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-    }
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  const formatTime = (time24h: string) => {
-    if (!time24h) return "";
-    const [hours, minutes] = time24h.split(":");
-    const hour = parseInt(hours, 10);
-    const period = hour >= 12 ? "P.M" : "A.M";
-    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-    return `${hour12}:${minutes} ${period}`;
-  };
-
-  const handleClockIn = async (comment: string) => {
-    setIsLoading(true);
-    try {
-      const endpoint = isClockedIn ? '/timelogs/clock-out' : '/timelogs/clock-in';
-      await api.post(endpoint, { comment });
-
-      setIsClockedIn(!isClockedIn);
-
-      toast.success(
-        isClockedIn
-          ? "You have successfully clocked out"
-          : "You have successfully clocked in"
-      );
-    } catch (error: any) {
-      console.error("Clock in/out error:", error);
-      toast.error(error.response?.data?.message || "Failed to process your request");
-    } finally {
-      setIsLoading(false);
-      setShowClockIn(false);
-    }
-  };
-
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
@@ -169,12 +97,18 @@ export default function MySchedulePage() {
 
               <Button
                 variant="outline"
-                className="w-full border hover:bg-orange-600 hover:text-white border-orange-500 text-gray-700 py-3 rounded-md flex items-center justify-center text-lg font-medium group"
+                className="w-full border hover:bg-orange-600 text-white border-orange-500 text-gray-700 py-3 rounded-md flex items-center justify-center text-lg font-medium"
               >
                 <FileText className="w-6 h-6 mr-2 group-hover:text-white" />
                 Manual Request
               </Button>
             </div>
+            {isModalOpen && (
+              <ManualRequestModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+              />
+            )}
           </div>
         </div>
 

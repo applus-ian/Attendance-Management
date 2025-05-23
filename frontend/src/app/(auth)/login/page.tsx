@@ -1,30 +1,26 @@
 "use client";
-import { LoginForm } from "@/components/login/login-form";
-import Image from "next/image";
-import { SiteHeader } from "@/components/ui/header";
 import { useState } from "react";
+import { LoginForm } from "@/components/login/login-form";
+import { SiteHeader } from "@/components/ui/header";
+import Image from "next/image";
 
 export default function LoginPage() {
-  const [role, setRole] = useState("");
-
   return (
     <div className="bg-white text-black dark:bg-zinc-900 dark:text-white">
-      <SiteHeader role={role} setRole={setRole} />
+      <SiteHeader />
       <main className="flex-1">
         <div className="grid min-h-screen lg:grid-cols-2">
           <div className="flex flex-col gap-4 p-6 md:p-10">
             <div className="flex flex-1 items-center justify-center">
-              {role && (
-                <div className="w-full max-w-sm text-center">
-                  <h1 className="text-3xl font-bold text-black dark:text-white">
-                    Login
-                  </h1>
-                  <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-                    Enter your {role.toLowerCase()} credentials
-                  </p>
-                  <LoginForm className="space-y-4 mt-8" />
-                </div>
-              )}
+              <div className="w-full max-w-sm text-center">
+                <h1 className="text-3xl font-bold text-black dark:text-white">
+                  Login
+                </h1>
+                <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+                  Enter your credentials
+                </p>
+                <LoginForm className="space-y-4 mt-8" />
+              </div>
             </div>
           </div>
           <div className="relative hidden lg:block">

@@ -7,75 +7,74 @@ import type { Request } from "@/components/request-table"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
 
 interface RequestDetailsModalProps {
-  request: Request
-  isOpen: boolean
-  onClose: () => void
+  request: ManualRequest;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export function RequestDetailsModal({ request, isOpen, onClose }: RequestDetailsModalProps) {
-  const handleApprove = () => {
-    console.log("Approving request:", request.id)
-    onClose()
-  }
+  if (!isOpen) return null;
 
-  const handleReject = () => {
-    console.log("Rejecting request:", request.id)
-    onClose()
-  }
+  const timeData = JSON.parse(request.time);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Request Details</DialogTitle>
-          <Button variant="ghost" size="icon" className="absolute right-4 top-4" onClick={onClose}>
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
-          </Button>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="dateSubmitted" className="text-right">
-              Date Submitted
-            </Label>
-            <Input id="dateSubmitted" value={request.dateSubmitted} readOnly className="col-span-3" />
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+        <div className="p-6">
+          <h2 className="text-lg font-semibold mb-4">Request Details</h2>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-500">Member</label>
+              <p className="mt-1">{request.employee?.name || `Employee ${request.emp_id}`}</p>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-500">Request Type</label>
+              <p className="mt-1 capitalize">{request.request_type.replace('_', ' ')}</p>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-500">Date Requested</label>
+              <p className="mt-1">{new Date(timeData.date).toLocaleDateString()}</p>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-500">Time</label>
+              <p className="mt-1">
+                {timeData.start && `Start: ${timeData.start}`}
+                {timeData.end && ` End: ${timeData.end}`}
+              </p>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-500">Comment</label>
+              <p className="mt-1">{request.reason}</p>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-500">Status</label>
+              <Badge
+                variant={
+                  request.approval_status === "approved" ? "secondary"
+                    : request.approval_status === "pending" ? "default"
+                      : "destructive"
+                }
+                className="mt-1 rounded-md capitalize"
+              >
+                {request.approval_status}
+              </Badge>
+            </div>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Name
-            </Label>
-            <Input id="name" value={request.member} readOnly className="col-span-3" />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="requestType" className="text-right">
-              Request Type
-            </Label>
-            <Input id="requestType" value={request.type} readOnly className="col-span-3" />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="dateRequested" className="text-right">
-              Date Requested
-            </Label>
-            <Input id="dateRequested" value={request.dateRequested} readOnly className="col-span-3" />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="comment" className="text-right">
-              Comment
-            </Label>
-            <Textarea id="comment" value={request.comment} readOnly className="col-span-3" rows={3} />
+
+          <div className="mt-6 flex justify-end">
+            <Button onClick={onClose}>Close</Button>
           </div>
         </div>
-        <DialogFooter className="sm:justify-center gap-2">
-          <Button variant="destructive" onClick={handleReject}>
-            Reject
-          </Button>
-          <Button variant="default" className="bg-green-600 hover:bg-green-700" onClick={handleApprove}>
-            Approve
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
+      </div>
+    </div>
+  );
 }
