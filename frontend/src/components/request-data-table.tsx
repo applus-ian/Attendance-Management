@@ -9,50 +9,39 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ManualRequest } from "@/hooks/useManualRequest";
 
-interface EmployeeRequest {
-  dateSubmitted: string;
-  requestType: string;
-  requestDate: string;
-  requestComment: string;
-  requestStatus: string;
-  
-}
-
-export function RequestDataTable({ data }: { data: EmployeeRequest[] }) {
+export function RequestDataTable({ data }: { data: ManualRequest[] }) {
   return (
-    
-      <Table>
-        <TableHeader className="bg-gray-200">
-          <TableRow>
-            <TableHead>Date Submitted</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Date requested</TableHead>
-            <TableHead>Comment</TableHead>
-            <TableHead>Status</TableHead>
-            
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.length > 0 ? (
-            data.map((row, index) => (
-              <TableRow key={index}>
-                <TableCell>{row.dateSubmitted}</TableCell>
-                <TableCell>{row.requestType}</TableCell>
-                <TableCell>{row.requestDate}</TableCell>
-                <TableCell>{row.requestComment}</TableCell>
-                <TableCell>{row.requestStatus}</TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center">
-                No data available.
-              </TableCell>
+    <Table>
+      <TableHeader className="bg-gray-200">
+        <TableRow>
+          <TableHead>Date Submitted</TableHead>
+          <TableHead>Type</TableHead>
+          <TableHead>Time</TableHead>
+          <TableHead>Reason</TableHead>
+          <TableHead>Status</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {data.length > 0 ? (
+          data.map((row) => (
+            <TableRow key={row.request_id}>
+              <TableCell>{new Date(row.created_at).toLocaleDateString()}</TableCell>
+              <TableCell>{row.request_type}</TableCell>
+              <TableCell>{new Date(row.time).toLocaleString()}</TableCell>
+              <TableCell>{row.reason}</TableCell>
+              <TableCell>{row.approval_status}</TableCell>
             </TableRow>
-          )}
-        </TableBody>
-      </Table>
-
+          ))
+        ) : (
+          <TableRow>
+            <TableCell colSpan={5} className="text-center">
+              No data available.
+            </TableCell>
+          </TableRow>
+        )}
+      </TableBody>
+    </Table>
   );
 }
