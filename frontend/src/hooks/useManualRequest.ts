@@ -11,6 +11,7 @@ export interface ManualRequest {
     employee?: {
         name: string;
     };
+    feedback?: string;
 }
 
 interface ManualRequestData {
@@ -20,13 +21,15 @@ interface ManualRequestData {
     approval_status: 'pending' | 'approved' | 'rejected';
 }
 
-export const useManualRequest = () => {
+export const useManualRequest = (emp_id?: number) => {
     const queryClient = useQueryClient();
 
     const { data, isLoading, error, refetch } = useQuery({
-        queryKey: ['manualRequests'],
+        queryKey: ['manualRequests', emp_id],
         queryFn: async () => {
-            const response = await api.get('/manual-requests');
+            const response = await api.get('/manual-requests', {
+                params: emp_id ? { emp_id } : {},
+            });
             // Handle different possible response shapes
             if (Array.isArray(response.data)) return response.data;
             if (Array.isArray(response.data.data)) return response.data.data;

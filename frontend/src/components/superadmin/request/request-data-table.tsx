@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import {
   Table,
@@ -9,52 +7,71 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ManualRequest } from "@/hooks/useManualRequest";
+import clsx from "clsx";
 
-export interface Request {
-  id: string;
-  dateSubmitted: string;
-  member: string;
-  type: 'clock_in' | 'clock_out' | 'overtime';
-  dateRequested: string;
-  comment: string;
-  status: "Approved" | "Pending" | "Denied";
-  feedback: string;
-}
+export function RequestDataTable({ data }: { data: ManualRequest[] }) {
+  // Ensure data is an array
+  const safeData = Array.isArray(data) ? data : [];
 
-interface EmployeeRequest {
-  dateSubmitted: string;
-  requestType: string;
-  requestDate: string;
-  requestComment: string;
-  requestStatus: string;
-}
-
-export function RequestDataTable({ data }: { data: EmployeeRequest[] }) {
   return (
     <Table>
       <TableHeader className="bg-gray-200">
         <TableRow>
           <TableHead>Date Submitted</TableHead>
+          <TableHead>Member</TableHead>
           <TableHead>Type</TableHead>
-          <TableHead>Date requested</TableHead>
+          <TableHead>Date Requested</TableHead>
           <TableHead>Comment</TableHead>
           <TableHead>Status</TableHead>
+          <TableHead>Feedback</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {data.length > 0 ? (
-          data.map((row, index) => (
-            <TableRow key={index}>
-              <TableCell>{row.dateSubmitted}</TableCell>
-              <TableCell>{row.requestType}</TableCell>
-              <TableCell>{row.requestDate}</TableCell>
-              <TableCell>{row.requestComment}</TableCell>
-              <TableCell>{row.requestStatus}</TableCell>
-            </TableRow>
-          ))
+        {safeData.length > 0 ? (
+          safeData.map((row, index) => {
+            const uniqueKey = `${row.request_id || ''}-${row.created_at || ''}-${index}`;
+            // Format dates
+            const dateSubmitted = row.created_at
+              ? new Date(row.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+              : "N/A";
+            const dateRequested = row.time
+              ? new Date(row.time).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+              : "N/A";
+            // Status badge
+            const status = row.approval_status || "N/A";
+            const statusClass = clsx(
+              "px-3 py-1 rounded-full text-xs font-semibold",
+              status === "Approved" && "bg-gray-200 text-gray-700",
+              status === "Pending" && "bg-orange-400 text-white",
+              status === "Denied" && "bg-red-400 text-white"
+            );
+            // Feedback
+            const feedback = row.feedback ? row.feedback : "—";
+            const feedbackClass = clsx(
+              "text-sm",
+              row.feedback === "Done" ? "text-gray-700" : "text-gray-400 italic"
+            );
+
+            return (
+              <TableRow key={uniqueKey}>
+                <TableCell>{dateSubmitted}</TableCell>
+                <TableCell>{row.employee?.name || "N/A"}</TableCell>
+                <TableCell>{row.request_type || "N/A"}</TableCell>
+                <TableCell>{dateRequested}</TableCell>
+                <TableCell>{row.reason || "N/A"}</TableCell>
+                <TableCell>
+                  <span className={statusClass}>{status}</span>
+                </TableCell>
+                <TableCell>
+                  <span className={feedbackClass}>{feedback}</span>
+                </TableCell>
+              </TableRow>
+            );
+          })
         ) : (
           <TableRow>
-            <TableCell colSpan={6} className="text-center">
+            <TableCell colSpan={7} className="text-center">
               No data available.
             </TableCell>
           </TableRow>

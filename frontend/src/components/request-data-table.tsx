@@ -10,10 +10,31 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ManualRequest } from "@/hooks/useManualRequest";
+import { format, parseISO } from 'date-fns';
 
 export function RequestDataTable({ data }: { data: ManualRequest[] }) {
   // Ensure data is an array
   const safeData = Array.isArray(data) ? data : [];
+
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = parseISO(dateString);
+      return format(date, 'MMM dd, yyyy');
+    } catch (error) {
+      return 'Invalid Date';
+    }
+  };
+
+  const formatTime = (dateString: string | null | undefined) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = parseISO(dateString);
+      return format(date, 'HH:mm:ss');
+    } catch (error) {
+      return 'Invalid Time';
+    }
+  };
 
   return (
     <Table>
@@ -34,9 +55,9 @@ export function RequestDataTable({ data }: { data: ManualRequest[] }) {
 
             return (
               <TableRow key={uniqueKey}>
-                <TableCell>{row.created_at ? new Date(row.created_at).toLocaleDateString() : 'N/A'}</TableCell>
+                <TableCell>{formatDate(row.time)}</TableCell>
                 <TableCell>{row.request_type || 'N/A'}</TableCell>
-                <TableCell>{row.time ? new Date(row.time).toLocaleString() : 'N/A'}</TableCell>
+                <TableCell>{formatTime(row.time)}</TableCell>
                 <TableCell>{row.reason || 'N/A'}</TableCell>
                 <TableCell>{row.approval_status || 'N/A'}</TableCell>
               </TableRow>
