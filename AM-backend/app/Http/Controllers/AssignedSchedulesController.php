@@ -78,4 +78,43 @@ class AssignedSchedulesController extends Controller
 
         return response()->json(['message' => 'Assignment deleted successfully.'], 200);
     }
+
+    public function getEmployeeSchedules()
+    {        // Get the currently authenticated user
+        $user = auth()->user();
+
+        // Find the employee record associated with this user
+        $employee = $user->employee;
+
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No employee record found for this user'
+            ], 404);
+        }
+
+        // Get assigned schedules for this employee, including the schedule details
+        $assignedSchedules = AssignedSchedules::where('emp_id', $employee->emp_id)
+            ->with('schedule')
+            ->get();
+
+        // Format the data for the frontend
+        $formattedSchedules = $assignedSchedules->map(function($assignedSchedule) {
+            $schedule = $assignedSchedule->schedule;
+
+            return [
+                'id' => $assignedSchedule->assigned_id,
+                'title' => $schedule->title,
+                'day' => $schedule->day,
+                'start' => $schedule->start,
+                'end' => $schedule->end,
+                'date' => $assignedSchedule->date // Include specific date if available
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $formattedSchedules
+        ]);
+    }
 }

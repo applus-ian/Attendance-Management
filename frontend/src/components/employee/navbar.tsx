@@ -1,32 +1,28 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import { Bell, Menu, ChevronDown } from "lucide-react";
-import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
-import { useState } from "react";
-import Notification from "@/components/notification";
-import { useAuth } from "@/hooks/useAuth";
+import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { Bell, Menu, ChevronDown } from "lucide-react"
+import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet"
+import { useState } from "react"
+import Notification from "@/components/notification"
+import { useAuth } from "@/hooks/useAuth"
+import RoleSwitch from "../RoleSwitch"
 
 export default function Navbar() {
-  const pathname = usePathname();
-  const router = useRouter();
-  const [showNotifications, setShowNotifications] = useState(false);
-  const { logout, isLoggingOut, user } = useAuth(); // Make sure user object is available
-  console.log("user", user);
+  const pathname = usePathname()
+  const router = useRouter()
+  const [showNotifications, setShowNotifications] = useState(false)
+  const { logout, isLoggingOut, user } = useAuth() // Make sure user object is available
+  console.log("user", user)
 
   const [notifications, setNotifications] = useState<
     {
-      id: number;
-      title: string;
-      description: string;
-      type: "info" | "success" | "error" | "warning";
+      id: number
+      title: string
+      description: string
+      type: "info" | "success" | "error" | "warning"
     }[]
   >([
     {
@@ -47,25 +43,20 @@ export default function Navbar() {
       description: "System maintenance at midnight.",
       type: "warning",
     },
-  ]);
+  ])
 
   const dismissNotification = (id: number) => {
-    setNotifications((prev) =>
-      prev.filter((notification) => notification.id !== id)
-    );
-  };
+    setNotifications((prev) => prev.filter((notification) => notification.id !== id))
+  }
 
-const isAdmin = Array.isArray(user?.role) && user.role.includes("admin");
-const isSuperAdmin = Array.isArray(user?.role) && user.role.includes("super_admin");
+  const isAdmin = Array.isArray(user?.role) && user.role.includes("admin")
+  const isSuperAdmin = Array.isArray(user?.role) && user.role.includes("super_admin")
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white dark:border-gray-800 dark:bg-gray-950">
       <div className="flex h-16 items-center justify-between px-4 md:px-6">
         {/* Logo Section */}
-        <Link
-          href="/"
-          className="flex items-center gap-1 pl-2 md:pl-0"
-          prefetch={false}
-        >
+        <Link href="/" className="flex items-center gap-1 pl-2 md:pl-0" prefetch={false}>
           <img src="/LOGO1.svg" alt="Acme Inc Logo" className="h-10 w-auto" />
         </Link>
 
@@ -73,30 +64,33 @@ const isSuperAdmin = Array.isArray(user?.role) && user.role.includes("super_admi
         <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
           <Link
             href="/employee/schedule"
-            className={`px-5 py-5 text-sm font-medium ${pathname === "/employee/schedule"
+            className={`px-5 py-5 text-sm font-medium ${
+              pathname === "/employee/schedule"
                 ? "text-orange-500 border-b-2 border-orange-500 dark:text-orange-400"
                 : "text-gray-600 border-b-2 border-transparent hover:text-orange-500 hover:border-orange-500 dark:text-gray-300 dark:hover:text-orange-400"
-              }`}
+            }`}
             prefetch={false}
           >
             My Schedule
           </Link>
           <Link
             href="/employee/timesheets"
-            className={`px-5 py-5 text-sm font-medium ${pathname === "/employee/timesheets"
+            className={`px-5 py-5 text-sm font-medium ${
+              pathname === "/employee/timesheets"
                 ? "text-orange-500 border-b-2 border-orange-500 dark:text-orange-400"
                 : "text-gray-600 border-b-2 border-transparent hover:text-orange-500 hover:border-orange-500 dark:text-gray-300 dark:hover:text-orange-400"
-              }`}
+            }`}
             prefetch={false}
           >
             Timesheets
           </Link>
           <Link
             href="/employee/request"
-            className={`px-5 py-5 text-sm font-medium ${pathname === "/employee/request"
+            className={`px-5 py-5 text-sm font-medium ${
+              pathname === "/employee/request"
                 ? "text-orange-500 border-b-2 border-orange-500 dark:text-orange-400"
                 : "text-gray-600 border-b-2 border-transparent hover:text-orange-500 hover:border-orange-500 dark:text-gray-300 dark:hover:text-orange-400"
-              }`}
+            }`}
             prefetch={false}
           >
             Request
@@ -105,27 +99,8 @@ const isSuperAdmin = Array.isArray(user?.role) && user.role.includes("super_admi
 
         {/* Right Section */}
         <div className="flex items-center space-x-4">
-          
-          {(isAdmin || isSuperAdmin) && (
-            <div className="flex items-center space-x-2">
-              <span className={`font-medium ${isSuperAdmin ? "text-orange-500" : "text-gray-500"}`}>Super Admin</span>
-              <button
-                className="relative inline-flex items-center h-6 rounded-full w-11 bg-gray-200 focus:outline-none transition-colors"
-                onClick={() => {
-                  if (isSuperAdmin) {
-                    router.push("/super-admin/dashboard");
-                  } else {
-                    router.push("/admin/dashboard");
-                  }
-                }}
-                aria-pressed="false"
-              >
-                <span className="sr-only">Switch to Admin</span>
-                <span className="inline-block w-5 h-5 transform bg-white rounded-full shadow transition-transform" />
-              </button>
-              <span className="font-medium text-gray-500">Employee</span>
-            </div>
-          )}
+          {/* Integrated RoleSwitch component */}
+          <RoleSwitch isAdmin={isAdmin} isSuperAdmin={isSuperAdmin} currentPath={pathname} />
 
           <button
             className="text-gray-600 hover:text-gray-900"
@@ -148,9 +123,7 @@ const isSuperAdmin = Array.isArray(user?.role) && user.role.includes("super_admi
                   />
                 ))
               ) : (
-                <div className="text-center text-gray-500 py-4">
-                  Empty notifications
-                </div>
+                <div className="text-center text-gray-500 py-4">Empty notifications</div>
               )}
             </div>
           )}
@@ -160,11 +133,7 @@ const isSuperAdmin = Array.isArray(user?.role) && user.role.includes("super_admi
             <DropdownMenuTrigger asChild>
               <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
                 <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                  <img
-                    src="/avatar.svg"
-                    alt="Employee Profile"
-                    className="w-full h-full object-cover"
-                  />
+                  <img src="/avatar.svg" alt="Employee Profile" className="w-full h-full object-cover" />
                 </div>
                 <span className="hidden md:inline">Employee</span>
                 <ChevronDown size={16} />
@@ -179,7 +148,7 @@ const isSuperAdmin = Array.isArray(user?.role) && user.role.includes("super_admi
               <DropdownMenuItem
                 onClick={() => {
                   if (!isLoggingOut) {
-                    logout.mutate();
+                    logout.mutate()
                   }
                 }}
               >
@@ -199,30 +168,33 @@ const isSuperAdmin = Array.isArray(user?.role) && user.role.includes("super_admi
               <div className="grid gap-4 p-4">
                 <Link
                   href="/employee/schedule"
-                  className={`text-sm font-medium ${pathname === "/employee/schedule"
+                  className={`text-sm font-medium ${
+                    pathname === "/employee/schedule"
                       ? "text-orange-500"
                       : "text-gray-500 hover:text-orange-500 dark:text-gray-400 dark:hover:text-orange-400"
-                    }`}
+                  }`}
                   prefetch={false}
                 >
                   My Schedule
                 </Link>
                 <Link
                   href="/employee/timesheets"
-                  className={`text-sm font-medium ${pathname === "/employee/timesheets"
+                  className={`text-sm font-medium ${
+                    pathname === "/employee/timesheets"
                       ? "text-orange-500"
                       : "text-gray-500 hover:text-orange-500 dark:text-gray-400 dark:hover:text-orange-400"
-                    }`}
+                  }`}
                   prefetch={false}
                 >
                   Timesheets
                 </Link>
                 <Link
                   href="/employee/request"
-                  className={`text-sm font-medium ${pathname === "/employee/request"
+                  className={`text-sm font-medium ${
+                    pathname === "/employee/request"
                       ? "text-orange-500"
                       : "text-gray-500 hover:text-orange-500 dark:text-gray-400 dark:hover:text-orange-400"
-                    }`}
+                  }`}
                   prefetch={false}
                 >
                   Request
@@ -233,5 +205,5 @@ const isSuperAdmin = Array.isArray(user?.role) && user.role.includes("super_admi
         </div>
       </div>
     </header>
-  );
+  )
 }

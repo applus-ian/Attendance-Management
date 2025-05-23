@@ -11,13 +11,13 @@ import { useSchedules } from "@/hooks/useSchedules"
 export interface EditScheduleV2DialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  schedule: {
-    id: string
-    name: string
-    days: string[]
-    start: string
-    end: string
-  }
+schedule: {
+  sched_id: number
+  name: string
+  days: string[]
+  start: string
+  end: string
+}
 }
 
 export function EditScheduleV2Dialog({ open, onOpenChange, schedule }: EditScheduleV2DialogProps) {
@@ -28,42 +28,53 @@ export function EditScheduleV2Dialog({ open, onOpenChange, schedule }: EditSched
   const [start, setStart] = useState(schedule.start)
   const [end, setEnd] = useState(schedule.end)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
 
-  useEffect(() => {
-    setScheduleName(schedule.name)
-    const dayMap: Record<string, boolean> = {
-      monday: false,
-      tuesday: false,
-      wednesday: false,
-      thursday: false,
-      friday: false,
-      saturday: false,
-      sunday: false,
+ useEffect(() => {
+  if (!schedule || !Array.isArray(schedule.days)) return;
+
+  setScheduleName(schedule.name);
+  const dayMap: Record<string, boolean> = {
+    monday: false,
+    tuesday: false,
+    wednesday: false,
+    thursday: false,
+    friday: false,
+    saturday: false,
+    sunday: false,
+  };
+  schedule.days.forEach(day => {
+    if (typeof day === 'string') {
+      dayMap[day.toLowerCase()] = true;
     }
-    schedule.days.forEach(day => {
-      dayMap[day.toLowerCase()] = true
-    })
-    setSelectedDays(dayMap)
-    setStart(schedule.start)
-    setEnd(schedule.end)
-  }, [schedule])
+  });
+  setSelectedDays(dayMap);
+  setStart(schedule.start);
+  setEnd(schedule.end);
+}, [schedule]);
+
 
   const handleDayChange = (day: string, checked: boolean) => {
     setSelectedDays((prev) => ({ ...prev, [day.toLowerCase()]: checked }))
   }
-
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true)
       const days = Object.entries(selectedDays)
         .filter(([_, checked]) => checked)
         .map(([day]) => day.charAt(0).toUpperCase() + day.slice(1))
-      await updateSchedule(Number(schedule.id), {
-        title: scheduleName,
-        day: days,
+      
+      // Use either sched_id or id depending on what's available in the schedule object
+      const scheduleId = schedule.sched_id ;
+      
+      await updateSchedule(scheduleId, {
+        title: scheduleName,  // This is correct - backend expects 'title'
+        day: days,           // This is correct
         start,
         end,
-      })
+      });
+
+
       onOpenChange(false)
     } catch (error) {
       console.error("Error updating schedule:", error)

@@ -63,6 +63,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('timelogs/clock-in', [TimelogsController::class, 'clockIn']);
     Route::post('timelogs/clock-out', [TimelogsController::class, 'clockOut']);
+    Route::get('employee/current-status', [TimelogsController::class, 'getCurrentStatus']);
 });
 
 Route::middleware(['auth:sanctum', 'role.permission:admin'])->group(function () {
@@ -72,6 +73,11 @@ Route::middleware(['auth:sanctum', 'role.permission:admin'])->group(function () 
 # Time Sheets
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('timesheets', TimesheetsController::class);
+});
+
+# Employee Schedules
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('employee/schedules', [AssignedSchedulesController::class, 'getEmployeeSchedules']);
 });
 
 # Employees

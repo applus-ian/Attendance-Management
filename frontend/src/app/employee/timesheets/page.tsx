@@ -2,9 +2,25 @@
 
 import Navbar from "@/components/employee/navbar";
 import { EmployeeDataTable } from "@/components/employee/Employee-data-table";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import ClockInModal from "@/components/employee/Clock-in-modal";
+import { Button } from "@/components/ui/button";
+import { Clock } from "lucide-react";
+import api from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
-const timesheetData = [
+type Timesheet = {
+  date: string;
+  inTime: string;
+  outTime: string;
+  worked: string;
+  scheduled: string;
+  comment: string;
+};
+
+// Static data for initial display - will be replaced by API data
+const initialTimesheetData = [
   { date: "January 2, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
   { date: "January 3, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
   { date: "January 6, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
@@ -18,16 +34,117 @@ const timesheetData = [
 ];
 export default function TimesheetsPage() {
     const [selectedPeriod, setSelectedPeriod] = useState("Jan 1 - 15, 2025");
+    const [showClockIn, setShowClockIn] = useState(false);
+    const [isClockedIn, setIsClockedIn] = useState(false);
+    const [timesheetData, setTimesheetData] = useState<Timesheet[]>(initialTimesheetData);
+    const [isLoadingTimesheets, setIsLoadingTimesheets] = useState(false);
+    const { user } = useAuth();
+  
+    // Fetch timesheet data
+    const fetchTimesheets = useCallback(async () => {
+      if (!user) return;
+      
+      setIsLoadingTimesheets(true);
+      try {
+        // Get the start and end dates from the selected period
+        const [startStr, endStr] = selectedPeriod.split(' - ');
+        
+        const response = await api.get(`/timesheets`, {
+          params: {
+            // You may need to format these dates according to your API
+            start_date: startStr,
+            end_date: endStr
+          }
+        });
+        
+        if (response.data && Array.isArray(response.data.data)) {
+          // Transform the API response to match our Timesheet type
+          const formattedData = response.data.data.map((item: any) => ({
+            date: new Date(item.date).toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            }),
+            inTime: item.clock_in_time || '-',
+            outTime: item.clock_out_time || '-',
+            worked: `${item.hrs_worked || 0} h`,
+            scheduled: `${item.scheduled_hours || 8} h`,
+            comment: item.comment || ''
+          }));
+          
+          setTimesheetData(formattedData);
+        }
+      } catch (error) {
+        console.error("Error fetching timesheets:", error);
+        // Don't show error toast as this is refreshed automatically
+      } finally {
+        setIsLoadingTimesheets(false);
+      }
+    }, [user, selectedPeriod]);
+  
+    // Check if user is clocked in when the page loads
+    useEffect(() => {
+      const checkClockInStatus = async () => {
+        if (!user) return;
+        
+        try {
+          // Assuming there's an endpoint to check the user's current status
+          const response = await api.get(`/employee/current-status`);
+          if (response.data && response.data.status === 'clocked_in') {
+            setIsClockedIn(true);
+          }
+        } catch (error) {
+          console.error("Error checking clock in status:", error);
+          // Don't show error toast as this is a background check
+        }
+      };
+      
+      checkClockInStatus();
+      fetchTimesheets(); // Fetch timesheet data when the page loads
+    }, [user, fetchTimesheets]);
+  
+    // When period changes, refetch timesheet data
+    useEffect(() => {
+      fetchTimesheets();
+    }, [selectedPeriod, fetchTimesheets]);
   
     const handlePeriodChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
       setSelectedPeriod(event.target.value);
+    };
+    
+    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const shiftTime = "9:00 AM"; // You can replace this with actual shift time from schedules
+    
+    // Handle clock in/out action
+    const handleClockComplete = (comment: string) => {
+      // Just toggle the state after successful clock in/out
+      setIsClockedIn(!isClockedIn);
+      
+      // Refresh timesheet data to show the new clock in/out
+      fetchTimesheets();
     };
   
     return (
       <>
         <Navbar />
         <main className="p-6 bg-gray-100 min-h-screen">
-          <h1 className="text-2xl font-bold mb-6">Timesheets</h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold">Timesheets</h1>
+            
+            {/* Clock In/Out Button */}
+            <Button
+              className={`${
+                isClockedIn 
+                  ? "bg-green-500 hover:bg-green-600" 
+                  : "bg-orange-500 hover:bg-orange-600"
+              } text-white py-2 px-6 rounded-md flex items-center justify-center shadow-md transition-all duration-200 transform hover:scale-105`}
+              onClick={() => setShowClockIn(true)}
+            >
+              <Clock className="w-5 h-5 mr-2" />
+              {isClockedIn ? "Clock Out" : "Clock In"}
+            </Button>
+          </div>
+          
           <div className="bg-white shadow-md rounded-lg p-4">
             {/* Pay Period Section */}
             <div className="flex justify-end items-center mb-4">
@@ -37,6 +154,7 @@ export default function TimesheetsPage() {
                   value={selectedPeriod}
                   onChange={handlePeriodChange}
                   className="appearance-none border border-gray-300 rounded-md px-4 py-2 text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  disabled={isLoadingTimesheets}
                 >
                   <optgroup label="January 2025">
                     <option>Jan 1 - 15, 2025</option>
@@ -56,10 +174,29 @@ export default function TimesheetsPage() {
                 </span>
               </div>
             </div>
-            {/* Employee Data Table */}
-            <EmployeeDataTable data={timesheetData} />
+            
+            {/* Timesheet Data Table with Loading State */}
+            {isLoadingTimesheets ? (
+              <div className="flex justify-center items-center py-20">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-orange-500"></div>
+              </div>
+            ) : (
+              <EmployeeDataTable data={timesheetData} />
+            )}
           </div>
           
+          {/* Clock In/Out Modal */}
+          {showClockIn && (
+            <ClockInModal
+              show={showClockIn}
+              onClose={() => setShowClockIn(false)}
+              onClockIn={handleClockComplete}
+              currentTime={currentTime}
+              shiftTime={shiftTime}
+              isClockedIn={isClockedIn}
+              userId={user?.id}
+            />
+          )}
         </main>
       </>
     );
