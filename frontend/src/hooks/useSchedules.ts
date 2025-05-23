@@ -23,24 +23,29 @@ export function useSchedules() {
       const res = await api.get("/schedules");
 
       // Normalize day into a string[]
-      const normalized: Schedule[] = (res.data.data || []).map((item: any) => {
-        let days: string[] = [];
+const normalized: Schedule[] = (res.data.data || []).map((item: any) => {
+  let days: string[] = [];
 
-        if (Array.isArray(item.day)) {
-          days = item.day;
-        } else if (typeof item.day === "string") {
-          try {
-            days = JSON.parse(item.day);
-          } catch {
-            days = item.day.split(",").map((d: string) => d.trim());
-          }
-        }
+  if (Array.isArray(item.day)) {
+    days = item.day;
+  } else if (typeof item.day === "string") {
+    try {
+      days = JSON.parse(item.day);
+    } catch {
+      days = item.day.split(",").map((d: string) => d.trim());
+    }
+  }
 
-        return {
-          ...item,
-          day: days,
-        };
-      });
+  return {
+    sched_id: item.sched_id ?? item.id,
+    title: item.title,
+    start: item.start,
+    end: item.end,
+    assigned: item.assigned ?? 0,
+    day: days,
+  };
+});
+
 
       // Sort by sched_id descending so newest appears first
       normalized.sort((a, b) => b.sched_id - a.sched_id);

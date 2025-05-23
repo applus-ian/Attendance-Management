@@ -82,28 +82,7 @@ export default function TimesheetsPage() {
       }
     }, [user, selectedPeriod]);
   
-    // Check if user is clocked in when the page loads
-    useEffect(() => {
-      const checkClockInStatus = async () => {
-        if (!user) return;
-        
-        try {
-          // Assuming there's an endpoint to check the user's current status
-          const response = await api.get(`/employee/current-status`);
-          if (response.data && response.data.status === 'clocked_in') {
-            setIsClockedIn(true);
-          }
-        } catch (error) {
-          console.error("Error checking clock in status:", error);
-          // Don't show error toast as this is a background check
-        }
-      };
-      
-      checkClockInStatus();
-      fetchTimesheets(); // Fetch timesheet data when the page loads
-    }, [user, fetchTimesheets]);
-  
-    // When period changes, refetch timesheet data
+    
     useEffect(() => {
       fetchTimesheets();
     }, [selectedPeriod, fetchTimesheets]);
@@ -115,14 +94,7 @@ export default function TimesheetsPage() {
     const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const shiftTime = "9:00 AM"; // You can replace this with actual shift time from schedules
     
-    // Handle clock in/out action
-    const handleClockComplete = (comment: string) => {
-      // Just toggle the state after successful clock in/out
-      setIsClockedIn(!isClockedIn);
-      
-      // Refresh timesheet data to show the new clock in/out
-      fetchTimesheets();
-    };
+    
   
     return (
       <>
@@ -131,18 +103,7 @@ export default function TimesheetsPage() {
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Timesheets</h1>
             
-            {/* Clock In/Out Button */}
-            <Button
-              className={`${
-                isClockedIn 
-                  ? "bg-green-500 hover:bg-green-600" 
-                  : "bg-orange-500 hover:bg-orange-600"
-              } text-white py-2 px-6 rounded-md flex items-center justify-center shadow-md transition-all duration-200 transform hover:scale-105`}
-              onClick={() => setShowClockIn(true)}
-            >
-              <Clock className="w-5 h-5 mr-2" />
-              {isClockedIn ? "Clock Out" : "Clock In"}
-            </Button>
+           
           </div>
           
           <div className="bg-white shadow-md rounded-lg p-4">
@@ -185,18 +146,7 @@ export default function TimesheetsPage() {
             )}
           </div>
           
-          {/* Clock In/Out Modal */}
-          {showClockIn && (
-            <ClockInModal
-              show={showClockIn}
-              onClose={() => setShowClockIn(false)}
-              onClockIn={handleClockComplete}
-              currentTime={currentTime}
-              shiftTime={shiftTime}
-              isClockedIn={isClockedIn}
-              userId={user?.id}
-            />
-          )}
+          
         </main>
       </>
     );

@@ -27,7 +27,7 @@ type Member = {
 type AssignShiftModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  scheduleId?: string|number; // Optional schedule ID
+  scheduleId: number; // Changed from optional string|number to required number
 };
 
 export function AssignShiftModal({ open, onOpenChange, scheduleId }: AssignShiftModalProps) {
@@ -92,50 +92,47 @@ export function AssignShiftModal({ open, onOpenChange, scheduleId }: AssignShift
 
   const selectedCount = members.filter(m => m.selected).length;
 
-  const handleSubmit = async () => {
-    const selectedMembers = members.filter(m => m.selected);
-    console.log("Members assigned:", selectedMembers, "to schedule:", scheduleId || 'Unknown ID');
-    
-    if (!scheduleId) {
-      console.error("No schedule ID provided for assignment");
-      setSubmitError("Cannot assign members: Missing schedule ID");
-      return;
-    }
-    
-    if (selectedMembers.length === 0) {
-      setSubmitError("Please select at least one member to assign");
-      return;
-    }
-    
-    try {
-      setSubmitting(true);
-      setSubmitError(null);
-      
-      // Call the API to assign users to the schedule
-      await assignUsersToSchedule(
-        scheduleId,
-        selectedMembers.map(member => member.id)
-      );
-      
-      onOpenChange(false);
-    } catch (error: any) {
-      console.error("Error assigning users:", error);
-      setSubmitError(error.message || "Failed to assign users to schedule");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-useEffect(() => {
-  if (open) {
-    // Clear selections and filters whenever modal opens with a new schedule
-    setMembers(prev =>
-      prev.map(member => ({ ...member, selected: false }))
-    );
-    setSearchTerm("");
-    setSelectedDepartment("All");
-    setSelectedRole("All");
+ const handleSubmit = async () => {
+  const selectedMembers = members.filter(m => m.selected);
+  
+  // More comprehensive ID validation
+  console.log("Members assigned:", selectedMembers);
+  console.log("Schedule ID for assignment:", scheduleId, "type:", typeof scheduleId);
+  
+  if (typeof scheduleId !== 'number' || isNaN(scheduleId)) {
+    console.error("Invalid schedule ID provided for assignment:", scheduleId);
+    setSubmitError("Cannot assign members: Invalid schedule ID");
+    return;
   }
-}, [open, scheduleId]);
+  
+  if (selectedMembers.length === 0) {
+    setSubmitError("Please select at least one member to assign");
+    return;
+  }
+  
+  try {
+    setSubmitting(true);
+    setSubmitError(null);
+    
+    // Call the API to assign users to the schedule with consistent type
+    await assignUsersToSchedule(
+      scheduleId,
+      selectedMembers.map(member => member.id)
+    );
+    
+    onOpenChange(false);
+  } catch (error: any) {
+    console.error("Error assigning users:", error);
+    setSubmitError(error.message || "Failed to assign users to schedule");
+  } finally {
+    setSubmitting(false);
+  }
+};
+useEffect(() => {
+  console.log("AssignShiftModal rendered with scheduleId:", scheduleId);
+  console.log("scheduleId type:", typeof scheduleId);
+  console.log("scheduleId is valid number:", !isNaN(Number(scheduleId)));
+}, [scheduleId]);
 
   const handleFilterSelect = (option: "Role" | "Department") => {
     setFilterOption(option);

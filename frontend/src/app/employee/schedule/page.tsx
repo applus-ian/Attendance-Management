@@ -1,16 +1,10 @@
 "use client";
 
 import {
-  Bell,
   FileText,
-  Menu,
-  User,
   Clock,
   AlertCircle,
   RefreshCw,
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import ClockInModal from "@/components/employee/Clock-in-modal";
@@ -29,17 +23,8 @@ export default function MySchedulePage() {
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { schedules, loading, error, refreshSchedule } = useEmployeeSchedule();
-  const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 5;
   const { user } = useAuth();
 
-  const pageCount = Math.ceil(schedules.length / itemsPerPage);
-  const paginatedSchedules = schedules.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
-
-  // Check if employee is already clocked in when page loads
   useEffect(() => {
     checkClockInStatus();
   }, []);
@@ -52,7 +37,6 @@ export default function MySchedulePage() {
       }
     } catch (error) {
       console.error("Error checking clock-in status:", error);
-      // Don't show error toast as this is a background check
     }
   };
 
@@ -81,22 +65,17 @@ export default function MySchedulePage() {
     return `${hour12}:${minutes} ${period}`;
   };
 
-  // Updated handler to use the real API
   const handleClockIn = async (comment: string) => {
     setIsLoading(true);
     try {
       const endpoint = isClockedIn ? '/timelogs/clock-out' : '/timelogs/clock-in';
-      const response = await api.post(endpoint, { 
-        comment,
-        // If we need additional data here, such as schedule ID
-      });
-      
-      // Update local state based on the new status
+      await api.post(endpoint, { comment });
+
       setIsClockedIn(!isClockedIn);
-      
+
       toast.success(
-        isClockedIn 
-          ? "You have successfully clocked out" 
+        isClockedIn
+          ? "You have successfully clocked out"
           : "You have successfully clocked in"
       );
     } catch (error: any) {

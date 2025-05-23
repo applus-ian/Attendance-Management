@@ -42,15 +42,13 @@ export default function ScheduleTable() {
   }
 
 const handleAssignClick = (schedule: any) => {
-  if (!schedule.sched_id) {
-    console.error("Missing sched_id for assign action!", schedule)
-    return
-  }
-
+  console.log("Assigning schedule:", schedule)
+  console.log("Schedule ID:", schedule.sched_id) // Confirm this is defined
   setSelectedSchedule(schedule)
   setAssignDialogOpen(true)
   setOpenDropdown(null)
 }
+
 
 
   const handleConfirmDelete = async () => {
