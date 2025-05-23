@@ -12,6 +12,9 @@ import {
 import { ManualRequest } from "@/hooks/useManualRequest";
 
 export function RequestDataTable({ data }: { data: ManualRequest[] }) {
+  // Ensure data is an array
+  const safeData = Array.isArray(data) ? data : [];
+
   return (
     <Table>
       <TableHeader className="bg-gray-200">
@@ -24,16 +27,21 @@ export function RequestDataTable({ data }: { data: ManualRequest[] }) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {data.length > 0 ? (
-          data.map((row) => (
-            <TableRow key={row.request_id}>
-              <TableCell>{new Date(row.created_at).toLocaleDateString()}</TableCell>
-              <TableCell>{row.request_type}</TableCell>
-              <TableCell>{new Date(row.time).toLocaleString()}</TableCell>
-              <TableCell>{row.reason}</TableCell>
-              <TableCell>{row.approval_status}</TableCell>
-            </TableRow>
-          ))
+        {safeData.length > 0 ? (
+          safeData.map((row, index) => {
+            // Create a unique key using multiple fields
+            const uniqueKey = `${row.request_id || ''}-${row.created_at || ''}-${index}`;
+
+            return (
+              <TableRow key={uniqueKey}>
+                <TableCell>{row.created_at ? new Date(row.created_at).toLocaleDateString() : 'N/A'}</TableCell>
+                <TableCell>{row.request_type || 'N/A'}</TableCell>
+                <TableCell>{row.time ? new Date(row.time).toLocaleString() : 'N/A'}</TableCell>
+                <TableCell>{row.reason || 'N/A'}</TableCell>
+                <TableCell>{row.approval_status || 'N/A'}</TableCell>
+              </TableRow>
+            );
+          })
         ) : (
           <TableRow>
             <TableCell colSpan={5} className="text-center">
