@@ -30,7 +30,7 @@ class AuthServiceProvider extends ServiceProvider
         Timesheets::class => TimesheetPolicy::class,
         AssignedSchedules::class => AssignedSchedulePolicy::class,
         ManualTimeRequests::class => ManualTimeRequestPolicy::class,
-        Schedules::class          => SchedulePolicy::class,
+        Schedules::class => SchedulePolicy::class,
     ];
 
     /**
