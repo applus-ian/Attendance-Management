@@ -2,23 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Models\AssignedSchedules;
 use Illuminate\Http\JsonResponse;
+use App\Services\AuditLogsService;
 use App\Services\AssignedScheduleService;
 use App\Http\Requests\AssignedSchedulesRequest;
 use App\Http\Resources\AssignedScheduleResource;
-use App\Services\AuditLogsService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class AssignedSchedulesController extends Controller
 {
     use AuthorizesRequests;
 
-    public function __construct(protected AssignedScheduleService $assignedScheduleService, protected AuditLogsService $auditLogsService)
-    {
-        $this->assignedScheduleService = $assignedScheduleService;
-        $this->auditLogsService = $auditLogsService;
-    }
+    public function __construct(
+        protected AssignedScheduleService $assignedScheduleService,
+        protected AuditLogsService $auditLogsService
+    ) {}
 
     public function index()
     {
@@ -31,7 +31,9 @@ class AssignedSchedulesController extends Controller
             description: "View all Assigned Schedules."
         );
 
-        return AssignedScheduleResource::collection(AssignedSchedules::with(['schedule', 'employee', 'createdBy', 'updatedBy'])->get());
+        return AssignedScheduleResource::collection(
+            AssignedSchedules::with(['schedule', 'employee', 'createdBy', 'updatedBy'])->get()
+        );
     }
 
     public function store(AssignedSchedulesRequest $request)
@@ -77,5 +79,28 @@ class AssignedSchedulesController extends Controller
         );
 
         return response()->json(['message' => 'Assignment deleted successfully.'], 200);
+    }
+
+    public function bulkAssign(Request $request): JsonResponse
+    {
+        $this->authorize('create', AssignedSchedules::class);
+
+        $data = $request->validated();
+        $assignedAt = $data['assigned_at'] ?? now();
+
+        $assigned = $this->assignedScheduleService->bulkAssign(
+            schedId: $data['sched_id'],
+            empIds: $data['emp_ids'],
+            assignedAt: $assignedAt
+        );
+
+        $this->auditLogsService->log(
+            action: 'Bulk Assigned Schedule',
+            type: 'Assigned Schedules',
+            targetId: $data['sched_id'],
+            description: 'Bulk assigned to employees: ' . implode(', ', $data['emp_ids'])
+        );
+
+        return response()->json(AssignedScheduleResource::collection($assigned), 201);
     }
 }
