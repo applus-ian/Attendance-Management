@@ -28,7 +28,12 @@ function TimeInputs({ day, checked, onCheckedChange, start, end, onStartChange, 
   return (
     <div className="grid grid-cols-4 gap-2 items-center mb-2">
       <div className="flex items-center space-x-2">
-        <Checkbox checked={checked} onCheckedChange={onCheckedChange} id={day} />
+        <Checkbox 
+          checked={checked} 
+          onCheckedChange={onCheckedChange} 
+          id={day} 
+          className="border-orange-500 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+        />
         <Label htmlFor={day} className="text-sm font-medium">{day}</Label>
       </div>
       <Input type="time" value={start} onChange={e => onStartChange(e.target.value)} className="col-span-1" placeholder="Start" disabled={!checked} />
@@ -51,9 +56,14 @@ export function AddScheduleDialog({ open, onOpenChange }: AddScheduleDialogProps
   const [scheduleName, setScheduleName] = useState("")
   const [success, setSuccess] = useState(false)
   const [addedSchedule, setAddedSchedule] = useState<{title: string, days: string[], start: string, end: string} | null>(null)
+  const [selectAll, setSelectAll] = useState(false);
 
   const handleDayCheckedChange = (idx: number, checked: boolean) => {
-    setDays(prev => prev.map((d, i) => i === idx ? { ...d, checked } : d))
+    const updatedDays = days.map((d, i) => i === idx ? { ...d, checked } : d);
+    setDays(updatedDays);
+    
+    // Update selectAll state based on whether all days are checked
+    setSelectAll(updatedDays.every(d => d.checked));
   }
   const handleStartChange = (idx: number, value: string) => {
     setDays(prev => prev.map((d, i) => i === idx ? { ...d, start: value } : d))
@@ -62,6 +72,31 @@ export function AddScheduleDialog({ open, onOpenChange }: AddScheduleDialogProps
     setDays(prev => prev.map((d, i) => i === idx ? { ...d, end: value } : d))
   }
 
+  // Add handler for selecting all days
+  const handleSelectAll = (checked: boolean) => {
+    setSelectAll(checked);
+    
+    // If checking all days, copy time values from the first checked day (if any)
+    if (checked) {
+      const firstCheckedDay = days.find(d => d.checked);
+      const startTime = firstCheckedDay?.start || '';
+      const endTime = firstCheckedDay?.end || '';
+      
+      setDays(prev => prev.map(d => ({
+        ...d,
+        checked,
+        start: d.start || startTime,
+        end: d.end || endTime
+      })));
+    } else {
+      // Just uncheck all without changing times
+      setDays(prev => prev.map(d => ({
+        ...d,
+        checked
+      })));
+    }
+  };
+
   const handleSubmit = async () => {
     const selectedDays = days.filter(d => d.checked);
     if (!scheduleName || selectedDays.length === 0) return;
@@ -69,7 +104,11 @@ export function AddScheduleDialog({ open, onOpenChange }: AddScheduleDialogProps
     const end = selectedDays[0].end;
     const day = selectedDays.map(d => d.name.toLowerCase());
     await addSchedule({
-      title: scheduleName, start, end, day,
+      title: scheduleName, 
+      start, 
+      end, 
+      day,
+      num_assigned: 0,
       assigned: 0
     });
     setAddedSchedule({
@@ -79,6 +118,11 @@ export function AddScheduleDialog({ open, onOpenChange }: AddScheduleDialogProps
       end
     });
     setSuccess(true);
+    
+    // Automatically reload the page after a short delay to show success message
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
   }
 
   const handleClose = () => {
@@ -122,7 +166,15 @@ export function AddScheduleDialog({ open, onOpenChange }: AddScheduleDialogProps
               </div>
               <div className="grid gap-4 mt-2">
                 <div className="grid grid-cols-4 gap-2 items-center mb-2">
-                  <div></div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="select-all"
+                      checked={selectAll} 
+                      onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                      className="border-orange-500 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+                    />
+                    <Label htmlFor="select-all" className="text-sm font-medium">Select All</Label>
+                  </div>
                   <div className="text-sm text-center">Start</div>
                   <div className="text-sm text-center">End</div>
                 </div>

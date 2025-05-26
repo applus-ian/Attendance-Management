@@ -53,6 +53,8 @@ Route::middleware('auth:sanctum')->group(function () {
 # Assigned Schedules
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('assigned-schedules', AssignedSchedulesController::class);
+    Route::post('assigned-schedules/batch', [AssignedSchedulesController::class, 'batchAssign'])->name('assigned-schedules.batchAssign');
+
      Route::get('assigned-schedules/employee', [AssignedSchedulesController::class, 'getEmployeeSchedules']);
 });
 

@@ -1,11 +1,13 @@
 "use client"
 
 import { Schedule, useSchedules } from "@/hooks/useSchedules"
-import { User } from "lucide-react"
+import { User, MoreHorizontal } from "lucide-react"
 import { useState } from "react"
 import { DeleteScheduleDialog } from "./delete-schedule-dialog"
 import { EditScheduleV2Dialog } from "./editv2"
 import { AssignShiftModal } from "./assign-members-dialog"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button"
 
 export default function ScheduleTable() {
   const { schedules, loading, error, deleteSchedule, updateSchedule } = useSchedules()
@@ -87,29 +89,37 @@ export default function ScheduleTable() {
                   </div>
                 </td>
                 <td className="py-4 px-6 text-right">
-                  <div className="flex justify-end gap-2">
-                    <button
-                      className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 text-sm"
-                      onClick={() => handleEditClick(sched)}
-                      disabled={sched.sched_id == null}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm"
-                      onClick={() => handleDeleteClick(sched)}
-                      disabled={sched.sched_id == null}
-                    >
-                      Delete
-                    </button>
-                    <button
-                      className="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-sm"
-                      onClick={() => handleAssignClick(sched)}
-                      disabled={sched.sched_id == null}
-                    >
-                      Assign
-                    </button>
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem 
+                        onClick={() => handleAssignClick(sched)} 
+                        disabled={sched.sched_id == null}
+                        className="cursor-pointer hover:bg-orange-500 hover:text-white"
+                      >
+                        Assigned
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleEditClick(sched)} 
+                        disabled={sched.sched_id == null}
+                        className="cursor-pointer hover:bg-orange-500 hover:text-white"
+                      >
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleDeleteClick(sched)} 
+                        disabled={sched.sched_id == null}
+                        className="cursor-pointer text-red-500 hover:bg-orange-500 hover:text-white"
+                      >
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </td>
               </tr>
             ))}
