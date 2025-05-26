@@ -9,6 +9,23 @@ import { AssignShiftModal } from "./assign-members-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button"
 
+// Helper function to convert 24-hour time to 12-hour format
+function formatTimeTo12Hour(time: string): string {
+  if (!time) return '';
+  
+  // Parse the hours and minutes
+  const [hours, minutes] = time.split(':').map(Number);
+  
+  // Determine AM or PM
+  const period = hours >= 12 ? 'PM' : 'AM';
+  
+  // Convert hours to 12-hour format
+  const hours12 = hours % 12 || 12; // Converts 0 to 12 for midnight
+  
+  // Format the time string
+  return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
+
 export default function ScheduleTable() {
   const { schedules, loading, error, deleteSchedule, updateSchedule } = useSchedules()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -81,7 +98,7 @@ export default function ScheduleTable() {
               <tr key={sched.sched_id ?? index} className="border-b hover:bg-gray-50">
                 <td className="py-4 px-6 text-sm">{sched.title}</td>
                 <td className="py-4 px-6 text-sm">{sched.day.join(", ")}</td>
-                <td className="py-4 px-6 text-sm">{`${sched.start} - ${sched.end}`}</td>
+                <td className="py-4 px-6 text-sm">{`${formatTimeTo12Hour(sched.start)} - ${formatTimeTo12Hour(sched.end)}`}</td>
                 <td className="py-4 px-6 text-sm">
                   <div className="flex items-center">
                     <span className="mr-2">{sched.num_assigned || 0}</span>
