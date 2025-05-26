@@ -62,6 +62,8 @@ Route::middleware('auth:sanctum')->group(function () {
 # Assigned Schedules
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('assigned-schedules', AssignedSchedulesController::class);
+    Route::delete('assigned-schedules/{assigned_schedule}', [AssignedSchedulesController::class, 'destroy']);
+    Route::post('assigned-schedules/bulk', [AssignedSchedulesController::class, 'bulkAssign']);
 });
 
 # Audit Logs

@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Models\AssignedSchedules;
 use Illuminate\Http\JsonResponse;
+use App\Services\AuditLogsService;
 use App\Services\AssignedScheduleService;
 use App\Http\Requests\AssignedSchedulesRequest;
 use App\Http\Resources\AssignedScheduleResource;
-use App\Services\AuditLogsService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class AssignedSchedulesController extends Controller
@@ -81,5 +82,28 @@ class AssignedSchedulesController extends Controller
         );
 
         return response()->json(['message' => 'Assignment deleted successfully.'], 200);
+    }
+
+    public function bulkAssign(Request $request): JsonResponse
+    {
+        $this->authorize('create', AssignedSchedules::class);
+
+        $data = $request->validated();
+        $assignedAt = $data['assigned_at'] ?? now();
+
+        $assigned = $this->assignedScheduleService->bulkAssign(
+            schedId: $data['sched_id'],
+            empIds: $data['emp_ids'],
+            assignedAt: $assignedAt
+        );
+
+        $this->auditLogsService->log(
+            action: 'Bulk Assigned Schedule',
+            type: 'Assigned Schedules',
+            targetId: $data['sched_id'],
+            description: 'Bulk assigned to employees: ' . implode(', ', $data['emp_ids'])
+        );
+
+        return response()->json(AssignedScheduleResource::collection($assigned), 201);
     }
 }
