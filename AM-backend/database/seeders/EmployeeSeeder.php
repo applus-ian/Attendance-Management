@@ -55,7 +55,7 @@ class EmployeeSeeder extends Seeder
             'profile_pic_url' => null,
         ]);
 
-        $user1 = User::create([
+        $user = User::create([
             'emp_id' => $employee->emp_id,
             'email' => $employee->email,
             'password' => Hash::make('password123'),
