@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
@@ -12,15 +11,23 @@ class AuthService
     {
         if (!Auth::attempt($credentials)) {
             return response()
-                ->json(['message' => 'Incorrect Password!'], 401);
+                ->json(['message' => 'Incorrect credentials!'], 401);
         }
 
-        // $user = User::where('email', $credentials['email'])->first();
         /** @var User $user */
         $user = Auth::user();
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // 🔒 Check if the user is inactive
+        if (!$user->is_active) {
+            // Logout immediately to clear any session
+            Auth::logout();
+            return response()->json([
+                'message' => 'Your account is inactive. Please contact an administrator.'
+            ], 403);
+        }
 
+        // ✅ Active user – continue login
+        $token = $user->createToken('auth_token')->plainTextToken;
         $role = $user->getRoleNames();
 
         return [

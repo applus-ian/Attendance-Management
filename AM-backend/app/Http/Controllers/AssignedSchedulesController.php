@@ -39,12 +39,13 @@ class AssignedSchedulesController extends Controller
     public function store(AssignedSchedulesRequest $request)
     {
         $this->authorize('create', AssignedSchedules::class);
+
         $schedule = $this->assignedScheduleService->assign($request->validated());
 
         $this->auditLogsService->log(
             action: 'Assigned Schedule',
             type: 'Assigned Schedules',
-            targetId: $request->assigned_id,
+            targetId: $schedule->assigned_id,
             description: "Assigned a Schedule."
         );
 
@@ -53,13 +54,14 @@ class AssignedSchedulesController extends Controller
 
     public function update(AssignedSchedulesRequest $request, AssignedSchedules $assignedSchedule): JsonResponse
     {
-        $this->authorize('update', AssignedSchedules::class);
+        $this->authorize('update', $assignedSchedule);
+
         $updated = $this->assignedScheduleService->update($assignedSchedule, $request->validated());
 
         $this->auditLogsService->log(
             action: 'Update Assigned Schedule',
             type: 'Assigned Schedules',
-            targetId: $request->assigned_id,
+            targetId: $updated->assigned_id,
             description: "Update Assigned Schedule."
         );
 
@@ -68,7 +70,8 @@ class AssignedSchedulesController extends Controller
 
     public function destroy(AssignedSchedules $assignedSchedule)
     {
-        $this->authorize('delete', AssignedSchedules::class);
+        $this->authorize('delete', $assignedSchedule);
+
         $this->assignedScheduleService->delete($assignedSchedule);
 
         $this->auditLogsService->log(

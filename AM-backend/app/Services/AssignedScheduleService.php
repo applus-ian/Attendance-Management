@@ -14,13 +14,14 @@ class AssignedScheduleService
 {
     public function assign(array $data): AssignedSchedules
     {
-        $empId = $data['emp_id'];
+        $empId = Employee::find($data['emp_id']);
         $schedId = $data['sched_id'];
         $assignedAt = Carbon::now();
         $userId = Auth::id();
 
         $schedule = Schedules::find($schedId);
-        if (! $schedule) {
+        if (!$schedule) {
+
             throw ValidationException::withMessages([
                 'sched_id' => ['The selected schedule does not exist.']
             ]);
@@ -39,7 +40,7 @@ class AssignedScheduleService
 
         if ($existing) {
             $existing->update([
-                'sched_id'   => $schedId,
+                'sched_id' => $schedId,
                 'updated_by' => $userId,
             ]);
             return $existing;
@@ -48,8 +49,9 @@ class AssignedScheduleService
         Schedules::where('sched_id', $schedId)->increment('num_assigned');
 
         return AssignedSchedules::create([
-            'emp_id'      => $empId,
-            'sched_id'    => $schedId,
+            'emp_id' => $empId->emp_id,
+            'sched_id' => $schedId,
+
             'assigned_at' => $assignedAt,
             'created_by'  => $userId,
             'updated_by'  => $userId,

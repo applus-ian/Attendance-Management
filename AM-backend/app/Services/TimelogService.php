@@ -22,9 +22,9 @@ class TimelogService
     public function clockIn(array $data): Timelogs
     {
         $employee = Employee::findOrFail($data['emp_id']);
-        $today    = Carbon::today()->toDateString();
+        $now      = Carbon::parse($data['time'] ?? now());
+        $today    = $now->toDateString();
 
-        // Holiday check: block clock‑in on non‑working holidays
         $isHoliday = Holiday::whereDate('date', $today)
             ->where('active', true)
             ->whereIn('type', [
@@ -46,19 +46,18 @@ class TimelogService
             ]);
         }
 
-        $now       = Carbon::now();
-        $schedule  = AssignedSchedules::where('emp_id', $employee->emp_id)
+        $schedule = AssignedSchedules::where('emp_id', $employee->emp_id)
             ->whereDate('assigned_at', $today)
             ->with('schedule')
             ->first()?->schedule;
 
         $isLate = $schedule
-            ? $now->greaterThan(Carbon::parse($today . ' ' . $schedule->start))
+            ? $now->greaterThan(Carbon::parse("{$today} {$schedule->start}"))
             : false;
 
         $timelog = Timelogs::create([
             'emp_id'       => $employee->emp_id,
-            'timelog_type' => 'clock_in',
+            'timelog_type' => $data['type'] ?? 'clock_in',
             'time'         => $now,
             'created_by'   => Auth::user()->user_id,
             'is_present'   => true,
@@ -92,7 +91,7 @@ class TimelogService
             ->firstOrFail();
 
         $inTime = Carbon::parse($in->time);
-        $now    = Carbon::now();
+        $now = isset($data['time']) ? Carbon::parse($data['time']) : Carbon::now();
         $duration = $now->diffInMinutes($inTime) / 60;
 
         $hasOvertime = ManualTimeRequests::where('emp_id', $employee->emp_id)

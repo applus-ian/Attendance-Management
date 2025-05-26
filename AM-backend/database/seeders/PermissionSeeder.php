@@ -44,7 +44,12 @@ class PermissionSeeder extends Seeder
             'create custom holiday',
             'edit holiday',
             'remove holidays',
-            'sync holidays'
+            'sync holidays',
+            'view assigned schedules',
+            'view assigned schedule',
+            'create assigned schedule',
+            'update assigned schedule',
+            'delete assigned schedule'
         ];
 
         foreach ($permissions as $permission) {
@@ -80,7 +85,12 @@ class PermissionSeeder extends Seeder
             'create requests',
             'approve requests',
             'reject requests',
-            'create auditlogs'
+            'create auditlogs',
+            'view assigned schedules',
+            'view assigned schedule',
+            'create assigned schedule',
+            'update assigned schedule',
+            'delete assigned schedule'
 
         ]);
         $employeeRole->syncPermissions([
@@ -95,7 +105,11 @@ class PermissionSeeder extends Seeder
         ]);
 
         $superAdmin = User::where('email', 'john1@example.com')->first();
+        $employee = User::where('email', 'john2@example.com')->first();
+        $admin = User::where('email', 'john3@example.com')->first();
 
         $superAdmin->assignRole($superAdminRole);
+        $employee->assignRole($employeeRole);
+        $admin->assignRole($adminRole);
     }
 }
