@@ -16,7 +16,10 @@ class AssignedSchedulesRequest extends FormRequest
         return [
             'emp_id' => 'required|exists:employees,emp_id',
             'sched_id' => 'required|exists:schedules,sched_id',
-            'assigned_at' => 'nullable|date|after_or_equal:today',
+            'assigned_at' => 'required|date',
+            'emp_ids' => 'array', // for bulk assign
+            'emp_ids.*' => 'exists:employees,emp_id',
         ];
     }
+
 }

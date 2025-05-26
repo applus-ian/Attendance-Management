@@ -40,6 +40,7 @@ class PermissionSeeder extends Seeder
             'view auditlogs',
             'view auditlog',
             'create auditlogs',
+            'create assigned schedule',
         ];
 
         foreach ($permissions as $permission) {

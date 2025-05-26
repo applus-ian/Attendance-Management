@@ -5,11 +5,11 @@ import { User, MoreHorizontal } from "lucide-react"
 import { useState } from "react"
 import { DeleteScheduleDialog } from "./delete-schedule-dialog"
 import { EditScheduleV2Dialog } from "./editv2"
-import { AssignShiftModal } from "./assign-members-dialog"
+import { AssignUserModal } from "./assign-user-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button"
 
-// Helper function to convert 24-hour time to 12-hour format
+// Helper function to convert 24-hour time to 12-hour formatas
 function formatTimeTo12Hour(time: string): string {
   if (!time) return '';
   
@@ -27,14 +27,14 @@ function formatTimeTo12Hour(time: string): string {
 }
 
 export default function ScheduleTable() {
-  const { schedules, loading, error, deleteSchedule, updateSchedule } = useSchedules()
+  const { schedules, loading, error, deleteSchedule, updateSchedule, fetchSchedules } = useSchedules()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null)
   const [currentPage, setCurrentPage] = useState(0)
   const [isDeleting, setIsDeleting] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
-  const [assignSchedule, setAssignSchedule] = useState<Schedule | null>(null);
+  const [assignUserDialogOpen, setAssignUserDialogOpen] = useState(false);
+  const [assignUserSchedule, setAssignUserSchedule] = useState<Schedule | null>(null);
 
   const itemsPerPage = 5
   const pageCount = Math.ceil(schedules.length / itemsPerPage)
@@ -72,8 +72,8 @@ export default function ScheduleTable() {
   };
 
   const handleAssignClick = (schedule: Schedule) => {
-    setAssignSchedule(schedule);
-    setAssignDialogOpen(true);
+    setAssignUserSchedule(schedule);
+    setAssignUserDialogOpen(true);
   };
 
 
@@ -237,12 +237,22 @@ export default function ScheduleTable() {
         />
       )}
 
-      {/* Assign Members Dialog */}
-      {assignSchedule && (
+      {/* Assign Members Dialog (old, now commented out) */}
+      {/*assignSchedule && (
         <AssignShiftModal
           open={assignDialogOpen}
           onOpenChange={setAssignDialogOpen}
           scheduleId={assignSchedule.sched_id}
+          onAssigned={fetchSchedules}
+        />
+      )*/}
+      {/* Assign User Dialog (new) */}
+      {assignUserSchedule && (
+        <AssignUserModal
+          open={assignUserDialogOpen}
+          onOpenChange={setAssignUserDialogOpen}
+          scheduleId={assignUserSchedule.sched_id}
+          onAssigned={fetchSchedules}
         />
       )}
     </>

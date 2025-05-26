@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Request;
 use App\Models\AssignedSchedules;
 use Illuminate\Http\JsonResponse;
 use App\Services\AssignedScheduleService;
@@ -9,6 +9,7 @@ use App\Http\Requests\AssignedSchedulesRequest;
 use App\Http\Resources\AssignedScheduleResource;
 use App\Services\AuditLogsService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use App\Http\Requests\BulkAssignRequest;
 
 class AssignedSchedulesController extends Controller
 {
@@ -124,5 +125,38 @@ class AssignedSchedulesController extends Controller
             'success' => true,
             'data' => $formattedSchedules
         ]);
+    }
+    public function bulkAssign(BulkAssignRequest $request): JsonResponse
+    {
+        $this->authorize('bulkAssign', AssignedSchedules::class);
+
+        \Log::info('Bulk assign payload:', $request->all());
+
+        $data = $request->validated();
+        $assignedAt = $data['assigned_at'] ?? now();
+
+        $assigned = $this->assignedScheduleService->bulkAssign(
+            schedId: $data['sched_id'],
+            empIds: $data['emp_ids'],
+            assignedAt: $assignedAt
+        );
+
+        $this->auditLogsService->log(
+            action: 'Bulk Assigned Schedule',
+            type: 'Assigned Schedules',
+            targetId: $data['sched_id'],
+            description: 'Bulk assigned to employees: ' . implode(', ', $data['emp_ids'])
+        );
+
+        return response()->json(AssignedScheduleResource::collection($assigned), 201);
+    }
+
+    public function show($id)
+    {
+        $assigned = AssignedSchedules::find($id);
+        if (!$assigned) {
+            return response()->json(['message' => 'Assigned schedule not found'], 404);
+        }
+        return response()->json(new AssignedScheduleResource($assigned));
     }
 }

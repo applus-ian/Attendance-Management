@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useUsers, User as ApiUser } from "@/hooks/useUsers";
+import { useBulkAssignSchedules } from "@/hooks/useAssignedSchedules";
 import { Loader2 } from "lucide-react";
 
 type Member = {
@@ -33,7 +34,8 @@ type AssignShiftModalProps = {
 export function AssignShiftModal({ open, onOpenChange, scheduleId }: AssignShiftModalProps) {
   console.log("AssignShiftModal received scheduleId:", scheduleId, "type:", typeof scheduleId);
   
-  const { users, loading: loadingUsers, error: usersError, assignUsersToSchedule } = useUsers();
+  const { users, loading: loadingUsers, error: usersError } = useUsers();
+  const { bulkAssign, loading: bulkAssigning, error: bulkAssignError } = useBulkAssignSchedules();
   const [searchTerm, setSearchTerm] = useState("");
   const [members, setMembers] = useState<Member[]>([]);
   const [filterOption, setFilterOption] = useState<"Role" | "Department">("Role");
@@ -94,35 +96,23 @@ export function AssignShiftModal({ open, onOpenChange, scheduleId }: AssignShift
 
  const handleSubmit = async () => {
   const selectedMembers = members.filter(m => m.selected);
-  
-  // More comprehensive ID validation
-  console.log("Members assigned:", selectedMembers);
-  console.log("Schedule ID for assignment:", scheduleId, "type:", typeof scheduleId);
-  
   if (typeof scheduleId !== 'number' || isNaN(scheduleId)) {
-    console.error("Invalid schedule ID provided for assignment:", scheduleId);
     setSubmitError("Cannot assign members: Invalid schedule ID");
     return;
   }
-  
   if (selectedMembers.length === 0) {
     setSubmitError("Please select at least one member to assign");
     return;
   }
-  
   try {
     setSubmitting(true);
     setSubmitError(null);
-    
-    // Call the API to assign users to the schedule with consistent type
-    await assignUsersToSchedule(
-      scheduleId,
-      selectedMembers.map(member => member.id)
-    );
-    
+    await bulkAssign({
+      sched_id: scheduleId,
+      emp_ids: selectedMembers.map(m => Number(m.id)),
+    });
     onOpenChange(false);
   } catch (error: any) {
-    console.error("Error assigning users:", error);
     setSubmitError(error.message || "Failed to assign users to schedule");
   } finally {
     setSubmitting(false);
@@ -300,9 +290,9 @@ useEffect(() => {
           <Button
             className="bg-orange-500 hover:bg-orange-600 text-white"
             onClick={handleSubmit}
-            disabled={selectedCount === 0 || submitting}
+            disabled={selectedCount === 0 || submitting || bulkAssigning}
           >
-            {submitting ? (
+            {submitting || bulkAssigning ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Assigning...
@@ -311,6 +301,9 @@ useEffect(() => {
               "Assign"
             )}
           </Button>
+          {bulkAssignError && (
+            <p className="text-sm text-red-500 mb-2">{bulkAssignError}</p>
+          )}
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
             Cancel
           </Button>

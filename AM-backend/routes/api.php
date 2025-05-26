@@ -27,8 +27,6 @@ Route::controller(AuthController::class)
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('schedules', SchedulesController::class);
 
-
-
 });
 
 #User Management
@@ -53,9 +51,9 @@ Route::middleware('auth:sanctum')->group(function () {
 # Assigned Schedules
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('assigned-schedules', AssignedSchedulesController::class);
-    Route::post('assigned-schedules/batch', [AssignedSchedulesController::class, 'batchAssign'])->name('assigned-schedules.batchAssign');
+    Route::post('assigned-schedules/bulk', [AssignedSchedulesController::class, 'bulkAssign']);
 
-     Route::get('assigned-schedules/employee', [AssignedSchedulesController::class, 'getEmployeeSchedules']);
+    Route::get('assigned-schedules/employee', [AssignedSchedulesController::class, 'getEmployeeSchedules']);
 });
 
 

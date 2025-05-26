@@ -7,8 +7,9 @@ use App\Models\Employee;
 use App\Models\Schedules;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Collection;
 
 class AssignedScheduleService
 {
@@ -16,10 +17,9 @@ class AssignedScheduleService
     {
         $empId = $data['emp_id'];
         $schedId = $data['sched_id'];
-        $assignedAt = $data['assigned_at'] ?? Carbon::now();
+        $assignedAt = $data['assigned_at'] ?? now();
         $userId = Auth::id();
 
-        // Validate existence
         $employee = Employee::find($empId);
         if (!$employee) {
             throw ValidationException::withMessages([
@@ -34,22 +34,12 @@ class AssignedScheduleService
             ]);
         }
 
-        // Optional: Prevent assigning to past dates
-        // if (Carbon::parse($assignedAt)->isPast()) {
-        //     throw ValidationException::withMessages([
-        //         'assigned_at' => ['You cannot assign a schedule in the past.']
-        //     ]);
-        // }
-
-        return DB::transaction(function () use ($empId, $schedId, $assignedAt, $userId, $schedule) {
-
-            // Check if assignment already exists for employee on assigned date
+        return DB::transaction(function () use ($empId, $schedId, $assignedAt, $userId) {
             $existing = AssignedSchedules::where('emp_id', $empId)
                 ->whereDate('assigned_at', $assignedAt)
                 ->first();
 
             if ($existing) {
-                // If schedule changed, update num_assigned counts accordingly
                 if ($existing->sched_id !== $schedId) {
                     Schedules::where('sched_id', $existing->sched_id)->decrement('num_assigned');
                     Schedules::where('sched_id', $schedId)->increment('num_assigned');
@@ -57,13 +47,13 @@ class AssignedScheduleService
 
                 $existing->update([
                     'sched_id' => $schedId,
-                    'updated_by' => $userId,
                     'assigned_at' => $assignedAt,
+                    'updated_by' => $userId,
                 ]);
+
                 return $existing;
             }
 
-            // New assignment, increment num_assigned
             Schedules::where('sched_id', $schedId)->increment('num_assigned');
 
             return AssignedSchedules::create([
@@ -81,14 +71,16 @@ class AssignedScheduleService
         $userId = Auth::id();
 
         return DB::transaction(function () use ($assignment, $data, $userId) {
-            if ($assignment->sched_id !== (int) $data['sched_id']) {
+            $newSchedId = $data['sched_id'];
+
+            if ($assignment->sched_id !== $newSchedId) {
                 Schedules::where('sched_id', $assignment->sched_id)->decrement('num_assigned');
-                Schedules::where('sched_id', $data['sched_id'])->increment('num_assigned');
+                Schedules::where('sched_id', $newSchedId)->increment('num_assigned');
             }
 
             $assignment->update([
                 'emp_id' => $data['emp_id'],
-                'sched_id' => $data['sched_id'],
+                'sched_id' => $newSchedId,
                 'assigned_at' => $data['assigned_at'],
                 'updated_by' => $userId,
             ]);
@@ -103,5 +95,59 @@ class AssignedScheduleService
             Schedules::where('sched_id', $assignment->sched_id)->decrement('num_assigned');
             return $assignment->delete();
         });
+    }
+
+    public function bulkAssign(int $schedId, array $empIds, $assignedAt): Collection
+    {
+        $schedule = Schedules::find($schedId);
+        if (!$schedule) {
+            throw ValidationException::withMessages([
+                'sched_id' => ['Schedule not found.']
+            ]);
+        }
+
+        $userId = Auth::id();
+        $results = collect();
+
+        foreach ($empIds as $empId) {
+            $employee = Employee::find($empId);
+            if (!$employee) {
+                throw ValidationException::withMessages([
+                    'emp_ids' => ["Employee with ID {$empId} does not exist."]
+                ]);
+            }
+
+            $existing = AssignedSchedules::where('emp_id', $empId)
+                ->whereDate('assigned_at', $assignedAt)
+                ->first();
+
+            if ($existing) {
+                if ($existing->sched_id !== $schedId) {
+                    Schedules::where('sched_id', $existing->sched_id)->decrement('num_assigned');
+                    Schedules::where('sched_id', $schedId)->increment('num_assigned');
+                }
+
+                $existing->update([
+                    'sched_id' => $schedId,
+                    'updated_by' => $userId,
+                ]);
+
+                $results->push($existing);
+            } else {
+                Schedules::where('sched_id', $schedId)->increment('num_assigned');
+
+                $newAssignment = AssignedSchedules::create([
+                    'emp_id' => $empId,
+                    'sched_id' => $schedId,
+                    'assigned_at' => $assignedAt,
+                    'created_by' => $userId,
+                    'updated_by' => $userId,
+                ]);
+
+                $results->push($newAssignment);
+            }
+        }
+
+        return $results;
     }
 }

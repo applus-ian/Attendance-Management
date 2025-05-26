@@ -38,7 +38,8 @@ return new class extends Migration
                 'View All Assigned Schedules',
                 'Assigned Schedule',
                 'Update Assigned Schedule',
-                'Remove Assigned Schedule'
+                'Remove Assigned Schedule',
+                'Bulk Assigned Schedule'
             ]);
             $table->string('target_type', 50)->nullable();
             $table->unsignedBigInteger('target_id')->nullable();

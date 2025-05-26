@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -27,6 +26,9 @@ return new class extends Migration
         Schema::table('assigned_schedules', function (Blueprint $table) {
             $table->dropForeign(['emp_id']);
             $table->dropForeign(['sched_id']);
+            $table->dropForeign(['created_by']);
+            $table->dropForeign(['updated_by']);
         });
     }
+
 };

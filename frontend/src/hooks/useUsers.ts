@@ -61,9 +61,9 @@ export function useUsers() {
       });
       
       // Call the API endpoint for batch assigning users to schedules
-      const response = await api.post(`/assigned-schedules/batch`, {
-        schedule_id: scheduleId,
-        user_ids: userIds
+      const response = await api.post(`/assigned-schedules/bulk`, {
+        sched_id: scheduleId,
+        emp_ids: userIds
       });
       
       console.log("Assignment response:", response.data);

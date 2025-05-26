@@ -31,4 +31,11 @@ class AssignedSchedulePolicy
     {
         return $user->can('delete assigned schedule');
     }
+
+    public function bulkAssign(User $user): bool
+    {
+        return $user->hasPermissionTo('create assigned schedule');
+    }
+
+
 }
