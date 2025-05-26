@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
@@ -15,13 +14,13 @@ class AssignedScheduleResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
+            'id' => $this->assigned_id,
             'emp_id' => $this->emp_id,
-            'employee' => [
+            'employee' => $this->employee ? [
                 'id' => $this->employee->emp_id,
                 'name' => $this->employee->first_name . ' ' . $this->employee->last_name,
-            ],
-            'schedule' => new ScheduleResource($this->schedule),
+            ] : null,
+            'schedule' => $this->schedule ? new ScheduleResource($this->schedule) : null,
             'assigned_at' => $this->assigned_at,
             'created_by' => $this->createdBy ? [
                 'id' => $this->createdBy->user_id,

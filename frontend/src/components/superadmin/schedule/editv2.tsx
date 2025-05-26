@@ -11,69 +11,97 @@ import { useSchedules } from "@/hooks/useSchedules"
 export interface EditScheduleV2DialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-schedule: {
-  sched_id: number
-  name: string
-  days: string[]
-  start: string
-  end: string
-}
+  schedule: {
+    sched_id: number
+    name: string
+    days: string[]
+    start: string
+    end: string
+  }
 }
 
 export function EditScheduleV2Dialog({ open, onOpenChange, schedule }: EditScheduleV2DialogProps) {
-  const { updateSchedule } = useSchedules();
+  const { updateSchedule } = useSchedules()
 
   const [scheduleName, setScheduleName] = useState(schedule.name)
   const [selectedDays, setSelectedDays] = useState<Record<string, boolean>>({})
-  const [start, setStart] = useState(schedule.start)
-  const [end, setEnd] = useState(schedule.end)
+  const [timePerDay, setTimePerDay] = useState<Record<string, { start: string; end: string }>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
-  
 
- useEffect(() => {
-  if (!schedule || !Array.isArray(schedule.days)) return;
+  useEffect(() => {
+    if (!open || !schedule || !Array.isArray(schedule.days)) return
 
-  setScheduleName(schedule.name);
-  const dayMap: Record<string, boolean> = {
-    monday: false,
-    tuesday: false,
-    wednesday: false,
-    thursday: false,
-    friday: false,
-    saturday: false,
-    sunday: false,
-  };
-  schedule.days.forEach(day => {
-    if (typeof day === 'string') {
-      dayMap[day.toLowerCase()] = true;
+    setScheduleName(schedule.name)
+
+    const initialDays: Record<string, boolean> = {
+      monday: false,
+      tuesday: false,
+      wednesday: false,
+      thursday: false,
+      friday: false,
+      saturday: false,
+      sunday: false,
     }
-  });
-  setSelectedDays(dayMap);
-  setStart(schedule.start);
-  setEnd(schedule.end);
-}, [schedule]);
 
+    const initialTimes: Record<string, { start: string; end: string }> = {}
+
+    schedule.days.forEach(day => {
+      const key = day.toLowerCase()
+      initialDays[key] = true
+      initialTimes[key] = {
+        start: schedule.start,
+        end: schedule.end,
+      }
+    })
+
+    setSelectedDays(initialDays)
+    setTimePerDay(initialTimes)
+  }, [schedule, open])
 
   const handleDayChange = (day: string, checked: boolean) => {
-    setSelectedDays((prev) => ({ ...prev, [day.toLowerCase()]: checked }))
+    const key = day.toLowerCase()
+    setSelectedDays(prev => ({ ...prev, [key]: checked }))
+    if (checked && !timePerDay[key]) {
+      setTimePerDay(prev => ({
+        ...prev,
+        [key]: { start: schedule.start, end: schedule.end },
+      }))
+    }
   }
+
+  const handleTimeChange = (day: string, type: "start" | "end", value: string) => {
+    const key = day.toLowerCase()
+    setTimePerDay(prev => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        [type]: value,
+      },
+    }))
+  }
+
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true)
-      const days = Object.entries(selectedDays)
-        .filter(([_, checked]) => checked)
-        .map(([day]) => day.charAt(0).toUpperCase() + day.slice(1))
-      
-      // Use either sched_id or id depending on what's available in the schedule object
-      const scheduleId = schedule.sched_id ;
-      
-      await updateSchedule(scheduleId, {
-        title: scheduleName,  // This is correct - backend expects 'title'
-        day: days,           // This is correct
+
+      const selected = Object.entries(selectedDays).filter(([_, checked]) => checked)
+
+      if (selected.length === 0) {
+        alert("Please select at least one day.")
+        return
+      }
+
+      const days = selected.map(([day]) => day.charAt(0).toUpperCase() + day.slice(1))
+      const firstDay = selected[0][0]
+      const start = timePerDay[firstDay]?.start || ""
+      const end = timePerDay[firstDay]?.end || ""
+
+      await updateSchedule(schedule.sched_id, {
+        title: scheduleName,
+        day: days,
         start,
         end,
-      });
-
+      })
 
       onOpenChange(false)
     } catch (error) {
@@ -101,31 +129,34 @@ export function EditScheduleV2Dialog({ open, onOpenChange, schedule }: EditSched
               <div className="text-sm text-center">End</div>
               <div></div>
             </div>
-            {["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].map(day => (
-              <div className="grid grid-cols-4 gap-2 items-center mb-2" key={day}>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`day-${day.toLowerCase()}`}
-                    checked={selectedDays[day.toLowerCase()] || false}
-                    onCheckedChange={checked => handleDayChange(day, !!checked)}
+            {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(day => {
+              const key = day.toLowerCase()
+              return (
+                <div className="grid grid-cols-4 gap-2 items-center mb-2" key={day}>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`day-${key}`}
+                      checked={selectedDays[key] || false}
+                      onCheckedChange={checked => handleDayChange(day, !!checked)}
+                    />
+                    <Label htmlFor={`day-${key}`} className="text-sm font-medium">{day}</Label>
+                  </div>
+                  <Input
+                    type="time"
+                    value={timePerDay[key]?.start || ""}
+                    onChange={e => handleTimeChange(day, "start", e.target.value)}
+                    disabled={!selectedDays[key]}
                   />
-                  <Label htmlFor={`day-${day.toLowerCase()}`} className="text-sm font-medium">{day}</Label>
+                  <Input
+                    type="time"
+                    value={timePerDay[key]?.end || ""}
+                    onChange={e => handleTimeChange(day, "end", e.target.value)}
+                    disabled={!selectedDays[key]}
+                  />
+                  <div></div>
                 </div>
-                <Input
-                  type="time"
-                  value={start}
-                  onChange={e => setStart(e.target.value)}
-                  disabled={!selectedDays[day.toLowerCase()]}
-                />
-                <Input
-                  type="time"
-                  value={end}
-                  onChange={e => setEnd(e.target.value)}
-                  disabled={!selectedDays[day.toLowerCase()]}
-                />
-                <div></div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
         <DialogFooter className="gap-2 sm:gap-0">

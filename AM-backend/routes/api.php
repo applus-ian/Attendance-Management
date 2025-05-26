@@ -27,6 +27,8 @@ Route::controller(AuthController::class)
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('schedules', SchedulesController::class);
 
+
+
 });
 
 #User Management
@@ -51,8 +53,9 @@ Route::middleware('auth:sanctum')->group(function () {
 # Assigned Schedules
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('assigned-schedules', AssignedSchedulesController::class);
-    Route::delete('/assigned-schedules/{assigned_schedule}', [AssignedSchedulesController::class, 'destroy']);
+     Route::get('assigned-schedules/employee', [AssignedSchedulesController::class, 'getEmployeeSchedules']);
 });
+
 
 # Audit Logs
 Route::middleware('auth:sanctum')->group(function () {

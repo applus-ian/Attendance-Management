@@ -1,92 +1,62 @@
 "use client"
 
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { useSchedules } from "@/hooks/useSchedules"
-import { useState } from "react"
-
-interface Schedule {
-  sched_id: number
-  title: string
-  day: string[]
-  start: string
-  end: string
-}
+import * as React from "react"
+import { Schedule } from "@/hooks/useSchedules"
 
 interface DeleteScheduleDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  schedule: Schedule;
-  onConfirmDelete: () => Promise<void>;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  schedule: Schedule
+  onConfirmDelete: () => void
+  isDeleting: boolean
 }
-
 
 export function DeleteScheduleDialog({
   open,
   onOpenChange,
   schedule,
+  onConfirmDelete,
+  isDeleting,
 }: DeleteScheduleDialogProps) {
-  const { deleteSchedule } = useSchedules()
-  const [message, setMessage] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-
-  const handleDelete = async () => {
-    setLoading(true)
-    setMessage(null)
-    try {
-      await deleteSchedule(schedule.sched_id)
-      setMessage("Schedule deleted successfully!")
-      setTimeout(() => {
-        onOpenChange(false)
-        setMessage(null)
-      }, 1000) // delay to show message
-    } catch (err) {
-      setMessage("Failed to delete the schedule.")
-    } finally {
-      setLoading(false)
-    }
+  // Close dialog handler
+  const handleClose = () => {
+    if (!isDeleting) onOpenChange(false)
   }
 
+  if (!open) return null
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>
-            Are you sure you want to delete &quot;{schedule.title}&quot;?
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="py-4">
-          <p className="text-sm text-muted-foreground">
-            This action cannot be undone. This will permanently delete the schedule.
-          </p>
-          {message && (
-            <p className={`text-sm mt-2 ${message.includes("success") ? "text-green-600" : "text-red-500"}`}>
-              {message}
-            </p>
-          )}
-        </div>
-
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleDelete}
-            variant="destructive"
-            className="bg-orange-500 hover:bg-orange-600 text-white"
-            disabled={loading}
+    <div
+      className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+      onClick={handleClose}
+    >
+      <div
+        className="bg-white rounded-md shadow-lg max-w-sm w-full p-6"
+        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside dialog
+      >
+        <h2 className="text-lg font-semibold mb-4 text-red-600">Delete Schedule</h2>
+        <p className="mb-6 text-gray-700">
+          Are you sure you want to delete the schedule <strong>{schedule.title}</strong>?
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800"
+            onClick={handleClose}
+            disabled={isDeleting}
           >
-            {loading ? "Deleting..." : "Continue"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            Cancel
+          </button>
+          <button
+            className={`px-4 py-2 rounded text-white ${
+              isDeleting ? "bg-red-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"
+            }`}
+            onClick={onConfirmDelete}
+            disabled={isDeleting}
+          >
+            {isDeleting ? "Deleting..." : "Delete"}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }

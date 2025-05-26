@@ -39,55 +39,59 @@ class SchedulesController extends Controller
 
         $schedule = $this->scheduleService->store($request->validated());
         $this->auditLogsService->log(
-            action: 'Create Schedule',
-            type: 'Schedule',
-            targetId: $request->sched_id,
-            description: "Create a Schedule"
-        );
+    action: 'Create Schedule',
+    type: 'Schedule',
+    targetId: $schedule->sched_id,  // <-- Use the new schedule's id here
+    description: "Create a Schedule"
+);
+
         return new ScheduleResource($schedule);
     }
+public function show(Schedules $schedule)
+{
+    $this->authorize('view', $schedule);
 
-    public function show(Schedules $schedules)
-    {
-        $this->authorize('view', $schedules);
+    $this->auditLogsService->log(
+        action: 'View Schedule',
+        type: 'Schedule',
+        targetId: $schedule->sched_id,
+        description: "View a Schedule"
+    );
 
-        $this->auditLogsService->log(
-            action: 'View Schedule',
-            type: 'Schedule',
-            targetId: $schedules->sched_id,
-            description: "View a Schedule"
-        );
+    return new ScheduleResource($schedule);
+}
 
-        return new ScheduleResource($schedules);
-    }
+public function update(ScheduleRequest $request, Schedules $schedule)
+{
+    \Log::info('Schedule to update', ['schedule' => $schedule]);
 
+    $this->authorize('update', $schedule);
 
-    public function update(ScheduleRequest $request, Schedules $schedules)
-    {
-        $this->authorize('update', $schedules);
+    $updatedSchedule = $this->scheduleService->update($schedule, $request->validated());
 
-        $updatedSchedule = $this->scheduleService->update($schedules, $request->validated());
-        $this->auditLogsService->log(
-            action: 'Edit Schedule',
-            type: 'Schedule',
-            targetId: $updatedSchedule->sched_id,
-            description: "Update a schedule."
-        );
-        return new ScheduleResource($updatedSchedule);
-    }
+    $this->auditLogsService->log(
+        action: 'Edit Schedule',
+        type: 'Schedule',
+        targetId: $updatedSchedule->sched_id,
+        description: "Update a schedule."
+    );
 
+    return new ScheduleResource($updatedSchedule);
+}
 
-    public function destroy(Schedules $schedules)
-    {
-        $this->authorize('delete', $schedules);
+    public function destroy(Schedules $schedule)
+{
+    $this->authorize('delete', $schedule);
 
-        $schedules->delete();
-        $this->auditLogsService->log(
-            action: 'Delete Schedule',
-            type: 'Schedule',
-            targetId: $schedules->sched_id,
-            description: "Delete a schedule."
-        );
-        return response()->json(['message' => 'Schedule has been deleted successfully.']);
-    }
+    $schedule->delete();
+
+    $this->auditLogsService->log(
+        action: 'Delete Schedule',
+        type: 'Schedule',
+        targetId: $schedule->sched_id,
+        description: "Delete a schedule."
+    );
+
+    return response()->json(['message' => 'Schedule has been deleted successfully.']);
+}
 }

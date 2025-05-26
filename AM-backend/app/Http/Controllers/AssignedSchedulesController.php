@@ -14,13 +14,15 @@ class AssignedSchedulesController extends Controller
 {
     use AuthorizesRequests;
 
-    public function __construct(protected AssignedScheduleService $assignedScheduleService, protected AuditLogsService $auditLogsService)
-    {
+    public function __construct(
+        protected AssignedScheduleService $assignedScheduleService,
+        protected AuditLogsService $auditLogsService
+    ) {
         $this->assignedScheduleService = $assignedScheduleService;
         $this->auditLogsService = $auditLogsService;
     }
 
-    public function index()
+    public function index(): \Illuminate\Http\Resources\Json\AnonymousResourceCollection
     {
         $this->authorize('viewAny', AssignedSchedules::class);
 
@@ -31,18 +33,21 @@ class AssignedSchedulesController extends Controller
             description: "View all Assigned Schedules."
         );
 
-        return AssignedScheduleResource::collection(AssignedSchedules::with(['schedule', 'employee', 'createdBy', 'updatedBy'])->get());
+        return AssignedScheduleResource::collection(
+            AssignedSchedules::with(['schedule', 'employee', 'createdBy', 'updatedBy'])->get()
+        );
     }
 
-    public function store(AssignedSchedulesRequest $request)
+    public function store(AssignedSchedulesRequest $request): JsonResponse
     {
         $this->authorize('create', AssignedSchedules::class);
+
         $schedule = $this->assignedScheduleService->assign($request->validated());
 
         $this->auditLogsService->log(
             action: 'Assigned Schedule',
             type: 'Assigned Schedules',
-            targetId: $request->assigned_id,
+            targetId: $schedule->assigned_id,
             description: "Assigned a Schedule."
         );
 
@@ -51,22 +56,24 @@ class AssignedSchedulesController extends Controller
 
     public function update(AssignedSchedulesRequest $request, AssignedSchedules $assignedSchedule): JsonResponse
     {
-        $this->authorize('update', AssignedSchedules::class);
+        $this->authorize('update', $assignedSchedule);
+
         $updated = $this->assignedScheduleService->update($assignedSchedule, $request->validated());
 
         $this->auditLogsService->log(
             action: 'Update Assigned Schedule',
             type: 'Assigned Schedules',
-            targetId: $request->assigned_id,
+            targetId: $updated->assigned_id,
             description: "Update Assigned Schedule."
         );
 
         return response()->json(new AssignedScheduleResource($updated));
     }
 
-    public function destroy(AssignedSchedules $assignedSchedule)
+    public function destroy(AssignedSchedules $assignedSchedule): JsonResponse
     {
-        $this->authorize('delete', AssignedSchedules::class);
+        $this->authorize('delete', $assignedSchedule);
+
         $this->assignedScheduleService->delete($assignedSchedule);
 
         $this->auditLogsService->log(
@@ -79,8 +86,9 @@ class AssignedSchedulesController extends Controller
         return response()->json(['message' => 'Assignment deleted successfully.'], 200);
     }
 
-    public function getEmployeeSchedules()
-    {        // Get the currently authenticated user
+    public function getEmployeeSchedules(): JsonResponse
+    {
+        // Get the currently authenticated user
         $user = auth()->user();
 
         // Find the employee record associated with this user
@@ -99,7 +107,7 @@ class AssignedSchedulesController extends Controller
             ->get();
 
         // Format the data for the frontend
-        $formattedSchedules = $assignedSchedules->map(function($assignedSchedule) {
+        $formattedSchedules = $assignedSchedules->map(function ($assignedSchedule) {
             $schedule = $assignedSchedule->schedule;
 
             return [
@@ -108,7 +116,7 @@ class AssignedSchedulesController extends Controller
                 'day' => $schedule->day,
                 'start' => $schedule->start,
                 'end' => $schedule->end,
-                'date' => $assignedSchedule->date // Include specific date if available
+                'date' => $assignedSchedule->assigned_at->toDateString(), // corrected to assigned_at
             ];
         });
 

@@ -1,77 +1,69 @@
 "use client"
 
-import { useSchedules } from "@/hooks/useSchedules"
-import { User, MoreHorizontal } from "lucide-react"
-import { useEffect, useState } from "react"
+import { Schedule, useSchedules } from "@/hooks/useSchedules"
+import { User } from "lucide-react"
+import { useState } from "react"
 import { DeleteScheduleDialog } from "./delete-schedule-dialog"
-import { AssignShiftModal } from "./assign-members-dialog"
-import { EditScheduleDialog } from "./edit-schedule-dialog"
 import { EditScheduleV2Dialog } from "./editv2"
+import { AssignShiftModal } from "./assign-members-dialog"
 
 export default function ScheduleTable() {
-  const { schedules, loading, error, deleteSchedule } = useSchedules()
-  const [openDropdown, setOpenDropdown] = useState<number | null>(null)
+  const { schedules, loading, error, deleteSchedule, updateSchedule } = useSchedules()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [assignDialogOpen, setAssignDialogOpen] = useState(false)
-  const [selectedSchedule, setSelectedSchedule] = useState<any | null>(null)
-  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null)
   const [currentPage, setCurrentPage] = useState(0)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [assignSchedule, setAssignSchedule] = useState<Schedule | null>(null);
+
   const itemsPerPage = 5
-
-
-  useEffect(() => {
-    console.log("Schedules:", schedules)
-  }, [schedules])
-
-    const handleEditClick = (schedule: any) => {
-    setSelectedSchedule({
-      id: schedule.sched_id,
-      name: schedule.title,
-      days: schedule.day,
-      start: schedule.start,
-      end: schedule.end,
-    })
-    setEditDialogOpen(true)
-    setOpenDropdown(null)
-  }
-
-  const handleDeleteClick = (schedule: any) => {
-    setSelectedSchedule(schedule)
-    setDeleteDialogOpen(true)
-    setOpenDropdown(null)
-  }
-
-const handleAssignClick = (schedule: any) => {
-  console.log("Assigning schedule:", schedule)
-  console.log("Schedule ID:", schedule.sched_id) // Confirm this is defined
-  setSelectedSchedule(schedule)
-  setAssignDialogOpen(true)
-  setOpenDropdown(null)
-}
-
-
-
-  const handleConfirmDelete = async () => {
-    if (selectedSchedule) {
-      await deleteSchedule(selectedSchedule.sched_id)
-      setDeleteDialogOpen(false)
-      setSelectedSchedule(null)
-    }
-  }
-
-  if (loading) return <p>Loading schedules...</p>
-  if (error) return <p className="text-red-500">{error}</p>
-
-  // Calculate pagination
   const pageCount = Math.ceil(schedules.length / itemsPerPage)
   const paginatedSchedules = schedules.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   )
+  const handleDeleteClick = (schedule: Schedule) => {
+    if (!schedule.sched_id) {
+      console.error("Attempted to delete a schedule with missing sched_id:", schedule);
+      return;
+    }
+    setSelectedSchedule(schedule);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedSchedule || !selectedSchedule.sched_id) {
+      console.error("No schedule selected or sched_id is missing!", selectedSchedule);
+      return;
+    }
+    setIsDeleting(true);
+    try {
+      await deleteSchedule(selectedSchedule.sched_id);
+      setDeleteDialogOpen(false);
+      setSelectedSchedule(null);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleEditClick = (schedule: Schedule) => {
+    setSelectedSchedule(schedule);
+    setEditDialogOpen(true);
+  };
+
+  const handleAssignClick = (schedule: Schedule) => {
+    setAssignSchedule(schedule);
+    setAssignDialogOpen(true);
+  };
+
+
+  if (loading) return <p>Loading schedules...</p>
+  if (error) return <p className="text-red-500">{error}</p>
 
   return (
     <>
-      <div className="w-full overflow-auto">
+      <div className="w-full h-screen overflow-auto">
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b">
@@ -90,49 +82,33 @@ const handleAssignClick = (schedule: any) => {
                 <td className="py-4 px-6 text-sm">{`${sched.start} - ${sched.end}`}</td>
                 <td className="py-4 px-6 text-sm">
                   <div className="flex items-center">
-                    <span className="mr-2">{sched.assigned || 0}</span>
+                    <span className="mr-2">{sched.num_assigned || 0}</span>
                     <User size={16} className="text-gray-400" />
                   </div>
                 </td>
                 <td className="py-4 px-6 text-right">
-                  <div className="relative inline-block text-left">
+                  <div className="flex justify-end gap-2">
                     <button
-                      type="button"
-                      className="inline-flex justify-center w-full px-4 py-2  text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
-                      id={`menu-button-${index}`}
-                      aria-expanded={openDropdown === index}
-                      aria-haspopup="true"
-                      onClick={() => setOpenDropdown(openDropdown === index ? null : index)}
+                      className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 text-sm"
+                      onClick={() => handleEditClick(sched)}
+                      disabled={sched.sched_id == null}
                     >
-                      <MoreHorizontal size={20} />
+                      Edit
                     </button>
-                    {openDropdown === index && (
-                      <div className="origin-top-right absolute right-0 mt-2 w-40 rounded-xl shadow-lg bg-white focus:outline-none z-10 border border-gray-100" role="menu" aria-orientation="vertical" aria-labelledby={`menu-button-${index}`}> 
-                        <div className="py-1" role="none">
-                          <button 
-                            className="w-full text-left px-4 py-3 text-lg text-gray-800 rounded-t-xl hover:bg-orange-500 hover:text-white transition-colors duration-150" 
-                            role="menuitem"
-                            onClick={() => handleAssignClick(sched)}
-                          >
-                            Assign
-                          </button>
-                                                <button
-                        className="w-full text-left px-4 py-3 text-lg text-gray-800 hover:bg-orange-500 hover:text-white transition-colors duration-150"
-                        role="menuitem"
-                        onClick={() => handleEditClick(sched)} // <-- add this
-                      >
-                        Edit
-                      </button>
-                          <button
-                            className="w-full text-left px-4 py-3 text-lg text-gray-800 hover:bg-orange-500 hover:text-white rounded-b-xl transition-colors duration-150"
-                            role="menuitem"
-                            onClick={() => handleDeleteClick(sched)}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                    <button
+                      className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm"
+                      onClick={() => handleDeleteClick(sched)}
+                      disabled={sched.sched_id == null}
+                    >
+                      Delete
+                    </button>
+                    <button
+                      className="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-sm"
+                      onClick={() => handleAssignClick(sched)}
+                      disabled={sched.sched_id == null}
+                    >
+                      Assign
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -140,52 +116,66 @@ const handleAssignClick = (schedule: any) => {
           </tbody>
         </table>
       </div>
-      
-      {/* Simple Pagination Controls */}
+
+      {/* Pagination */}
       {pageCount > 1 && (
         <div className="flex justify-between items-center border-t pt-4 mt-4">
           <div className="text-sm text-gray-600">
-            Showing {currentPage * itemsPerPage + 1} to {Math.min((currentPage + 1) * itemsPerPage, schedules.length)} of {schedules.length} schedules
+            Showing {currentPage * itemsPerPage + 1} to{" "}
+            {Math.min((currentPage + 1) * itemsPerPage, schedules.length)} of{" "}
+            {schedules.length} schedules
           </div>
           <div className="flex items-center space-x-2">
             <button
-              className={`px-3 py-1 border rounded ${currentPage === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white hover:bg-gray-50'}`}
-              onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+              className={`px-3 py-1 border rounded ${
+                currentPage === 0
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white hover:bg-gray-50"
+              }`}
+              onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
               disabled={currentPage === 0}
             >
               Previous
             </button>
-            
-            {/* Page Numbers */}
+
             <div className="flex space-x-1">
               {Array.from({ length: Math.min(5, pageCount) }).map((_, i) => {
-                // Show first page, last page, current page, and pages around current
-                let pageNum = i;
+                let pageNum = i
                 if (pageCount > 5) {
-                  if (currentPage < 2) { // Near the start
-                    pageNum = i;
-                  } else if (currentPage > pageCount - 3) { // Near the end
-                    pageNum = pageCount - 5 + i;
-                  } else { // In the middle
-                    pageNum = currentPage - 2 + i;
+                  if (currentPage < 2) {
+                    pageNum = i
+                  } else if (currentPage > pageCount - 3) {
+                    pageNum = pageCount - 5 + i
+                  } else {
+                    pageNum = currentPage - 2 + i
                   }
                 }
-                
+
                 return (
                   <button
                     key={pageNum}
-                    className={`w-8 h-8 flex items-center justify-center rounded ${currentPage === pageNum ? 'bg-orange-500 text-white' : 'bg-white hover:bg-gray-50'}`}
+                    className={`w-8 h-8 flex items-center justify-center rounded ${
+                      currentPage === pageNum
+                        ? "bg-orange-500 text-white"
+                        : "bg-white hover:bg-gray-50"
+                    }`}
                     onClick={() => setCurrentPage(pageNum)}
                   >
                     {pageNum + 1}
                   </button>
-                );
+                )
               })}
             </div>
-            
+
             <button
-              className={`px-3 py-1 border rounded ${currentPage === pageCount - 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white hover:bg-gray-50'}`}
-              onClick={() => setCurrentPage(p => Math.min(pageCount - 1, p + 1))}
+              className={`px-3 py-1 border rounded ${
+                currentPage === pageCount - 1
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white hover:bg-gray-50"
+              }`}
+              onClick={() =>
+                setCurrentPage((p) => Math.min(pageCount - 1, p + 1))
+              }
               disabled={currentPage === pageCount - 1}
             >
               Next
@@ -193,28 +183,39 @@ const handleAssignClick = (schedule: any) => {
           </div>
         </div>
       )}
-      
+
+      {/* Delete Dialog */}
+      {selectedSchedule && (
+        <DeleteScheduleDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          schedule={selectedSchedule}
+          onConfirmDelete={handleConfirmDelete}
+          isDeleting={isDeleting}
+        />
+      )}
+
+      {/* Edit Dialog */}
       {selectedSchedule && (
         <EditScheduleV2Dialog
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
-          schedule={selectedSchedule}
-        />
-      )}
-      {selectedSchedule && (
-        <DeleteScheduleDialog
-          open={deleteDialogOpen}
-          onOpenChange={(open) => setDeleteDialogOpen(open)}
-          schedule={selectedSchedule}
-          onConfirmDelete={handleConfirmDelete}
+          schedule={{
+            sched_id: selectedSchedule.sched_id,
+            name: selectedSchedule.title,
+            days: selectedSchedule.day,
+            start: selectedSchedule.start,
+            end: selectedSchedule.end,
+          }}
         />
       )}
 
-      {selectedSchedule && (
+      {/* Assign Members Dialog */}
+      {assignSchedule && (
         <AssignShiftModal
           open={assignDialogOpen}
-          onOpenChange={(open) => setAssignDialogOpen(open)}
-          scheduleId={selectedSchedule.sched_id}
+          onOpenChange={setAssignDialogOpen}
+          scheduleId={assignSchedule.sched_id}
         />
       )}
     </>
