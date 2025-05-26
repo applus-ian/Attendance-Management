@@ -22,6 +22,7 @@ class Schedules extends Model
         'day' => 'array',
         'start' => 'string',
         'end' => 'string',
+        
     ];
 
     public function assignedEmployees()

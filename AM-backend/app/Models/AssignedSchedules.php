@@ -16,6 +16,10 @@ class AssignedSchedules extends Model
         'assigned_at',
     ];
 
+    protected $casts = [
+    'assigned_at' => 'date',
+];
+
     public function schedule()
     {
         return $this->belongsTo(Schedules::class, 'sched_id');
