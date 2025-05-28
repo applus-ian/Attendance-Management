@@ -34,9 +34,6 @@ class Employee extends Model
         'profile_pic_url'
     ];
 
-    /**
-     * Relationship to the associated User.
-     */
     public function user()
     {
         return $this->belongsTo(User::class, 'emp_id');
@@ -84,7 +81,7 @@ class Employee extends Model
 
     public function address()
     {
-        return $this->hasOne(EmployeeAddress::class);
+        return $this->hasOne(EmployeeAddress::class, 'employee_id', 'emp_id');
     }
 
     /**

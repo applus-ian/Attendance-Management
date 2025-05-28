@@ -21,6 +21,8 @@ class EmployeeFactory extends Factory
      */
     public function definition(): array
     {
+        $department = Departments::inRandomOrder()->first();
+        $jobPosition = JobPosition::inRandomOrder()->first();
         return [
             'first_name' => $this->faker->firstName(),
             'middle_name' => $this->faker->firstName(),
@@ -36,9 +38,9 @@ class EmployeeFactory extends Factory
             'date_hired' => $this->faker->date(),
             'status' => 'active',
             'profile_pic_url' => null,
-            'department' => Departments::inRandomOrder()->first()->name,
-            'job_position' => JobPosition::inRandomOrder()->first()->name,
-            'address' => EmployeeAddress::factory(),
+            'department' => $department ? $department->name : 'Engineering',
+            'job_position' => $jobPosition ? $jobPosition->title : 'Manager',
+            'email' => $this->faker->unique()->safeEmail(),
         ];
     }
 }

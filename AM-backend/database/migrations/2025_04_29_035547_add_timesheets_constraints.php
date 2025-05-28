@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('timesheets', function (Blueprint $table) {
             $table->foreign('emp_id')->references('emp_id')->on('employees')->onDelete('cascade');
+            $table->unique(['emp_id', 'timesheet_date']);
         });
     }
 

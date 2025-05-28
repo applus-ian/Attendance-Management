@@ -14,6 +14,7 @@ use Database\Seeders\JobPositionSeeder;
 use Database\Seeders\NotificationSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Database\Seeders\EmployeeAddressSeeder;
+use Database\Seeders\TimesheetSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -30,6 +31,7 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             ScheduleSeeder::class,
             AssignedScheduleSeeder::class,
+            TimesheetSeeder::class,
             // UserSeeder::class,
             // RoleSeeder::class,
             // RolePermissionSeeder::class,

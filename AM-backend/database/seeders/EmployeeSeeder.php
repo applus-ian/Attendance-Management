@@ -24,20 +24,10 @@ class EmployeeSeeder extends Seeder
         // Ensure Department exists
         $engineeringDept = Departments::firstOrCreate(['name' => 'Engineering']);
 
-        // Create Address
-        $address = EmployeeAddress::create([
-            'province' => 'Metro Manila',
-            'city_or_municipality' => 'Quezon City',
-            'barangay' => 'Commonwealth',
-            'street' => '123 Main St',
-            'postal_code' => '1121',
-        ]);
-
         // Create Employee
         $employee = Employee::create([
             'department' => $engineeringDept->name,
             'job_position' => $backendDev->title,
-            'address' => $address->city_or_municipality,
             'first_name' => 'Juan',
             'middle_name' => 'Santos',
             'last_name' => 'Dela Cruz',
@@ -53,6 +43,14 @@ class EmployeeSeeder extends Seeder
             'status' => 'active',
             'email' => 'john1@example.com',
             'profile_pic_url' => null,
+        ]);
+        EmployeeAddress::create([
+            'employee_id' => $employee->emp_id,
+            'province' => 'Metro Manila',
+            'city_or_municipality' => 'Quezon City',
+            'barangay' => 'Commonwealth',
+            'street' => '123 Main St',
+            'postal_code' => '1121',
         ]);
 
         $user = User::create([
@@ -73,20 +71,10 @@ class EmployeeSeeder extends Seeder
         // Ensure Department exists
         $engineeringDept2 = Departments::firstOrCreate(['name' => 'Engineering']);
 
-        // Create Address
-        $address2 = EmployeeAddress::create([
-            'province' => 'Cebu',
-            'city_or_municipality' => 'Cebu City',
-            'barangay' => 'Cogon Ramos',
-            'street' => 'Ranudo St',
-            'postal_code' => '6000',
-        ]);
-
         // Create Employee
         $employee2 = Employee::create([
             'department' => $engineeringDept2->name,
             'job_position' => $backendDev2->title,
-            'address' => $address2->city_or_municipality,
             'first_name' => 'Jonathan',
             'middle_name' => 'Reyes',
             'last_name' => 'Dela Rama',
@@ -102,6 +90,14 @@ class EmployeeSeeder extends Seeder
             'status' => 'active',
             'email' => 'john3@example.com',
             'profile_pic_url' => null,
+        ]);
+        EmployeeAddress::create([
+            'employee_id' => $employee2->emp_id,
+            'province' => 'Cebu',
+            'city_or_municipality' => 'Cebu City',
+            'barangay' => 'Cogon Ramos',
+            'street' => 'Ranudo St',
+            'postal_code' => '6000',
         ]);
 
         // Create associated User account with role attribute set
@@ -123,20 +119,10 @@ class EmployeeSeeder extends Seeder
         // Ensure Department exists
         $engineeringDept1 = Departments::firstOrCreate(['name' => 'IT']);
 
-        // Create Address
-        $address1 = EmployeeAddress::create([
-            'province' => 'Cebu',
-            'city_or_municipality' => 'Cebu City',
-            'barangay' => 'Cogon Ramos',
-            'street' => 'Ranudo St',
-            'postal_code' => '6000',
-        ]);
-
         // Create Employee
         $employee1 = Employee::create([
             'department' => $engineeringDept1->name,
             'job_position' => $backendDev1->title,
-            'address' => $address1->city_or_municipality,
             'first_name' => 'Mario',
             'middle_name' => 'Santos',
             'last_name' => 'Dela Calzada',
@@ -152,6 +138,14 @@ class EmployeeSeeder extends Seeder
             'status' => 'active',
             'email' => 'john2@example.com',
             'profile_pic_url' => null,
+        ]);
+        EmployeeAddress::create([
+            'employee_id' => $employee1->emp_id,
+            'province' => 'Cebu',
+            'city_or_municipality' => 'Cebu City',
+            'barangay' => 'Cogon Ramos',
+            'street' => 'Ranudo St',
+            'postal_code' => '6000',
         ]);
 
         // Create associated User account with role attribute set

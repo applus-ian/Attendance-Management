@@ -29,21 +29,21 @@ class TimesheetsController extends Controller
             description: "View all Timesheets."
         );
 
-        return TimesheetResource::collection(Timesheets::all());
+        return TimesheetResource::collection(Timesheets::with('timelogs')->get());
     }
 
-    public function show(Request $request)
+    public function show(Timesheets $timesheet)
     {
-        $this->authorize('view', Timesheets::class);
+        $this->authorize('view', $timesheet);
 
         $this->auditLogsService->log(
             action: 'View Own Timesheet',
             type: 'Timesheets',
-            targetId: $request->timesheet_id,
+            targetId: $timesheet->timesheet_id,
             description: "View Own Timesheets."
         );
 
-        return new TimesheetResource($request);
+        return new TimesheetResource($timesheet->load('timelogs'));
     }
 
     public function store(Request $request)

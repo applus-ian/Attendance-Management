@@ -78,6 +78,7 @@ class ManualTimeRequestsController extends Controller
                 'emp_id' => $updated->emp_id,
                 'time'   => $updated->requested_time,
                 'type'   => $updated->request_type,
+                'comment' => $updated->reason,
             ]);
         }
 

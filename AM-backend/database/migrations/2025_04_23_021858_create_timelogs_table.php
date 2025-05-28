@@ -13,9 +13,11 @@ return new class extends Migration
     {
         Schema::create('timelogs', function (Blueprint $table) {
             $table->id('timelog_id');
+            $table->unsignedBigInteger('timesheet_id')->nullable();
             $table->unsignedBigInteger('emp_id');
             $table->string('timelog_type');
             $table->timestamp('time');
+            $table->string('comment')->nullable();
             $table->string('created_by');
             $table->boolean('is_present')->default(false);
             $table->boolean('is_absent')->default(false);

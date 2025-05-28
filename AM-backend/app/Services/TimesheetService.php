@@ -31,13 +31,13 @@ class TimesheetService
                 $end->addDay();
             }
 
-            $scheduleHours = $end->diffInMinutes($start) / 60;
+            $scheduleHours = max(0, $end->diffInMinutes($start) / 60);
         }
 
         $timesheet = Timesheets::updateOrCreate(
             [
                 'emp_id' => $empId,
-                'created_at' => $today,
+                'timesheet_date' => $today,
             ],
             [
                 'total_hrs_work'     => (float) $timelogs->sum('hrs_worked'),
@@ -46,6 +46,7 @@ class TimesheetService
                 'total_absent'       => (int) $timelogs->clone()->where('is_absent', true)->count(),
                 'total_lates'        => (int) $timelogs->clone()->where('is_late', true)->count(),
                 'scheduled_hrs'       => $scheduleHours,
+                'timesheet_date'     => $today,
             ]
         );
 

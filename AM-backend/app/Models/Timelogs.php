@@ -21,7 +21,8 @@ class Timelogs extends Model
         'is_present',
         'is_late',
         'hrs_worked',
-        'overtime_hrs'
+        'overtime_hrs',
+        'comment',
     ];
 
     public function employee(): BelongsTo

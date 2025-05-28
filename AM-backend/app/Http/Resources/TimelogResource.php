@@ -17,6 +17,8 @@ class TimelogResource extends JsonResource
             'is_late'      => (bool)$this->is_late,
             'hrs_worked'   => (float)$this->hrs_worked,
             'overtime_hrs' => (float)$this->overtime_hrs,
+            'comment'      => $this->comment,
+            'created_at'   => $this->created_at,
         ];
     }
 }

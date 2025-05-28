@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('timesheets', function (Blueprint $table) {
             $table->id('timesheet_id');
             $table->unsignedBigInteger('emp_id');
+            $table->date('timesheet_date');
             $table->decimal('total_hrs_work', 5, 2);
             $table->decimal('total_overtime_hrs', 5, 2)->nullable();
             $table->integer('total_lates');
@@ -23,6 +24,7 @@ return new class extends Migration
             $table->timestamps();
         });
     }
+            
 
     /**
      * Reverse the migrations.

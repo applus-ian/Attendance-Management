@@ -11,7 +11,7 @@ class TimesheetResource extends JsonResource
         return [
             'timesheet_id'      => $this->timesheet_id,
             'emp_id'            => $this->emp_id,
-            'date'         => $this->date,
+            'date'         => $this->timesheet_date,
             'total_hrs_work'    => (float)$this->total_hrs_work,
             'total_overtime_hrs' => (float)$this->total_overtime_hrs,
             'total_present'     => (int)$this->total_present,
