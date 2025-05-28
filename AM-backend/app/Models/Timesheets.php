@@ -25,4 +25,10 @@ class Timesheets extends Model
     {
         return $this->belongsTo(Employee::class, 'emp_id');
     }
+
+    public function timelogs()
+    {
+        return $this->hasMany(Timelogs::class, 'timesheet_id');
+
+    }
 }

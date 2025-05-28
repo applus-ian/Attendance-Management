@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Employee;
 use App\Models\Timelogs;
 use App\Models\AssignedSchedules;
+use Illuminate\Support\Facades\Auth;
 use App\Models\ManualTimeRequests;
 
 class TimelogService
@@ -19,9 +20,9 @@ class TimelogService
 
     public function clockIn(array $data): Timelogs
     {
-        $employee  = Employee::findOrFail($data['emp_id']);
+        $employee = Employee::findOrFail($data['emp_id']);
         $createdBy = $employee ? $employee->first_name . ' ' . $employee->last_name : 'Unknown';
-        $now  = Carbon::now();
+        $now = Carbon::now();
         $today = $now->toDateString();
 
         $schedule = AssignedSchedules::where('emp_id', $employee->emp_id)
@@ -34,14 +35,14 @@ class TimelogService
             : false;
 
         $timelog = Timelogs::create([
-            'emp_id'       => $employee->emp_id,
+            'emp_id' => $employee->emp_id,
             'timelog_type' => 'clock_in',
-            'time'        => $now,
-            'created_by'  => $createdBy,
-            'is_present'  => true,
-            'is_absent'   => false,
-            'is_late'     => $isLate,
-            'hrs_worked'  => 0,
+            'time' => $now,
+            'created_by' => $createdBy,
+            'is_present' => true,
+            'is_absent' => false,
+            'is_late' => $isLate,
+            'hrs_worked' => 0,
             'overtime_hrs' => 0,
         ]);
 
@@ -52,23 +53,24 @@ class TimelogService
 
     public function clockOut(array $data): Timelogs
     {
-        $employee   = Employee::findOrFail($data['emp_id']);
+        $employee = Employee::findOrFail($data['emp_id']);
+        ;
         $createdBy = $employee ? $employee->first_name . ' ' . $employee->last_name : 'Unknown';
         $today = Carbon::now()->toDateString();
 
-        $in    = Timelogs::where('emp_id', $employee->emp_id)
+        $in = Timelogs::where('emp_id', $employee->emp_id)
             ->whereDate('time', $today)
             ->where('timelog_type', 'clock_in')
             ->firstOrFail();
 
         $inTime = Carbon::parse($in->time);
-        $now    = Carbon::now();
+        $now = Carbon::now();
         $duration = $now->diffInMinutes($inTime) / 60;
 
         $hasOvertime = ManualTimeRequests::where('emp_id', $employee->emp_id)
             ->where('request_type', 'overtime')
-            ->where('status', 'approved')
-            ->whereDate('request_date', $today)
+            ->where('approval_status', 'approved')
+            ->whereDate('created_at', $today)
             ->exists();
 
         $overtime = $hasOvertime
@@ -76,14 +78,14 @@ class TimelogService
             : 0;
 
         $timelog = Timelogs::create([
-            'emp_id'       => $employee->emp_id,
+            'emp_id' => $employee->emp_id,
             'timelog_type' => 'clock_out',
-            'time'        => $now,
-            'created_by'  => $createdBy,
-            'is_present'  => true,
-            'is_absent'   => false,
-            'is_late'     => $in->is_late,
-            'hrs_worked'  => round($duration, 2),
+            'time' => $now,
+            'created_by' => $createdBy,
+            'is_present' => true,
+            'is_absent' => false,
+            'is_late' => $in->is_late,
+            'hrs_worked' => round($duration, 2),
             'overtime_hrs' => round($overtime, 2),
         ]);
 
@@ -103,7 +105,8 @@ class TimelogService
                 $as = $employee->assignedSchedules
                     ->first(fn($a) => $a->assigned_at->toDateString() === $today);
 
-                if (!$as) return;
+                if (!$as)
+                    return;
 
                 $schedule = $as->schedule;
                 $exists = Timelogs::where('emp_id', $employee->emp_id)

@@ -15,26 +15,35 @@ import Footer from "@/components/Footer";
 import { useEmployeeSchedule } from "@/hooks/useEmployeeSchedule";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import api from "@/lib/api";
 import "../../globals.css";
 
 export default function MySchedulePage() {
-  const [showClockIn, setShowClockIn] = useState(false);
+  const [showClockInModal, setShowClockInModal] = useState(false);
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { schedules, loading, error, refreshSchedule } = useEmployeeSchedule();
   const { user } = useAuth();
-  const [lastClockInTime, setLastClockInTime] = useState<string | null>(null);
+  const [lastClockTime, setLastClockTime] = useState<string | null>(null);
 
-  // Simplified clock-in status (no backend check)
-  useEffect(() => {
-    // Check local storage for clock-in status
-    const savedStatus = localStorage.getItem('clockInStatus');
-    if (savedStatus) {
-      const parsed = JSON.parse(savedStatus);
-      setIsClockedIn(parsed.status);
-      setLastClockInTime(parsed.timestamp);
+  // Fetch current clock-in status from backend
+  async function fetchClockStatus() {
+    if (!user?.id) return;
+    try {
+      const res = await api.get("/employee/current-status", {
+        params: { user_id: user.id },
+      });
+      const { status, timestamp } = res.data;
+      setIsClockedIn(status === "clocked_in");
+      setLastClockTime(timestamp);
+    } catch (err) {
+      console.error("Failed to fetch clock-in status", err);
     }
-  }, []);
+  }
+
+  useEffect(() => {
+    fetchClockStatus();
+  }, [user]);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) {
@@ -61,38 +70,50 @@ export default function MySchedulePage() {
     return `${hour12}:${minutes} ${period}`;
   };
 
-  // Simplified clock-in/out handling (no backend)
-  const handleClockIn = async (comment: string) => {
+  // Unified clock handler toggling between clock-in and clock-out
+  const handleClock = async () => {
+    if (!user?.id) {
+      toast.error("User not authenticated");
+      return;
+    }
+  
     setIsLoading(true);
-    
-    // Simulate a delay for better UX
-    setTimeout(() => {
-      // Toggle clock-in status
-      const newStatus = !isClockedIn;
-      setIsClockedIn(newStatus);
-      
-      // Save to local storage
-      const timestamp = new Date().toISOString();
-      localStorage.setItem('clockInStatus', JSON.stringify({
-        status: newStatus,
-        timestamp,
-        comment
-      }));
-      
-      if (newStatus) {
-        setLastClockInTime(timestamp);
+  
+    try {
+      let res;
+      if (!isClockedIn) {
+        // Clock in
+        res = await api.post("/timelogs/clock-in", {
+          emp_id: user.id,
+          timelog_type: "clock_in",
+        });
+      } else {
+        // Clock out
+        res = await api.post("/timelogs/clock-out", {
+          emp_id: user.id,
+          timelog_type: "clock_out",
+        });
       }
-      
+  
+      const { status, timestamp } = res.data;
+      setIsClockedIn(status === "clocked_in");
+      setLastClockTime(timestamp);
+  
       toast.success(
-        isClockedIn
-          ? "You have successfully clocked out"
-          : "You have successfully clocked in"
+        status === "clocked_in"
+          ? "You have successfully clocked in"
+          : "You have successfully clocked out"
       );
-      
+  
+      setShowClockInModal(false);
+    } catch (error: any) {
+      console.error("Clock action failed:", error);
+      toast.error("Something went wrong while updating clock status.");
+    } finally {
       setIsLoading(false);
-      setShowClockIn(false);
-    }, 800);
+    }
   };
+  
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -101,11 +122,11 @@ export default function MySchedulePage() {
         <div className="md:grid md:grid-cols-2 md:gap-12">
           <div className="flex flex-col items-center md:items-start mb-8 md:mb-0 order-2 md:order-1 md:pl-20">
             <CircularClock greeting="Good Morning, Employee!" />
-            
-            {isClockedIn && lastClockInTime && (
+
+            {isClockedIn && lastClockTime && (
               <div className="mt-4 bg-green-100 p-3 rounded-md text-green-700">
                 <p className="text-sm">
-                  You clocked in at {new Date(lastClockInTime).toLocaleTimeString()}
+                  You clocked in at {new Date(lastClockTime).toLocaleTimeString()}
                 </p>
               </div>
             )}
@@ -171,7 +192,7 @@ export default function MySchedulePage() {
                     ? "bg-green-500 hover:bg-green-600"
                     : "bg-orange-500 hover:bg-orange-600"
                 } text-white py-3 rounded-md flex items-center justify-center text-lg font-medium`}
-                onClick={() => setShowClockIn(true)}
+                onClick={() => setShowClockInModal(true)}
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -193,11 +214,11 @@ export default function MySchedulePage() {
           </div>
         </div>
 
-        {showClockIn && (
+        {showClockInModal && (
           <ClockInModal
-            show={showClockIn}
-            onClose={() => setShowClockIn(false)}
-            onClockIn={handleClockIn}
+            show={showClockInModal}
+            onClose={() => setShowClockInModal(false)}
+            onClockIn={handleClock}
             currentTime={new Date().toLocaleTimeString()}
             shiftTime={schedules.length > 0 ? formatTime(schedules[0]?.start) : ""}
             isClockedIn={isClockedIn}

@@ -16,6 +16,8 @@ class TimelogRequest extends FormRequest
     {
         return [
             'emp_id' => 'required|exists:employees,emp_id',
+            'timelog_type' => 'required|in:clock_in,clock_out',
+            
         ];
     }
 
@@ -25,15 +27,15 @@ class TimelogRequest extends FormRequest
             $empId = $this->input('emp_id');
             $timelogType = $this->input('timelog_type');
 
+            $lastTimelog = Timelogs::where('emp_id', $empId)->latest()->first();
+
             if ($timelogType === 'clock_in') {
-                $lastTimelog = Timelogs::where('emp_id', $empId)->latest()->first();
                 if ($lastTimelog && $lastTimelog->timelog_type === 'clock_in') {
                     $validator->errors()->add('timelog_type', 'Employee is already clocked in.');
                 }
             }
 
             if ($timelogType === 'clock_out') {
-                $lastTimelog = Timelogs::where('emp_id', $empId)->latest()->first();
                 if (!$lastTimelog || $lastTimelog->timelog_type !== 'clock_in') {
                     $validator->errors()->add('timelog_type', 'Employee must clock in before clocking out.');
                 }
