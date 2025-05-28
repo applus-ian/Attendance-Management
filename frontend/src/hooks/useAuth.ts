@@ -5,63 +5,41 @@ import api from "@/lib/api";
 import Cookies from "js-cookie";
 import { useState } from "react";
 
-// export const useAuth = () => {
-//   const queryClient = useQueryClient();
-//   const router = useRouter();
-//   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-//   // Get token from cookies
-//   const token = Cookies.get("auth_token");
-
-//   // Conditionally fetch the user only if token exists
-//   const { data: user } = useQuery({
-//     queryKey: ["user"],
-//     queryFn: async () => {
-//       try {
-//         const { data } = await api.get("/auth/me");
-//         return data;
-//       } catch {
-//         Cookies.remove("auth_token"); // Remove invalid token
-//         queryClient.invalidateQueries({ queryKey: ["user"] });
-//         return null;
-//       }
-//     },
-//     enabled: !!token, // Prevent fetching if no token
-//     retry: false, // Prevent retries on failure
-//   });
-
-//   const login = useMutation({
-//     mutationFn: async (values: { email: string; password: string }) => {
-//       const { data } = await api.post("/auth/login", values);
-//       Cookies.set("auth_token", data.token, { expires: 7 });
-//     },
-//     onSuccess: () => {
-//       queryClient.invalidateQueries({ queryKey: ["user"] });
-//       router.push("employee/schedule");
-//     },
-//   });
-
-//   const logout = useMutation({
-//     mutationFn: async () => {
-//       setIsLoggingOut(true);
-//       await api.post("/auth/logout");
-//       Cookies.remove("auth_token");
-//       queryClient.removeQueries({ queryKey: ["user"] });
-//     },
-//     onSettled: () => {
-//       setIsLoggingOut(false);
-//       router.push("/auth/login");
-//     },
-//   });
-
-//   return { user, login, logout, isLoggingOut };
-// };
-
 type User = {
   id: number;
+  user_id?: number;
+  emp_id?: number;
   name: string;
   email: string;
   role: "employee" | "admin" | "super_admin";
+  is_active?: boolean;
+  roles?: string[];
+  created_at?: string;
+  updated_at?: string;
+  employee?: {
+    emp_id: number;
+    user_id: number;
+    department: string;
+    job_position: string;
+    address: string;
+    first_name: string;
+    middle_name: string;
+    last_name: string;
+    suffix: string | null;
+    gender: string;
+    dob: string;
+    civil_status: string;
+    nationality: string;
+    phone_number: string;
+    emergency_contact1: string;
+    emergency_contact2: string;
+    date_hired: string;
+    status: string;
+    profile_pic_url: string | null;
+    created_at: string;
+    updated_at: string;
+    assigned_schedule?: any;
+  };
 };
 
 export const useAuth = () => {
@@ -76,7 +54,7 @@ export const useAuth = () => {
     queryFn: async () => {
       try {
         const { data } = await api.get("/auth/me");
-        return data as User;
+        return data.original as User;
       } catch {
         Cookies.remove("auth_token");
         queryClient.invalidateQueries({ queryKey: ["user"] });
@@ -93,20 +71,9 @@ export const useAuth = () => {
       Cookies.set("auth_token", data.token, { expires: 7 });
       return data.user as User;
     },
-    onSuccess: (user) => {
-      switch (user.role) {
-        case "employee":
-          router.push("/employee/schedule");
-          break;
-        case "admin":
-          router.push("/admin/dashboard");
-          break;
-        case "super_admin":
-          router.push("/super-admin/dashboard");
-          break;
-        default:
-          router.push("/unauthorized");
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+      router.push("/employee/schedule");
     },
   });
 

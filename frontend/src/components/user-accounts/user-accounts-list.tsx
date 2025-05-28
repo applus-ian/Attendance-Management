@@ -15,6 +15,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -26,6 +28,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { UserAccountFilters } from "@/components/superadmin/user-accounts/user-account-filters";
 import { useUserManagement } from "@/hooks/useUserManagement";
+import { useAuth } from "@/hooks/useAuth";
 
 function formatHour24To12(time24?: string) {
   if (!time24) return "-";
@@ -55,23 +58,28 @@ const dayAbbreviationMap: Record<string, string> = {
 
 export function AdminUserAccountsList() {
   const isMobile = useIsMobile();
+  const { user: currentUser } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [filters, setFilters] = useState({
     search: "",
-    role: "all",
     department: "all",
     status: "all",
     jobPosition: "all",
   });
+  const [sortField, setSortField] = useState<string>("name");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const { users, isLoadingUsers, isErrorUsers, activate, deactivate, remove } =
     useUserManagement();
 
-  const userAccounts = (users ?? []).filter((user) =>
-    user.roles.includes("employee")
-  );
+  const userAccounts = (users ?? [])
+    .filter((user) => user.roles.includes("employee"))
+    .filter((user) => user.user_id !== currentUser?.user_id);
+
+  // Get unique job positions for filter dropdown
+  const jobPositions = Array.from(new Set(userAccounts.map(u => u.employee?.job_position).filter((jp): jp is string => typeof jp === 'string' && jp.length > 0)));
 
   const pageSize = 7;
   const totalItems = userAccounts.length;
@@ -86,6 +94,7 @@ export function AdminUserAccountsList() {
   };
 
   const filteredUsers = userAccounts.filter((user) => {
+    // Tabs
     if (activeTab === "active" && !user.is_active) return false;
     if (activeTab === "inactive" && user.is_active) return false;
 
@@ -94,24 +103,29 @@ export function AdminUserAccountsList() {
       filters.search &&
       !user.name.toLowerCase().includes(searchTerm) &&
       !user.roles.some((r) => r.toLowerCase().includes(searchTerm)) &&
-      !(user.employee?.department.toLowerCase().includes(searchTerm) ?? false)
+      !(user.employee?.department?.toLowerCase().includes(searchTerm) ?? false)
     ) {
       return false;
     }
 
-    if (filters.role !== "all" && !user.roles.includes(filters.role))
-      return false;
+    // Department filter (case-insensitive)
     if (
       filters.department !== "all" &&
-      user.employee?.department !== filters.department
-    )
-      return false;
+      (!user.employee?.department || user.employee.department.toLowerCase() !== filters.department.toLowerCase())
+    ) return false;
+
+    // Status filter
     if (
       filters.status !== "all" &&
-      ((filters.status === "active" && !user.is_active) ||
-        (filters.status === "inactive" && user.is_active))
-    )
-      return false;
+      ((filters.status.toLowerCase() === "active" && !user.is_active) ||
+        (filters.status.toLowerCase() === "inactive" && user.is_active))
+    ) return false;
+
+    // Job Position filter (case-insensitive)
+    if (
+      filters.jobPosition !== "all" &&
+      (!user.employee?.job_position || user.employee.job_position.toLowerCase() !== filters.jobPosition.toLowerCase())
+    ) return false;
 
     return true;
   });
@@ -120,6 +134,28 @@ export function AdminUserAccountsList() {
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
+
+  // Sorting logic
+  const sortedUsers = [...paginatedUsers].sort((a, b) => {
+    const getValue = (obj: any, field: string) => {
+      if (field === "name") return obj.name.toLowerCase();
+      if (field === "department") return (obj.employee?.department || "").toLowerCase();
+      if (field === "role") return (obj.roles[0] || "").toLowerCase();
+      return obj[field];
+    };
+    const aValue = getValue(a, sortField);
+    const bValue = getValue(b, sortField);
+    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const renderSortIcon = (field: string) => {
+    if (sortField !== field) return <ArrowUp className="inline w-3 h-3 text-gray-400" />;
+    return sortDirection === "asc"
+      ? <ArrowUp className="inline w-3 h-3 text-orange-500" />
+      : <ArrowDown className="inline w-3 h-3 text-orange-500" />;
+  };
 
   function getDisplayRole(roles: string[]) {
     for (const role of roles) {
@@ -202,15 +238,32 @@ export function AdminUserAccountsList() {
             filters={filters}
             setFilters={setFilters}
             className="mb-6 px-6"
+            jobPositions={jobPositions}
+            hideRoleFilter={true}
           />
         )}
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-[#F5F6FA]">
-                <TableHead className="py-3 px-6">Name</TableHead>
-                <TableHead className="py-3 px-6">Role</TableHead>
-                <TableHead className="py-3 px-6">Department</TableHead>
+                <TableHead className="cursor-pointer" onClick={() => {
+                  if (sortField === "name") setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+                  else { setSortField("name"); setSortDirection("asc"); }
+                }}>
+                  Name {renderSortIcon("name")}
+                </TableHead>
+                <TableHead className="cursor-pointer" onClick={() => {
+                  if (sortField === "department") setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+                  else { setSortField("department"); setSortDirection("asc"); }
+                }}>
+                  Department {renderSortIcon("department")}
+                </TableHead>
+                <TableHead className="cursor-pointer" onClick={() => {
+                  if (sortField === "role") setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+                  else { setSortField("role"); setSortDirection("asc"); }
+                }}>
+                  Role {renderSortIcon("role")}
+                </TableHead>
                 <TableHead className="py-3 px-6">Job Position</TableHead>
                 <TableHead className="py-3 px-6">Status</TableHead>
                 <TableHead className="py-3 px-6">Days</TableHead>
@@ -219,8 +272,8 @@ export function AdminUserAccountsList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedUsers.length > 0 ? (
-                paginatedUsers.map((user) => (
+              {sortedUsers.length > 0 ? (
+                sortedUsers.map((user) => (
                   <TableRow key={user.user_id} className="hover:bg-[#F5F6FA]">
                     <TableCell className="py-3 px-6">
                       <div className="flex items-center gap-3">
@@ -241,10 +294,10 @@ export function AdminUserAccountsList() {
                       </div>
                     </TableCell>
                     <TableCell className="py-3 px-6">
-                      {getDisplayRole(user.roles)}
+                      {user.employee?.department ?? "-"}
                     </TableCell>
                     <TableCell className="py-3 px-6">
-                      {user.employee?.department ?? "-"}
+                      {getDisplayRole(user.roles)}
                     </TableCell>
                     <TableCell className="py-3 px-6">
                       {user.employee?.job_position ?? "-"}

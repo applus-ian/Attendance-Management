@@ -4,114 +4,14 @@ import { useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { MoreHorizontal, ChevronLeft, ChevronRight, Filter, Search } from "lucide-react"
+import { MoreHorizontal, ChevronLeft, ChevronRight, Filter, Search, ArrowUp, ArrowDown } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Card, CardContent } from "@/components/ui/card"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { TimesheetsFilters } from "@/components/timesheets/timesheets-filters"
-
-// Mock timesheet data
-const timesheetData = [
-  {
-    id: "1",
-    date: "January 1, 2025",
-    name: "Shiela Marie Arcillo",
-    timeIn: "8:00 am",
-    timeOut: "5:00 pm",
-    totalHours: "8",
-    scheduled: "8",
-    overtime: "0",
-    late: "0",
-  },
-  {
-    id: "2",
-    date: "January 1, 2025",
-    name: "Cherry Ann Debby",
-    timeIn: "8:05 am",
-    timeOut: "5:00 pm",
-    totalHours: "8",
-    scheduled: "8",
-    overtime: "0",
-    late: "0",
-  },
-  {
-    id: "3",
-    date: "January 1, 2025",
-    name: "Shiela Marie Dingon",
-    timeIn: "8:05 am",
-    timeOut: "5:00 pm",
-    totalHours: "8",
-    scheduled: "8",
-    overtime: "0",
-    late: "0",
-  },
-  {
-    id: "4",
-    date: "January 1, 2025",
-    name: "Donna May Abais",
-    timeIn: "8:05 am",
-    timeOut: "5:00 pm",
-    totalHours: "8",
-    scheduled: "8",
-    overtime: "0",
-    late: "0",
-  },
-  {
-    id: "5",
-    date: "January 1, 2025",
-    name: "Mike Arthur Minoza",
-    timeIn: "8:05 am",
-    timeOut: "5:00 pm",
-    totalHours: "8",
-    scheduled: "8",
-    overtime: "0",
-    late: "0",
-  },
-  {
-    id: "6",
-    date: "January 1, 2025",
-    name: "Valey Austine Senoy",
-    timeIn: "8:05 am",
-    timeOut: "5:00 pm",
-    totalHours: "8",
-    scheduled: "8",
-    overtime: "0",
-    late: "0",
-  },
-  {
-    id: "7",
-    date: "January 1, 2025",
-    name: "Yestin Roy Prado",
-    timeIn: "8:05 am",
-    timeOut: "5:00 pm",
-    totalHours: "8",
-    scheduled: "8",
-    overtime: "0",
-    late: "0",
-  },
-  {
-    id: "8",
-    date: "January 1, 2025",
-    name: "Michelle Zoobrado",
-    timeIn: "8:05 am",
-    timeOut: "5:00 pm",
-    totalHours: "8",
-    scheduled: "8",
-    overtime: "0",
-    late: "0",
-  },
-  {
-    id: "9",
-    date: "January 1, 2025",
-    name: "Arnulfo Estenso",
-    timeIn: "8:05 am",
-    timeOut: "5:00 pm",
-    totalHours: "8",
-    scheduled: "8",
-    overtime: "0",
-    late: "0",
-  },
-]
+import { useTimesheet, useTimesheetDetails } from "@/hooks/useTimesheet"
+import { useUserManagement } from "@/hooks/useUserManagement"
+import { TimesheetDetailsModal } from "@/components/superadmin/timesheets/timesheet-details-modal"
 
 export function TimesheetsTable() {
   const isMobile = useIsMobile()
@@ -126,9 +26,22 @@ export function TimesheetsTable() {
     employee: "",
     status: "all",
   })
+  const [sortField, setSortField] = useState<string>("emp_id")
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
+
+  // --- Integration: Fetch real timesheets ---
+  const { data: timesheets = [], isLoading, isError, error } = useTimesheet()
+  const { users: allUsers = [] } = useUserManagement();
+  // Only include users with the 'employee' role
+  const users = allUsers.filter(u => u.roles && u.roles.includes('employee'));
+
+  // Modal state for details
+  const [selectedTimesheetId, setSelectedTimesheetId] = useState<number | null>(null)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const { data: timesheetDetails, isLoading: isLoadingDetails } = useTimesheetDetails(selectedTimesheetId ?? undefined)
 
   const pageSize = 10
-  const totalItems = timesheetData.length
+  const totalItems = timesheets.length
   const totalPages = Math.ceil(totalItems / pageSize)
 
   const handlePreviousPage = () => {
@@ -143,52 +56,104 @@ export function TimesheetsTable() {
     setCurrentPage(page)
   }
 
-  // Filter timesheets based on search and filters
-  const filteredTimesheets = timesheetData.filter((timesheet) => {
-    // Search filter
+  // Helper to get full name by emp_id
+  const getEmployee = (emp_id: number) => users.find((u) => u.emp_id === emp_id)
+  const getName = (ts: any) => {
+    const user = getEmployee(ts.emp_id)
+    if (user && user.employee) {
+      return [user.employee.first_name, user.employee.middle_name, user.employee.last_name].filter(Boolean).join(" ")
+    }
+    return `Employee #${ts.emp_id}`
+  }
+
+  // Only include timesheets for users with the 'employee' role
+  const filteredTimesheets = timesheets.filter((ts) => {
+    const user = getEmployee(ts.emp_id);
+    return user && user.roles && user.roles.includes('employee');
+  }).filter((ts) => {
+    // Search filter (by name, employee ID, or date)
+    const name = getName(ts).toLowerCase();
+    const empIdStr = `${ts.emp_id}`;
+    const dateStr = ts.date ? ts.date.toLowerCase() : '';
+    const search = searchQuery.toLowerCase();
     if (
-      searchQuery &&
-      !timesheet.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      !timesheet.date.toLowerCase().includes(searchQuery.toLowerCase())
+      search &&
+      !(
+        name.includes(search) ||
+        empIdStr.includes(search) ||
+        dateStr.includes(search)
+      )
     ) {
-      return false
+      return false;
     }
-
-    // Employee filter
-    if (filters.employee && !timesheet.name.toLowerCase().includes(filters.employee.toLowerCase())) {
-      return false
+    // Employee filter (by name or emp_id)
+    if (filters.employee) {
+      const empFilter = filters.employee.toLowerCase();
+      if (!name.includes(empFilter) && empIdStr !== filters.employee) {
+        return false;
+      }
     }
-
     // Date range filter
     if (filters.date.from || filters.date.to) {
-      const timesheetDate = new Date(timesheet.date)
-
-      if (filters.date.from && timesheetDate < filters.date.from) {
-        return false
-      }
-
+      const tsDate = new Date(ts.date);
+      if (filters.date.from && tsDate < filters.date.from) return false;
       if (filters.date.to) {
-        // Set the end of day for the to date
-        const endDate = new Date(filters.date.to)
-        endDate.setHours(23, 59, 59, 999)
-
-        if (timesheetDate > endDate) {
-          return false
-        }
+        const endDate = new Date(filters.date.to);
+        endDate.setHours(23, 59, 59, 999);
+        if (tsDate > endDate) return false;
       }
     }
-
     // Status filter (late, overtime, etc.)
     if (filters.status !== "all") {
-      if (filters.status === "late" && timesheet.late === "0") return false
-      if (filters.status === "overtime" && timesheet.overtime === "0") return false
+      if (filters.status === "late" && (!ts.total_lates || ts.total_lates === 0)) return false;
+      if (filters.status === "overtime" && (!ts.total_overtime_hrs || ts.total_overtime_hrs === 0)) return false;
     }
+    return true;
+  });
 
-    return true
+  // Sorting logic
+  const sortedTimesheets = [...filteredTimesheets].sort((a, b) => {
+    let aValue, bValue
+    switch (sortField) {
+      case "emp_id":
+        aValue = a.emp_id; bValue = b.emp_id; break
+      case "name":
+        aValue = getName(a).toLowerCase(); bValue = getName(b).toLowerCase(); break
+      case "total_hrs_work":
+        aValue = a.total_hrs_work; bValue = b.total_hrs_work; break
+      case "total_overtime_hrs":
+        aValue = a.total_overtime_hrs; bValue = b.total_overtime_hrs; break
+      case "total_present":
+        aValue = a.total_present; bValue = b.total_present; break
+      case "total_absent":
+        aValue = a.total_absent; bValue = b.total_absent; break
+      case "total_lates":
+        aValue = a.total_lates; bValue = b.total_lates; break
+      case "scheduled_hrs":
+        aValue = a.scheduled_hrs; bValue = b.scheduled_hrs; break
+      default:
+        aValue = a.emp_id; bValue = b.emp_id
+    }
+    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1
+    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1
+    return 0
   })
 
-  // Paginate the filtered timesheets
-  const paginatedTimesheets = filteredTimesheets.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+  // Paginate the sorted timesheets
+  const paginatedTimesheets = sortedTimesheets.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+
+  // Handle row click: open modal with details
+  const handleRowClick = (timesheet: any) => {
+    setSelectedTimesheetId(timesheet.timesheet_id)
+    setDetailsOpen(true)
+  }
+
+  const renderSortIcon = (field: string) => {
+    if (sortField !== field) return <ArrowDown className="inline w-3 h-3 text-gray-400" />
+    return sortDirection === "asc"
+      ? <ArrowUp className="inline w-3 h-3 text-orange-500" />
+      : <ArrowDown className="inline w-3 h-3 text-orange-500" />
+  }
 
   return (
     <div>
@@ -197,7 +162,7 @@ export function TimesheetsTable() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search by name or date..."
+            placeholder="Search by employee ID or date..."
             className="pl-8 w-full"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -213,62 +178,47 @@ export function TimesheetsTable() {
 
       {showFilters && <TimesheetsFilters filters={filters} setFilters={setFilters} className="mb-6" />}
 
-      {isMobile ? (
+      {isLoading ? (
+        <div className="text-center py-8">Loading timesheets...</div>
+      ) : isError ? (
+        <div className="text-center text-red-500 py-8">Error: {error?.message}</div>
+      ) : isMobile ? (
         // Mobile view with cards
         <div className="space-y-4">
-          {paginatedTimesheets.map((timesheet) => (
-            <Card key={timesheet.id}>
-              <CardContent className="p-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium">{timesheet.name}</h3>
-                    <p className="text-sm text-muted-foreground">{timesheet.date}</p>
+          {paginatedTimesheets.map((ts) => {
+            const user = getEmployee(ts.emp_id)
+            const name = user && user.employee ? [user.employee.first_name, user.employee.middle_name, user.employee.last_name].filter(Boolean).join(" ") : `Employee #${ts.emp_id}`
+            const profilePic = user?.employee?.profile_pic_url || "/default-avatar.png"
+            return (
+              <Card key={ts.timesheet_id}>
+                <CardContent className="p-4 cursor-pointer hover:bg-orange-50" onClick={() => handleRowClick(ts)}>
+                  <div className="text-xs text-muted-foreground mb-2">Employee ID: <span className="font-semibold">{ts.emp_id}</span></div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <img src={profilePic} alt="Profile" className="w-8 h-8 rounded-full object-cover border" />
+                    <h3 className="font-medium">{name}</h3>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Open menu</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => console.log("Edit", timesheet.id)}>Edit</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => console.log("View Details", timesheet.id)}>
-                        View Details
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 mt-3">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Time In</p>
-                    <p className="text-sm">{timesheet.timeIn}</p>
+                  <div className="grid grid-cols-2 gap-2 mt-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Total Hours</p>
+                      <p className="text-sm">{Number(ts.total_hrs_work).toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Overtime</p>
+                      <p className="text-sm">{Number(ts.total_overtime_hrs).toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Present</p>
+                      <p className="text-sm">{ts.total_present}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Absent</p>
+                      <p className="text-sm">{ts.total_absent}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Time Out</p>
-                    <p className="text-sm">{timesheet.timeOut}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Total Hours</p>
-                    <p className="text-sm">{timesheet.totalHours}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Scheduled</p>
-                    <p className="text-sm">{timesheet.scheduled}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Overtime</p>
-                    <p className="text-sm">{timesheet.overtime}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Late</p>
-                    <p className="text-sm">{timesheet.late}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       ) : (
         // Desktop view with table
@@ -276,50 +226,73 @@ export function TimesheetsTable() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>In</TableHead>
-                <TableHead>Out</TableHead>
-                <TableHead>Total Hours</TableHead>
-                <TableHead>Scheduled</TableHead>
-                <TableHead>Overtime</TableHead>
-                <TableHead>Late</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => {
+                  if (sortField === "emp_id") setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+                  else { setSortField("emp_id"); setSortDirection("asc") }
+                }}>
+                  Employee ID {renderSortIcon("emp_id")}
+                </TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => {
+                  if (sortField === "name") setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+                  else { setSortField("name"); setSortDirection("asc") }
+                }}>
+                  Name {renderSortIcon("name")}
+                </TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => {
+                  if (sortField === "total_hrs_work") setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+                  else { setSortField("total_hrs_work"); setSortDirection("asc") }
+                }}>
+                  Total Hours {renderSortIcon("total_hrs_work")}
+                </TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => {
+                  if (sortField === "total_overtime_hrs") setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+                  else { setSortField("total_overtime_hrs"); setSortDirection("asc") }
+                }}>
+                  Overtime {renderSortIcon("total_overtime_hrs")}
+                </TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => {
+                  if (sortField === "total_present") setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+                  else { setSortField("total_present"); setSortDirection("asc") }
+                }}>
+                  Present {renderSortIcon("total_present")}
+                </TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => {
+                  if (sortField === "total_absent") setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+                  else { setSortField("total_absent"); setSortDirection("asc") }
+                }}>
+                  Absent {renderSortIcon("total_absent")}
+                </TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => {
+                  if (sortField === "total_lates") setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+                  else { setSortField("total_lates"); setSortDirection("asc") }
+                }}>
+                  Lates {renderSortIcon("total_lates")}
+                </TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => {
+                  if (sortField === "scheduled_hrs") setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+                  else { setSortField("scheduled_hrs"); setSortDirection("asc") }
+                }}>
+                  Scheduled {renderSortIcon("scheduled_hrs")}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedTimesheets.length > 0 ? (
-                paginatedTimesheets.map((timesheet) => (
-                  <TableRow key={timesheet.id}>
-                    <TableCell>{timesheet.date}</TableCell>
-                    <TableCell className="font-medium">{timesheet.name}</TableCell>
-                    <TableCell>{timesheet.timeIn}</TableCell>
-                    <TableCell>{timesheet.timeOut}</TableCell>
-                    <TableCell>{timesheet.totalHours}</TableCell>
-                    <TableCell>{timesheet.scheduled}</TableCell>
-                    <TableCell>{timesheet.overtime}</TableCell>
-                    <TableCell>{timesheet.late}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => console.log("Edit", timesheet.id)}>Edit</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => console.log("View Details", timesheet.id)}>
-                            View Details
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+                paginatedTimesheets.map((ts) => (
+                  <TableRow key={ts.timesheet_id} className="cursor-pointer hover:bg-orange-50" onClick={() => handleRowClick(ts)}>
+                    <TableCell>{ts.emp_id}</TableCell>
+                    <TableCell>{getName(ts)}</TableCell>
+                    <TableCell>{Number(ts.total_hrs_work).toFixed(2)}</TableCell>
+                    <TableCell>{Number(ts.total_overtime_hrs).toFixed(2)}</TableCell>
+                    <TableCell>{ts.total_present}</TableCell>
+                    <TableCell>{ts.total_absent}</TableCell>
+                    <TableCell>{ts.total_lates}</TableCell>
+                    <TableCell>{Number(ts.scheduled_hrs).toFixed(2)}</TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-24 text-center">
+                  <TableCell colSpan={8} className="h-24 text-center">
                     No timesheets found matching your filters.
                   </TableCell>
                 </TableRow>
@@ -329,41 +302,51 @@ export function TimesheetsTable() {
         </div>
       )}
 
-      <div className="flex items-center justify-between space-x-2 py-4">
-        <div className="text-sm text-muted-foreground">
-          Showing {filteredTimesheets.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}-
-          {Math.min(currentPage * pageSize, filteredTimesheets.length)} of {filteredTimesheets.length} entries
+      {/* Pagination */}
+      {sortedTimesheets.length > 0 && (
+        <div className="flex items-center justify-between space-x-2 py-4">
+          <div className="text-sm text-muted-foreground">
+            Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, sortedTimesheets.length)} of {sortedTimesheets.length} entries
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" size="sm" onClick={handlePreviousPage} disabled={currentPage === 1}>
+              <ChevronLeft className="h-4 w-4" />
+              <span className="sr-only md:not-sr-only md:ml-1">Previous</span>
+            </Button>
+            {!isMobile && (
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(3, totalPages) }).map((_, i) => {
+                  const pageNumber = i + 1
+                  return (
+                    <Button
+                      key={i}
+                      variant={pageNumber === currentPage ? "default" : "outline"}
+                      size="sm"
+                      className="w-8 h-8"
+                      onClick={() => handlePageClick(pageNumber)}
+                    >
+                      {pageNumber}
+                    </Button>
+                  )
+                })}
+                {totalPages > 3 && <span className="px-2">...</span>}
+              </div>
+            )}
+            <Button variant="outline" size="sm" onClick={handleNextPage} disabled={currentPage === totalPages}>
+              <ChevronRight className="h-4 w-4" />
+              <span className="sr-only md:not-sr-only md:ml-1">Next</span>
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" onClick={handlePreviousPage} disabled={currentPage === 1}>
-            <ChevronLeft className="h-4 w-4" />
-            <span className="sr-only md:not-sr-only md:ml-1">Previous</span>
-          </Button>
-          {!isMobile && (
-            <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(3, totalPages) }).map((_, i) => {
-                const pageNumber = i + 1
-                return (
-                  <Button
-                    key={i}
-                    variant={pageNumber === currentPage ? "default" : "outline"}
-                    size="sm"
-                    className="w-8 h-8"
-                    onClick={() => handlePageClick(pageNumber)}
-                  >
-                    {pageNumber}
-                  </Button>
-                )
-              })}
-              {totalPages > 3 && <span className="px-2">...</span>}
-            </div>
-          )}
-          <Button variant="outline" size="sm" onClick={handleNextPage} disabled={currentPage === totalPages}>
-            <ChevronRight className="h-4 w-4" />
-            <span className="sr-only md:not-sr-only md:ml-1">Next</span>
-          </Button>
-        </div>
-      </div>
+      )}
+
+      {/* Details Modal */}
+      <TimesheetDetailsModal
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        timesheet={timesheetDetails ?? null}
+        isLoading={isLoadingDetails}
+      />
     </div>
   )
 }

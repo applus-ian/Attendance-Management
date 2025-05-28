@@ -143,4 +143,4 @@ export function TimeLogFilters({ filters, setFilters, className }: TimeLogFilter
       </div>
     </div>
   )
-}
+} 

@@ -21,6 +21,8 @@ import {
   SidebarHeader,
 } from "@/components/ui/sidebar";
 
+import { useUserList } from "@/hooks/useUserList";
+
 const data = {
   navMain: [
     {
@@ -35,7 +37,7 @@ const data = {
     },
     {
       title: "Time Logs",
-      url: "/super-admin/time-logs",
+      url: "/super-admin/time-logs/",
       icon: CalendarClock,
     },
     {
@@ -69,15 +71,32 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const [activeItem, setActiveItem] = React.useState("");
+  const { data: users = [] } = useUserList();
+
+  // Find the first userId for time logs
+  const firstUserId = users.length > 0 ? users[0].emp_id : null;
+
+  // Update navMain to use the first userId for Time Logs
+  const navMain = React.useMemo(() =>
+    data.navMain.map((item) =>
+      item.title === "Time Logs" && firstUserId
+        ? { ...item, url: `/super-admin/time-logs/${firstUserId}` }
+        : item
+    ),
+    [firstUserId]
+  );
 
   React.useEffect(() => {
-    const currentItem = data.navMain.find((item) =>
-      pathname.startsWith(item.url)
-    );
+    let currentItem = navMain.find((item) => {
+      if (item.title === "Time Logs") {
+        return pathname.startsWith("/super-admin/time-logs/");
+      }
+      return pathname.startsWith(item.url);
+    });
     if (currentItem) {
       setActiveItem(currentItem.title);
     }
-  }, [pathname]);
+  }, [pathname, navMain]);
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -89,7 +108,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain
-          items={data.navMain}
+          items={navMain}
           activeItem={activeItem}
           onItemSelect={(item: string) => setActiveItem(item)}
         />

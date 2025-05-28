@@ -8,9 +8,11 @@ const api = axios.create({
 
 // Attach token from cookies for authenticated requests
 api.interceptors.request.use((config) => {
-  const token = Cookies.get("auth_token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (typeof window !== "undefined") {
+    const token = Cookies.get("auth_token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
   return config;
 });

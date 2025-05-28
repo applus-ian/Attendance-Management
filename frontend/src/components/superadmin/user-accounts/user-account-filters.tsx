@@ -16,23 +16,11 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface UserAccountFiltersProps {
-  filters: {
-    search: string;
-    role: string;
-    department: string;
-    status: string;
-    jobPosition: string;
-  };
-  setFilters: React.Dispatch<
-    React.SetStateAction<{
-      search: string;
-      role: string;
-      department: string;
-      status: string;
-      jobPosition: string;
-    }>
-  >;
+  filters: any;
+  setFilters: React.Dispatch<React.SetStateAction<any>>;
   className?: string;
+  jobPositions?: string[];
+  hideRoleFilter?: boolean;
 }
 
 // Mock data for filter options
@@ -51,25 +39,27 @@ export function UserAccountFilters({
   filters,
   setFilters,
   className,
+  jobPositions = [],
+  hideRoleFilter = false,
 }: UserAccountFiltersProps) {
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFilters((prev) => ({ ...prev, search: e.target.value }));
+    setFilters((prev: any) => ({ ...prev, search: e.target.value }));
   };
 
   const handleRoleChange = (value: string) => {
-    setFilters((prev) => ({ ...prev, role: value }));
+    setFilters((prev: any) => ({ ...prev, role: value }));
   };
 
   const handleDepartmentChange = (value: string) => {
-    setFilters((prev) => ({ ...prev, department: value }));
+    setFilters((prev: any) => ({ ...prev, department: value }));
   };
 
   const handleStatusChange = (value: string) => {
-    setFilters((prev) => ({ ...prev, status: value }));
+    setFilters((prev: any) => ({ ...prev, status: value }));
   };
 
   const handleJobPositionChange = (value: string) => {
-    setFilters((prev) => ({ ...prev, jobPosition: value }));
+    setFilters((prev: any) => ({ ...prev, jobPosition: value }));
   };
 
   const clearFilters = () => {
@@ -94,24 +84,24 @@ export function UserAccountFilters({
             onChange={handleSearch}
           />
         </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="role">Role</Label>
-          <Select value={filters.role} onValueChange={handleRoleChange}>
-            <SelectTrigger id="role">
-              <SelectValue placeholder="Select role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Roles</SelectItem>
-              {roles.map((role) => (
-                <SelectItem key={role} value={role}>
-                  {role}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
+        {!hideRoleFilter && (
+          <div className="space-y-2">
+            <Label htmlFor="role">Role</Label>
+            <Select value={filters.role} onValueChange={handleRoleChange}>
+              <SelectTrigger id="role">
+                <SelectValue placeholder="Select role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                {roles.map((role) => (
+                  <SelectItem key={role} value={role}>
+                    {role}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <div className="space-y-2">
           <Label htmlFor="department">Department</Label>
           <Select
@@ -131,7 +121,6 @@ export function UserAccountFilters({
             </SelectContent>
           </Select>
         </div>
-
         <div className="space-y-2">
           <Label htmlFor="status">Status</Label>
           <Select value={filters.status} onValueChange={handleStatusChange}>
@@ -145,7 +134,6 @@ export function UserAccountFilters({
             </SelectContent>
           </Select>
         </div>
-
         <div className="space-y-2">
           <Label htmlFor="jobPosition">Job Position</Label>
           <Select
@@ -157,7 +145,7 @@ export function UserAccountFilters({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Job Position</SelectItem>
-              {jobPosition.map((jobPosition) => (
+              {jobPositions.map((jobPosition) => (
                 <SelectItem key={jobPosition} value={jobPosition}>
                   {jobPosition}
                 </SelectItem>
@@ -166,7 +154,6 @@ export function UserAccountFilters({
           </Select>
         </div>
       </div>
-
       <div className="flex justify-end">
         <Button variant="outline" onClick={clearFilters}>
           <X className="mr-2 h-4 w-4" />

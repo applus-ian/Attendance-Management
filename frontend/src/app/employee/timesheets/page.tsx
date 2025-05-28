@@ -3,26 +3,26 @@
 import Navbar from "@/components/navbar";
 import { EmployeeDataTable } from "@/components/employee-data-table";
 import { useState } from "react";
+import { useEmployeeTimesheet } from "@/hooks/useTimesheet";
 
-const timesheetData = [
-  { date: "January 2, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 3, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 6, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 7, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 8, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 9, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 10, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 13, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 14, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 15, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-];
 export default function TimesheetsPage() {
     const [selectedPeriod, setSelectedPeriod] = useState("Jan 1 - 15, 2025");
-  
+    const { timesheets, isLoading, isError, error } = useEmployeeTimesheet();
+
     const handlePeriodChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
       setSelectedPeriod(event.target.value);
     };
-  
+
+    // Map API timesheet data to EmployeeDataTable format
+    const tableData = timesheets.map((t) => ({
+      date: t.date,
+      inTime: t.timelogs && t.timelogs.length > 0 ? t.timelogs[0].time : "-",
+      outTime: t.timelogs && t.timelogs.length > 1 ? t.timelogs[t.timelogs.length - 1].time : "-",
+      worked: t.total_hrs_work + " h",
+      scheduled: t.scheduled_hrs + " h",
+      comment: '', // You can enhance this if you have comments in your data
+    }));
+
     return (
       <>
         <Navbar />
@@ -57,9 +57,14 @@ export default function TimesheetsPage() {
               </div>
             </div>
             {/* Employee Data Table */}
-            <EmployeeDataTable data={timesheetData} />
+            {isLoading ? (
+              <div className="text-center py-8">Loading timesheets...</div>
+            ) : isError ? (
+              <div className="text-center py-8 text-red-500">{error?.message || "Failed to load timesheets."}</div>
+            ) : (
+              <EmployeeDataTable data={tableData} />
+            )}
           </div>
-          
         </main>
       </>
     );

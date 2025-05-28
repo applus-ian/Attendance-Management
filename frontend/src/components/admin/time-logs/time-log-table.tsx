@@ -5,7 +5,6 @@ import { ChevronDown, ChevronUp, MoreHorizontal, ChevronLeft, ChevronRight } fro
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Card, CardContent } from "@/components/ui/card"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useTimelog } from "@/hooks/useTimelog"
 import TimeLogModal from "@/components/modal/time-logs/time-logs-modal"
@@ -37,7 +36,6 @@ export function TimeLogTable({ userId, filters, onEdit }: TimeLogTableProps) {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const { data: users = [] } = useUserList()
 
-
   const {
     timelogs,
     isLoading,
@@ -50,15 +48,12 @@ export function TimeLogTable({ userId, filters, onEdit }: TimeLogTableProps) {
 
   // --- Filtering, Sorting, Pagination ---
   const filteredLogs = timelogs.filter((log) => {
-    // Log type filter
     if (filters.logType !== "all" && log.type !== filters.logType) {
       return false
     }
-    // Comment filter (if you have comment field)
     if (filters.comment && !log.comment?.toLowerCase().includes(filters.comment.toLowerCase())) {
-      return false;
+      return false
     }
-    // Date range filter
     if (filters.dateRange.from || filters.dateRange.to) {
       const logDate = new Date(log.time)
       if (filters.dateRange.from && logDate < filters.dateRange.from) {
@@ -84,15 +79,15 @@ export function TimeLogTable({ userId, filters, onEdit }: TimeLogTableProps) {
 
   const sortedLogs = [...filteredLogs].sort((a, b) => {
     if (sortField === "date") {
-      const aDate = a.created_at ? new Date(a.created_at) : new Date(0);
-      const bDate = b.created_at ? new Date(b.created_at) : new Date(0);
+      const aDate = a.created_at ? new Date(a.created_at) : new Date(0)
+      const bDate = b.created_at ? new Date(b.created_at) : new Date(0)
       return sortDirection === "asc"
         ? aDate.getTime() - bDate.getTime()
         : bDate.getTime() - aDate.getTime()
     } else if (sortField === "time") {
-      const aTime = a.time ? new Date(a.time).getHours() * 60 + new Date(a.time).getMinutes() : 0;
-      const bTime = b.time ? new Date(b.time).getHours() * 60 + new Date(b.time).getMinutes() : 0;
-      return sortDirection === "asc" ? aTime - bTime : bTime - aTime;
+      const aTime = a.time ? new Date(a.time).getHours() * 60 + new Date(a.time).getMinutes() : 0
+      const bTime = b.time ? new Date(b.time).getHours() * 60 + new Date(b.time).getMinutes() : 0
+      return sortDirection === "asc" ? aTime - bTime : bTime - aTime
     } else if (sortField === "logType") {
       return sortDirection === "asc" ? a.type.localeCompare(b.type) : b.type.localeCompare(a.type)
     } else if (sortField === "hrs_worked") {
@@ -100,7 +95,7 @@ export function TimeLogTable({ userId, filters, onEdit }: TimeLogTableProps) {
     } else if (sortField === "overtime_hrs") {
       return sortDirection === "asc" ? (a.overtime_hrs ?? 0) - (b.overtime_hrs ?? 0) : (b.overtime_hrs ?? 0) - (a.overtime_hrs ?? 0)
     }
-    return 0
+    return 0;
   })
 
   const pageSize = 10
@@ -117,36 +112,11 @@ export function TimeLogTable({ userId, filters, onEdit }: TimeLogTableProps) {
   const handleDelete = (timelog_id: number) => {
     deleteTimelog.mutate(timelog_id)
   }
-  const handleModalSubmit = (data: any) => {
-    let timeValue = data.time || (editLog && editLog.time);
-    
-    let hhmm = '';
-    if (typeof timeValue === 'string') {
-      const match = timeValue.match(/(\d{2}:\d{2})/);
-      if (match) hhmm = match[1];
-    }
-    const normalized = {
-      ...data,
-      time: hhmm,
-      date: data.date ? data.date.toISOString().split('T')[0] : (editLog && editLog.date),
-      timelog_type: data.logType || data.timelog_type || data.type || (editLog && (editLog.logType || editLog.type)),
-    };
-    if (modalMode === "add") {
-      createTimelog.mutate({ emp_id: Number(userId), ...normalized })
-    } else if (modalMode === "edit" && editLog) {
-      updateTimelog.mutate({ timelog_id: editLog.timelog_id, emp_id: Number(userId), ...normalized })
-    }
-    setShowModal(false)
-  }
+
   const getEmployee = (emp_id: number) => users.find((u) => u.emp_id === emp_id)
-
-  if (isLoading) return <div>Loading...</div>
-  if (isError) return <div>Error: {error?.message}</div>
-
 
   return (
     <div>
-      {/* Table */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -204,7 +174,7 @@ export function TimeLogTable({ userId, filters, onEdit }: TimeLogTableProps) {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
+                <TableCell colSpan={9} className="h-24 text-center">
                   No time logs found matching your filters.
                 </TableCell>
               </TableRow>
@@ -212,22 +182,23 @@ export function TimeLogTable({ userId, filters, onEdit }: TimeLogTableProps) {
           </TableBody>
         </Table>
       </div>
+
       {/* Pagination */}
-      <div className="flex items-center justify-between space-x-2 py-4">
-        <div className="text-sm text-muted-foreground">
-          Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, filteredLogs.length)} of {filteredLogs.length} logs
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-            disabled={currentPage === 1}
-          >
-            <ChevronLeft className="h-4 w-4" />
-            <span className="sr-only md:sr-inline md:ml-1">Previous</span>
-          </Button>
-          {!isMobile && (
+      {sortedLogs.length > 0 && (
+        <div className="flex items-center justify-between space-x-2 py-4">
+          <div className="text-sm text-muted-foreground">
+            Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, sortedLogs.length)} of{" "}
+            {sortedLogs.length} logs
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
             <div className="flex items-center gap-1">
               {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
                 const pageNumber = i + 1
@@ -245,36 +216,30 @@ export function TimeLogTable({ userId, filters, onEdit }: TimeLogTableProps) {
               })}
               {totalPages > 5 && <span className="px-2">...</span>}
             </div>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-            disabled={currentPage === totalPages}
-          >
-            <ChevronRight className="h-4 w-4" />
-            <span className="sr-only md:sr-inline md:ml-1">Next</span>
-          </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+          </div>
         </div>
-      </div>
-      {/* Add/Edit Modal (reuse your modal component) */}
-      {showModal && (
-        <TimeLogModal
-          isOpen={showModal}
-          onClose={() => setShowModal(false)}
-          onSubmit={handleModalSubmit}
-          mode={modalMode}
-          initialData={modalMode === 'edit' ? editLog : undefined}
-        />
       )}
-      {/* Details Modal */}
       <TimeLogDetailsModal
         open={showDetailsModal}
         onOpenChange={setShowDetailsModal}
         timelog={detailsLog}
         getEmployee={getEmployee}
-        onEdit={() => { setShowDetailsModal(false); setModalMode('edit'); setEditLog(detailsLog); setShowModal(true); }}
-        onDelete={() => { setShowDetailsModal(false); handleDelete(detailsLog.timelog_id); }}
+        onEdit={() => {
+          setShowDetailsModal(false)
+          if (onEdit) onEdit(detailsLog)
+        }}
+        onDelete={() => {
+          if (detailsLog) handleDelete(detailsLog.timelog_id)
+          setShowDetailsModal(false)
+        }}
       />
     </div>
   )

@@ -26,6 +26,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { UserAccountFilters } from "@/components/superadmin/user-accounts/user-account-filters";
 import { useUserManagement } from "@/hooks/useUserManagement";
+import { useAuth } from "@/hooks/useAuth";
 
 // Helper to convert 24h time string to 12h format with am/pm
 function formatHour24To12(time24?: string) {
@@ -64,6 +65,7 @@ const dayAbbreviationMap: Record<string, string> = {
 
 export function UserAccountsList() {
   const isMobile = useIsMobile();
+  const { user: authUser } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
@@ -79,6 +81,9 @@ export function UserAccountsList() {
     useUserManagement();
 
   const userAccounts = users ?? [];
+  const filteredAccounts = authUser
+    ? userAccounts.filter(u => String(u.user_id) !== String(authUser.user_id) && u.email !== authUser.email)
+    : userAccounts;
 
   const pageSize = 7;
   const totalItems = userAccounts.length;
@@ -92,8 +97,11 @@ export function UserAccountsList() {
     setCurrentPage((prev) => Math.min(totalPages, prev + 1));
   };
 
-  const filteredUsers = userAccounts.filter((user) => {
-    if (activeTab === "admins" && !user.roles.includes("Admin")) return false;
+  const filteredUsers = filteredAccounts.filter((user) => {
+    if (
+      activeTab === "admins" &&
+      !user.roles.some((r) => ["admin", "super_admin"].includes(r.toLowerCase()))
+    ) return false;
     if (activeTab === "active" && !user.is_active) return false;
     if (activeTab === "inactive" && user.is_active) return false;
 
@@ -102,24 +110,35 @@ export function UserAccountsList() {
       filters.search &&
       !user.name.toLowerCase().includes(searchTerm) &&
       !user.roles.some((r) => r.toLowerCase().includes(searchTerm)) &&
-      !(user.employee?.department.toLowerCase().includes(searchTerm) ?? false)
+      !(user.employee?.department?.toLowerCase().includes(searchTerm) ?? false)
     ) {
       return false;
     }
 
-    if (filters.role !== "all" && !user.roles.includes(filters.role))
-      return false;
+    // Role filter (case-insensitive, supports mapped display names)
+    if (
+      filters.role !== "all" &&
+      !user.roles.some((r) => r.toLowerCase() === filters.role.toLowerCase())
+    ) return false;
+
+    // Department filter (case-insensitive)
     if (
       filters.department !== "all" &&
-      user.employee?.department !== filters.department
-    )
-      return false;
+      (!user.employee?.department || user.employee.department.toLowerCase() !== filters.department.toLowerCase())
+    ) return false;
+
+    // Status filter
     if (
       filters.status !== "all" &&
-      ((filters.status === "active" && !user.is_active) ||
-        (filters.status === "inactive" && user.is_active))
-    )
-      return false;
+      ((filters.status.toLowerCase() === "active" && !user.is_active) ||
+        (filters.status.toLowerCase() === "inactive" && user.is_active))
+    ) return false;
+
+    // Job Position filter (case-insensitive, matches backend attribute)
+    if (
+      filters.jobPosition !== "all" &&
+      (!user.employee?.job_position || user.employee.job_position.toLowerCase() !== filters.jobPosition.toLowerCase())
+    ) return false;
 
     return true;
   });
@@ -147,6 +166,11 @@ export function UserAccountsList() {
     const key = day.toLowerCase();
     return dayAbbreviationMap[key] ?? day;
   }
+
+  // Get unique job positions from filteredAccounts
+  const jobPositions = Array.from(new Set(filteredAccounts
+    .map(u => u.employee?.job_position)
+    .filter(Boolean))) as string[];
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -216,6 +240,7 @@ export function UserAccountsList() {
             filters={filters}
             setFilters={setFilters}
             className="mb-6 px-6"
+            jobPositions={jobPositions}
           />
         )}
         <div className="overflow-x-auto">
