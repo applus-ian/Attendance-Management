@@ -1,123 +1,130 @@
 services:
-  # MySQL Database Service (shared by both backends)
-  mysql:
+  # Employee DB
+  employee-db:
     image: mysql:8.0
-    container_name: mysql_container
+    container_name: employee-db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: attendance_db
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: employeedb
+      MYSQL_USER: empuser
+      MYSQL_PASSWORD: admin123
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - employee_data:/var/lib/mysql
     networks:
-      - app_network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      retries: 5
+      - backend
 
-  # phpMyAdmin Service (shared for both DBs)
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin_container
-    restart: unless-stopped
-    depends_on:
-      mysql:
-        condition: service_healthy
+  # Attendance DB
+  attendance-db:
+    image: mysql:8.0
+    container_name: attendance-db
+    restart: always
     environment:
-      PMA_HOST: mysql
-      MYSQL_ROOT_PASSWORD: root
-      APACHE_SERVER_NAME: localhost
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: attendancedb
+      MYSQL_USER: attuser
+      MYSQL_PASSWORD: admin123
     ports:
-      - "8081:80"
-    networks:
-      - app_network
-
-  # Attendance Management Backend
-  am-backend:
-    build: ./am-backend
-    container_name: am_backend_container
-    restart: unless-stopped
-    working_dir: /var/www
+      - "3308:3306"
     volumes:
-      - ./am-backend:/var/www
-      - /var/www/vendor
-    ports:
-      - "8000:8000"
-    depends_on:
-      mysql:
-        condition: service_healthy
+      - attendance_data:/var/lib/mysql
     networks:
-      - app_network
-    command: >
-      sh -c "composer install && php artisan serve --host=0.0.0.0 --port=8000"
-    environment:
-      - APP_ENV=local
-      - APP_DEBUG=true
-      - APP_URL=http://localhost:8000
-      - DB_CONNECTION=mysql
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_DATABASE=attendance_db
-      - DB_USERNAME=laravel_user
-      - DB_PASSWORD=secret
+      - backend
 
   # Employee Management Backend
-  em-backend:
-    build: ./em-backend
-    container_name: em_backend_container
+  employee-management:
+    image: ./EM-backend
+    container_name: em-backend
     restart: unless-stopped
-    working_dir: /var/www
-    volumes:
-      - ./em-backend:/var/www
-      - /var/www/vendor
+    depends_on:
+      - employee-db
     ports:
       - "8001:8001"
-    depends_on:
-      mysql:
-        condition: service_healthy
     networks:
-      - app_network
-    command: >
-      sh -c "composer install && php artisan serve --host=0.0.0.0 --port=8001"
+      - backend
     environment:
-      - APP_ENV=local
-      - APP_DEBUG=true
-      - APP_URL=http://localhost:8001
-      - DB_CONNECTION=mysql
-      - DB_HOST=mysql
+      - DB_HOST=employee-db
       - DB_PORT=3306
-      - DB_DATABASE=employee_db
-      - DB_USERNAME=laravel_user
-      - DB_PASSWORD=secret
+      - DB_DATABASE=employeedb
+      - DB_USERNAME=empuser
+      - DB_PASSWORD=admin123
+    command: >
+      sh -c "composer install &&
+             php artisan migrate &&
+             php artisan serve --host=0.0.0.0 --port=8001"
+
+  # Attendance Backend
+  attendance:
+    image: ./AM-backend
+    container_name: am-backend
+    restart: unless-stopped
+    depends_on:
+      - attendance-db
+      - employee-management
+    ports:
+      - "8002:8002"
+    networks:
+      - backend
+    environment:
+      - DB_HOST=attendance-db
+      - DB_PORT=3306
+      - DB_DATABASE=attendancedb
+      - DB_USERNAME=attuser
+      - DB_PASSWORD=admin123
+      - EMPLOYEE_API_URL=http://employee-management:8001/api/employees
+      - EM_USERS_API_URL=http://employee-management:8001/api/users
+    command: >
+      sh -c "composer install &&
+             php artisan migrate &&
+             php artisan serve --host=0.0.0.0 --port=8002"
 
   # Frontend (Next.js)
   frontend:
-    build: ./am-frontend
-    container_name: nextjs_container
+    build: ./frontend
+    container_name: am-frontend
     restart: unless-stopped
     working_dir: /app
     volumes:
-      - ./am-frontend:/app
+      - ./frontend:/app
       - /app/node_modules
     ports:
       - "3000:3000"
     depends_on:
-      - am-backend
+      - attendance
     networks:
-      - app_network
+      - frontend
     command: "npm run dev"
     environment:
       - NODE_ENV=development
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
 
-networks:
-  app_network:
+  # phpMyAdmin (GUI for both MySQL databases)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      - employee-db
+      - attendance-db
+    environment:
+      PMA_ARBITRARY: 1
+      PMA_HOSTS: employee-db,attendance-db
+      PMA_USER: root
+      PMA_PASSWORD: rootpass
+    ports:
+      - "8081:80"
+    networks:
+      - backend
 
 volumes:
-  mysql_data:
+  employee_data:
+  attendance_data:
+
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    driver: bridge
