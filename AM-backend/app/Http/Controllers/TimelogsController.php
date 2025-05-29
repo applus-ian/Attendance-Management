@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Timelogs;
-use Illuminate\Http\Request;
 use App\Services\TimelogService;
 use Illuminate\Http\JsonResponse;
 use App\Services\AuditLogsService;
