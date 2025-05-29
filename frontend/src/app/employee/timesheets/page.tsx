@@ -1,100 +1,18 @@
 "use client";
 
-import Navbar from "@/components/employee/navbar";
-import { EmployeeDataTable } from "@/components/employee/Employee-data-table";
-import { useState, useEffect, useCallback } from "react";
-import ClockInModal from "@/components/employee/Clock-in-modal";
-import { Button } from "@/components/ui/button";
-import { Clock } from "lucide-react";
-import api from "@/lib/api";
-import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
+import Navbar from "@/components/navbar";
+import { EmployeeDataTable } from "@/components/employee-data-table";
+import { useState } from "react";
+import { useEmployeeTimesheet } from "@/hooks/useTimesheet";
 
-type Timesheet = {
-  date: string;
-  inTime: string;
-  outTime: string;
-  worked: string;
-  scheduled: string;
-  comment: string;
-};
-
-// Static data for initial display - will be replaced by API data
-const initialTimesheetData = [
-  { date: "January 2, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 3, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 6, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 7, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 8, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 9, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 10, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 13, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 14, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-  { date: "January 15, 2025", inTime: "6 a.m", outTime: "3:00 p.m", worked: "8 h", scheduled: "8 h", comment: "" },
-];
 export default function TimesheetsPage() {
     const [selectedPeriod, setSelectedPeriod] = useState("Jan 1 - 15, 2025");
-    const [showClockIn, setShowClockIn] = useState(false);
-    const [isClockedIn, setIsClockedIn] = useState(false);
-    const [timesheetData, setTimesheetData] = useState<Timesheet[]>(initialTimesheetData);
-    const [isLoadingTimesheets, setIsLoadingTimesheets] = useState(false);
-    const { user } = useAuth();
-  
-    // Fetch timesheet data
-    const fetchTimesheets = useCallback(async () => {
-      if (!user) return;
-      
-      setIsLoadingTimesheets(true);
-      try {
-        // Get the start and end dates from the selected period
-        const [startStr, endStr] = selectedPeriod.split(' - ');
-        
-        const response = await api.get(`/timesheets`, {
-          params: {
-            // You may need to format these dates according to your API
-            start_date: startStr,
-            end_date: endStr
-          }
-        });
-        
-        if (response.data && Array.isArray(response.data.data)) {
-          // Transform the API response to match our Timesheet type
-          const formattedData = response.data.data.map((item: any) => ({
-            date: new Date(item.date).toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            }),
-            inTime: item.clock_in_time || '-',
-            outTime: item.clock_out_time || '-',
-            worked: `${item.hrs_worked || 0} h`,
-            scheduled: `${item.scheduled_hours || 8} h`,
-            comment: item.comment || ''
-          }));
-          
-          setTimesheetData(formattedData);
-        }
-      } catch (error) {
-        console.error("Error fetching timesheets:", error);
-        // Don't show error toast as this is refreshed automatically
-      } finally {
-        setIsLoadingTimesheets(false);
-      }
-    }, [user, selectedPeriod]);
-  
-    
-    useEffect(() => {
-      fetchTimesheets();
-    }, [selectedPeriod, fetchTimesheets]);
-  
+    const { timesheets, isLoading, isError, error } = useEmployeeTimesheet();
+
     const handlePeriodChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
       setSelectedPeriod(event.target.value);
     };
-    
-    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const shiftTime = "9:00 AM"; // You can replace this with actual shift time from schedules
-    
-    
+
   
     return (
       <>
@@ -135,18 +53,15 @@ export default function TimesheetsPage() {
                 </span>
               </div>
             </div>
-            
-            {/* Timesheet Data Table with Loading State */}
-            {isLoadingTimesheets ? (
-              <div className="flex justify-center items-center py-20">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-orange-500"></div>
-              </div>
+            {/* Employee Data Table */}
+            {isLoading ? (
+              <div className="text-center py-8">Loading timesheets...</div>
+            ) : isError ? (
+              <div className="text-center py-8 text-red-500">{error?.message || "Failed to load timesheets."}</div>
             ) : (
-              <EmployeeDataTable data={timesheetData} />
+              <EmployeeDataTable data={tableData} />
             )}
           </div>
-          
-          
         </main>
       </>
     );

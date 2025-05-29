@@ -1,26 +1,49 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from "@/components/ui/dialog";
 import { CalendarIcon, UserIcon, ClockIcon, X } from "lucide-react";
-
-type Timesheet = {
-  id: string;
-  date: string;
-  name: string;
-  timeIn: string;
-  timeOut: string;
-  totalHours: string;
-  scheduled: string;
-  overtime: string;
-  late: string;
-};
+import { useUserList } from "@/hooks/useUserList";
+import { Timesheet as ApiTimesheet } from "@/hooks/useTimesheet";
 
 type TimesheetDetailsModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  timesheet: Timesheet | null;
+  timesheet: ApiTimesheet | null;
+  isLoading?: boolean;
 };
 
-export function TimesheetDetailsModal({ open, onOpenChange, timesheet }: TimesheetDetailsModalProps) {
-  if (!timesheet) return null;
+export function TimesheetDetailsModal({ open, onOpenChange, timesheet, isLoading }: TimesheetDetailsModalProps) {
+  const { data: users = [] } = useUserList();
+
+  // Helper to get full name and profile pic by emp_id
+  const getEmployee = (emp_id: number) => users.find((u) => u.emp_id === emp_id);
+  const employee = timesheet ? getEmployee(timesheet.emp_id) : null;
+  const profilePic = employee?.profile_pic_url || "/default-avatar.png";
+  const fullName = employee ? [employee.first_name, employee.middle_name, employee.last_name].filter(Boolean).join(" ") : `Employee #${timesheet?.emp_id}`;
+
+  // Helper to get Time In and Time Out
+  const getTimeIn = (timelogs: any[] = []) => {
+    if (!timelogs.length) return '-';
+    // Find earliest clock_in
+    const clockIns = timelogs.filter(log => log.type === 'clock_in');
+    if (clockIns.length > 0) {
+      const earliest = clockIns.reduce((a, b) => new Date(a.time) < new Date(b.time) ? a : b);
+      return new Date(earliest.time).toLocaleTimeString();
+    }
+    // Fallback: earliest timelog
+    const earliest = timelogs.reduce((a, b) => new Date(a.time) < new Date(b.time) ? a : b);
+    return new Date(earliest.time).toLocaleTimeString();
+  };
+  const getTimeOut = (timelogs: any[] = []) => {
+    if (!timelogs.length) return '-';
+    // Find latest clock_out
+    const clockOuts = timelogs.filter(log => log.type === 'clock_out');
+    if (clockOuts.length > 0) {
+      const latest = clockOuts.reduce((a, b) => new Date(a.time) > new Date(b.time) ? a : b);
+      return new Date(latest.time).toLocaleTimeString();
+    }
+    // Fallback: latest timelog
+    const latest = timelogs.reduce((a, b) => new Date(a.time) > new Date(b.time) ? a : b);
+    return new Date(latest.time).toLocaleTimeString();
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -37,74 +60,52 @@ export function TimesheetDetailsModal({ open, onOpenChange, timesheet }: Timeshe
             </button>
           </DialogClose>
         </DialogHeader>
-        <div className="space-y-4 mt-2">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Date</label>
-            <div className="flex items-center gap-2 bg-gray-100 rounded px-3 py-2">
-              <CalendarIcon className="w-4 h-4 text-gray-400" />
-              <span className="text-sm">{timesheet.date}</span>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Name</label>
-            <div className="flex items-center gap-2 bg-gray-100 rounded px-3 py-2">
-              <UserIcon className="w-4 h-4 text-gray-400" />
-              <span className="text-sm">{timesheet.name}</span>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Time In</label>
-              <div className="flex items-center gap-2 bg-gray-100 rounded px-3 py-2">
-                <ClockIcon className="w-4 h-4 text-gray-400" />
-                <span className="text-sm">{timesheet.timeIn}</span>
+        <DialogDescription>
+          Detailed breakdown of the selected timesheet and timelogs.
+        </DialogDescription>
+        {isLoading ? (
+          <div className="py-12 text-center text-gray-500">Loading timesheet details...</div>
+        ) : !timesheet ? (
+          <div className="py-12 text-center text-gray-500">No details found.</div>
+        ) : (
+          <div className="space-y-6 mt-2">
+            <div className="bg-gray-50 rounded-lg p-4 flex flex-col gap-3 shadow-sm">
+              <div className="flex flex-col gap-1">
+                <label className="block text-xs font-semibold text-gray-500">Employee ID</label>
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-medium">{timesheet.emp_id}</span>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="block text-xs font-semibold text-gray-500">Name</label>
+                <div className="flex items-center gap-3">
+                  <img src={profilePic} alt="Profile" className="w-10 h-10 rounded-full object-cover border" />
+                  <span className="text-base font-medium">{fullName}</span>
+                </div>
               </div>
             </div>
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Time Out</label>
-              <div className="flex items-center gap-2 bg-gray-100 rounded px-3 py-2">
-                <ClockIcon className="w-4 h-4 text-gray-400" />
-                <span className="text-sm">{timesheet.timeOut}</span>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gray-50 rounded-lg p-4 flex flex-col gap-2 shadow-sm">
+                <label className="block text-xs font-semibold text-gray-500">Total Hours</label>
+                <span className="text-base">{Number(timesheet.total_hrs_work).toFixed(2)}</span>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4 flex flex-col gap-2 shadow-sm">
+                <label className="block text-xs font-semibold text-gray-500">Scheduled</label>
+                <span className="text-base">{timesheet.scheduled_hrs}</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gray-50 rounded-lg p-4 flex flex-col gap-2 shadow-sm">
+                <label className="block text-xs font-semibold text-gray-500">Overtime</label>
+                <span className="text-base">{Number(timesheet.total_overtime_hrs).toFixed(2)}</span>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4 flex flex-col gap-2 shadow-sm">
+                <label className="block text-xs font-semibold text-gray-500">Late</label>
+                <span className="text-base">{timesheet.total_lates}</span>
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Total Hours</label>
-              <input
-                className="w-full bg-gray-100 rounded px-3 py-2 text-sm"
-                value={timesheet.totalHours}
-                readOnly
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Scheduled</label>
-              <input
-                className="w-full bg-gray-100 rounded px-3 py-2 text-sm"
-                value={timesheet.scheduled}
-                readOnly
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Overtime</label>
-              <input
-                className="w-full bg-gray-100 rounded px-3 py-2 text-sm"
-                value={timesheet.overtime}
-                readOnly
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Late</label>
-              <input
-                className="w-full bg-gray-100 rounded px-3 py-2 text-sm"
-                value={timesheet.late}
-                readOnly
-              />
-            </div>
-          </div>
-        </div>
+        )}
       </DialogContent>
     </Dialog>
   );

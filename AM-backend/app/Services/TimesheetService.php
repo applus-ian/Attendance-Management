@@ -38,15 +38,16 @@ class TimesheetService
         $timesheet = Timesheets::updateOrCreate(
             [
                 'emp_id' => $empId,
-                'created_at' => $today,
+                'timesheet_date' => $today,
             ],
             [
-                'total_hrs_work' => (float) $timelogs->sum('hrs_worked'),
+                'total_hrs_work'     => (float) $timelogs->sum('hrs_worked'),
                 'total_overtime_hrs' => (float) $timelogs->sum('overtime_hrs'),
-                'total_present' => (int) $timelogs->clone()->where('is_present', true)->count(),
-                'total_absent' => (int) $timelogs->clone()->where('is_absent', true)->count(),
-                'total_lates' => (int) $timelogs->clone()->where('is_late', true)->count(),
-                'scheduled_hrs' => $scheduleHours,
+                'total_present'      => (int) $timelogs->clone()->where('is_present', true)->count(),
+                'total_absent'       => (int) $timelogs->clone()->where('is_absent', true)->count(),
+                'total_lates'        => (int) $timelogs->clone()->where('is_late', true)->count(),
+                'scheduled_hrs'       => $scheduleHours,
+                'timesheet_date'     => $today,
             ]
         );
 

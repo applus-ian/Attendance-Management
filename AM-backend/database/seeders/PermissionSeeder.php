@@ -22,6 +22,9 @@ class PermissionSeeder extends Seeder
             'delete user',
             'view timelogs',
             'view timelog',
+            'create timelog',
+            'update timelog',
+            'delete timelog',
             'clock in',
             'clock out',
             'view timesheets',
@@ -41,6 +44,16 @@ class PermissionSeeder extends Seeder
             'view auditlog',
             'create auditlogs',
             'create assigned schedule',
+            'view holidays',
+            'create custom holiday',
+            'edit holiday',
+            'remove holidays',
+            'sync holidays',
+            'view assigned schedules',
+            'view assigned schedule',
+            'create assigned schedule',
+            'update assigned schedule',
+            'delete assigned schedule'
         ];
 
         foreach ($permissions as $permission) {
@@ -61,6 +74,9 @@ class PermissionSeeder extends Seeder
             'delete user',
             'view timelogs',
             'view timelog',
+            'create timelog',
+            'delete timelog',
+            'update timelog',
             'clock in',
             'clock out',
             'view timesheets',
@@ -76,7 +92,17 @@ class PermissionSeeder extends Seeder
             'create requests',
             'approve requests',
             'reject requests',
-            'create auditlogs'
+            'create auditlogs',
+            'view holidays',
+            'create custom holiday',
+            'edit holiday',
+            'remove holidays',
+            'sync holidays',
+            'view assigned schedules',
+            'view assigned schedule',
+            'create assigned schedule',
+            'update assigned schedule',
+            'delete assigned schedule'
 
         ]);
         $employeeRole->syncPermissions([
@@ -91,7 +117,11 @@ class PermissionSeeder extends Seeder
         ]);
 
         $superAdmin = User::where('email', 'john1@example.com')->first();
+        $employee = User::where('email', 'john2@example.com')->first();
+        $admin = User::where('email', 'john3@example.com')->first();
 
         $superAdmin->assignRole($superAdminRole);
+        $employee->assignRole($employeeRole);
+        $admin->assignRole($adminRole);
     }
 }

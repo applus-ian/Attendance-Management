@@ -74,12 +74,12 @@ export function TimesheetsFilters({ filters, setFilters, className }: Timesheets
 
   return (
     <div className={cn("space-y-4 rounded-lg border p-4", className)}>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="employee">Employee</Label>
           <Input
             id="employee"
-            placeholder="Search by employee name"
+            placeholder="Search by employee name or ID"
             value={filters.employee}
             onChange={handleEmployeeChange}
           />
@@ -97,43 +97,6 @@ export function TimesheetsFilters({ filters, setFilters, className }: Timesheets
               <SelectItem value="overtime">Overtime</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Date Range</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                id="date"
-                variant={"outline"}
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !date.from && !date.to && "text-muted-foreground",
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date.from ? (
-                  date.to ? (
-                    <>
-                      {format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}
-                    </>
-                  ) : (
-                    format(date.from, "LLL dd, y")
-                  )
-                ) : (
-                  "Select date range"
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="range"
-                defaultMonth={date.from}
-                onSelect={handleDateChange}
-                numberOfMonths={isMobile ? 1 : 2}
-              />
-            </PopoverContent>
-          </Popover>
         </div>
       </div>
 

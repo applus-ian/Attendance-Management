@@ -1,7 +1,7 @@
 import { AppSidebar } from "@/components/App-sidebar";
 import { SiteHeader } from "@/components/admin/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { UserAccountsList } from "@/components/admin/user-accounts/user-accounts-list"
+import { AdminUserAccountsList } from "@/components/user-accounts/user-accounts-list";
 
 export default function RequestPage() {
   return (
@@ -20,8 +20,8 @@ export default function RequestPage() {
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 bg-[#E4E0E0]">
               <div className="px-4 lg:px-6">
-              <div className="container mx-auto px-4 lg:px-6 py-6 mt-6 bg-white rounded-lg shadow-sm">
-              <UserAccountsList />
+                <div className="container mx-auto px-4 lg:px-6 py-6 mt-6 bg-white rounded-lg shadow-sm">
+                  <AdminUserAccountsList />
                 </div>
               </div>
             </div>

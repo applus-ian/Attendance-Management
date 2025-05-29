@@ -27,6 +27,7 @@ class TimesheetSeeder extends Seeder
                 'total_absent' => rand(0, 2),
                 'total_lates' => rand(0, 3),
                 'scheduled_hrs' => 80,
+                'timesheet_date' => now()->toDateString(),
             ]);
 
             // Create 5 timelogs for this timesheet

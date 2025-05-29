@@ -3,19 +3,21 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Models\Holiday;
 use App\Models\Timelogs;
 use App\Models\AuditLogs;
+use App\Models\Schedules;
 use App\Models\Timesheets;
 use App\Policies\UserPolicy;
+use App\Policies\HolidayPolicy;
 use App\Policies\TimelogPolicy;
 use App\Policies\AuditLogPolicy;
+use App\Policies\SchedulePolicy;
 use App\Models\AssignedSchedules;
 use App\Policies\TimesheetPolicy;
 use App\Models\ManualTimeRequests;
 use App\Policies\AssignedSchedulePolicy;
 use App\Policies\ManualTimeRequestPolicy;
-use App\Models\Schedules;
-use App\Policies\SchedulePolicy;
 
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
@@ -30,6 +32,7 @@ class AuthServiceProvider extends ServiceProvider
         Timesheets::class => TimesheetPolicy::class,
         AssignedSchedules::class => AssignedSchedulePolicy::class,
         ManualTimeRequests::class => ManualTimeRequestPolicy::class,
+        Holiday::class => HolidayPolicy::class,
         Schedules::class => SchedulePolicy::class,
     ];
 

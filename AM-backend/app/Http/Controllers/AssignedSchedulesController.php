@@ -1,15 +1,16 @@
 <?php
 
 namespace App\Http\Controllers;
-use Request;
+
 use App\Models\AssignedSchedules;
 use Illuminate\Http\JsonResponse;
+use App\Services\AuditLogsService;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\BulkAssignRequest;
 use App\Services\AssignedScheduleService;
 use App\Http\Requests\AssignedSchedulesRequest;
 use App\Http\Resources\AssignedScheduleResource;
-use App\Services\AuditLogsService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use App\Http\Requests\BulkAssignRequest;
 
 class AssignedSchedulesController extends Controller
 {
@@ -18,10 +19,7 @@ class AssignedSchedulesController extends Controller
     public function __construct(
         protected AssignedScheduleService $assignedScheduleService,
         protected AuditLogsService $auditLogsService
-    ) {
-        $this->assignedScheduleService = $assignedScheduleService;
-        $this->auditLogsService = $auditLogsService;
-    }
+    ) {}
 
     public function index(): \Illuminate\Http\Resources\Json\AnonymousResourceCollection
     {
@@ -34,6 +32,9 @@ class AssignedSchedulesController extends Controller
             description: "View all Assigned Schedules."
         );
 
+        return AssignedScheduleResource::collection(
+            AssignedSchedules::with(['schedule', 'employee', 'createdBy', 'updatedBy'])->get()
+        );
         return AssignedScheduleResource::collection(
             AssignedSchedules::with(['schedule', 'employee', 'createdBy', 'updatedBy'])->get()
         );
@@ -59,6 +60,8 @@ class AssignedSchedulesController extends Controller
     {
         $this->authorize('update', $assignedSchedule);
 
+        $this->authorize('update', $assignedSchedule);
+
         $updated = $this->assignedScheduleService->update($assignedSchedule, $request->validated());
 
         $this->auditLogsService->log(
@@ -73,6 +76,8 @@ class AssignedSchedulesController extends Controller
 
     public function destroy(AssignedSchedules $assignedSchedule): JsonResponse
     {
+        $this->authorize('delete', $assignedSchedule);
+
         $this->authorize('delete', $assignedSchedule);
 
         $this->assignedScheduleService->delete($assignedSchedule);
@@ -90,7 +95,7 @@ class AssignedSchedulesController extends Controller
     public function getEmployeeSchedules(): JsonResponse
     {
         // Get the currently authenticated user
-        $user = auth()->user();
+        $user = Auth::user();
 
         // Find the employee record associated with this user
         $employee = $user->employee;
@@ -129,8 +134,6 @@ class AssignedSchedulesController extends Controller
     public function bulkAssign(BulkAssignRequest $request): JsonResponse
     {
         $this->authorize('bulkAssign', AssignedSchedules::class);
-
-        \Log::info('Bulk assign payload:', $request->all());
 
         $data = $request->validated();
         $assignedAt = $data['assigned_at'] ?? now();

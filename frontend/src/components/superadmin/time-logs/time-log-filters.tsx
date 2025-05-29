@@ -1,4 +1,3 @@
-
 "use client"
 
 import type React from "react"
@@ -84,10 +83,9 @@ export function TimeLogFilters({ filters, setFilters, className }: TimeLogFilter
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="Clock In">Clock In</SelectItem>
-              <SelectItem value="Clock Out">Clock Out</SelectItem>
-              <SelectItem value="Break Start">Break Start</SelectItem>
-              <SelectItem value="Break End">Break End</SelectItem>
+              <SelectItem value="clock_in">Clock In</SelectItem>
+              <SelectItem value="clock_out">Clock Out</SelectItem>
+              <SelectItem value="overtime">Overtime</SelectItem>
             </SelectContent>
           </Select>
         </div>

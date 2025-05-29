@@ -15,13 +15,13 @@ class AssignedScheduleService
 {
     public function assign(array $data): AssignedSchedules
     {
-        $empId = $data['emp_id'];
-        $schedId = $data['sched_id'];
+        $empId = $data['emp_id'] ?? Employee::find($data['emp_id']);
+        $schedId = $data['sched_id'] ?? Schedules::find($data['sched_id']);
         $assignedAt = $data['assigned_at'] ?? now();
         $userId = Auth::id();
 
         $employee = Employee::find($empId);
-        if (!$employee) {
+        if (! $employee) {
             throw ValidationException::withMessages([
                 'emp_id' => ['The selected employee does not exist.']
             ]);
@@ -80,9 +80,9 @@ class AssignedScheduleService
 
             $assignment->update([
                 'emp_id' => $data['emp_id'],
-                'sched_id' => $newSchedId,
+                'sched_id' => $data['sched_id'] ?? $newSchedId,
                 'assigned_at' => $data['assigned_at'],
-                'updated_by' => $userId,
+                'updated_by' => Auth::user()->first_name,
             ]);
 
             return $assignment;

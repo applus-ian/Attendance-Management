@@ -15,6 +15,7 @@ class EmployeeAddressFactory extends Factory
     public function definition(): array
     {
         return [
+            'employee_id' => null,
             'province' => $this->faker->state,
             'city_or_municipality' => $this->faker->city,
             'barangay' => $this->faker->streetName,

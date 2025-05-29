@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('timelogs', function (Blueprint $table) {
             $table->id('timelog_id');
+            $table->unsignedBigInteger('timesheet_id')->nullable();
             $table->unsignedBigInteger('emp_id');
             $table->string('timelog_type');
             $table->timestamp('time');

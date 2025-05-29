@@ -18,7 +18,8 @@ class Timesheets extends Model
         'total_present',
         'total_absent',
         'total_lates',
-        'scheduled_hrs'
+        'scheduled_hrs',
+        'timesheet_date'
     ];
 
     public function employee(): BelongsTo
@@ -29,6 +30,5 @@ class Timesheets extends Model
     public function timelogs()
     {
         return $this->hasMany(Timelogs::class, 'timesheet_id');
-
     }
 }

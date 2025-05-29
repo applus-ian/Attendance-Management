@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { usePathname } from "next/navigation"; 
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   FileQuestion,
@@ -21,26 +21,28 @@ import {
   SidebarHeader,
 } from "@/components/ui/sidebar";
 
+import { useUserList } from "@/hooks/useUserList";
+
 const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "/super-admin/dashboard", 
+      url: "/super-admin/dashboard",
       icon: LayoutDashboard,
     },
     {
       title: "Requests",
-      url: "/super-admin/requests", 
+      url: "/super-admin/requests",
       icon: FileQuestion,
     },
     {
       title: "Time Logs",
-      url: "/super-admin/time-logs", 
+      url: "/super-admin/time-logs/",
       icon: CalendarClock,
     },
     {
       title: "Schedule",
-      url: "/super-admin/schedule", 
+      url: "/super-admin/schedule",
       icon: Coins,
     },
     {
@@ -55,28 +57,46 @@ const data = {
     },
     {
       title: "Account Settings",
-      url: "/super-admin/account-settings", 
+      url: "/super-admin/account-settings",
       icon: User,
     },
-        {
+    {
       title: "Audit Logs",
-      url: "/super-admin/audit-logs", 
+      url: "/super-admin/audit-logs",
       icon: User,
     },
   ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const pathname = usePathname(); 
+  const pathname = usePathname();
   const [activeItem, setActiveItem] = React.useState("");
+  const { data: users = [] } = useUserList();
+
+  // Find the first userId for time logs
+  const firstUserId = users.length > 0 ? users[0].emp_id : null;
+
+  // Update navMain to use the first userId for Time Logs
+  const navMain = React.useMemo(() =>
+    data.navMain.map((item) =>
+      item.title === "Time Logs" && firstUserId
+        ? { ...item, url: `/super-admin/time-logs/${firstUserId}` }
+        : item
+    ),
+    [firstUserId]
+  );
 
   React.useEffect(() => {
-   
-    const currentItem = data.navMain.find((item) => pathname.startsWith(item.url));
+    let currentItem = navMain.find((item) => {
+      if (item.title === "Time Logs") {
+        return pathname.startsWith("/super-admin/time-logs/");
+      }
+      return pathname.startsWith(item.url);
+    });
     if (currentItem) {
       setActiveItem(currentItem.title);
     }
-  }, [pathname]); 
+  }, [pathname, navMain]);
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -88,15 +108,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain
-          items={data.navMain}
+          items={navMain}
           activeItem={activeItem}
-          onItemSelect={(item: string) => setActiveItem(item)} 
+          onItemSelect={(item: string) => setActiveItem(item)}
         />
       </SidebarContent>
       <hr />
       <SidebarFooter>
         <div className="flex justify-center items-center w-full h-full">
-          <img src="/togetherbeyond.svg" alt="Together Beyond Logo" className="h-10 w-auto" />
+          <img
+            src="/togetherbeyond.svg"
+            alt="Together Beyond Logo"
+            className="h-10 w-auto"
+          />
         </div>
       </SidebarFooter>
     </Sidebar>

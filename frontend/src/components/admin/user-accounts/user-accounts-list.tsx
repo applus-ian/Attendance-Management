@@ -1,380 +1,363 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { MoreHorizontal, ChevronLeft, ChevronRight, Filter } from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { UserAccountFilters } from "@/components/admin/user-accounts/user-account-filters"
-import { EditScheduleDialog } from "@/components/admin/user-accounts/edit-schedule-dialog"
-import { RemoveScheduleDialog } from "@/components/admin/user-accounts/remove-schedule-dialog"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import {
+  MoreHorizontal,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { UserAccountFilters } from "@/components/superadmin/user-accounts/user-account-filters";
+import { useUserManagement } from "@/hooks/useUserManagement";
+import { useAuth } from "@/hooks/useAuth";
 
-// Mock user account data
-const userAccounts = [
-  {
-    id: "1",
-    name: "Sarah Lim",
-    role: "Admin",
-    department: "IT",
-    status: "Active",
-    shiftType: "Morning",
-    days: "Mon, Tue, Wed, Thu, Fri",
-    hours: "8:00 am - 5:00 pm",
-    avatar: "SL",
-  },
-  {
-    id: "2",
-    name: "Valey Austine M. Senoy",
-    role: "Employee",
-    department: "IT",
-    status: "Active",
-    shiftType: "Morning",
-    days: "Mon, Tue, Wed, Thu, Fri",
-    hours: "8:00 am - 5:00 pm",
-    avatar: "VS",
-  },
-  {
-    id: "3",
-    name: "Sarah Lim",
-    role: "Admin",
-    department: "IT",
-    status: "Active",
-    shiftType: "Morning",
-    days: "Mon, Tue, Wed, Thu, Fri",
-    hours: "8:00 am - 5:00 pm",
-    avatar: "SL",
-  },
-  {
-    id: "4",
-    name: "Sarah Lim",
-    role: "Admin",
-    department: "IT",
-    status: "Active",
-    shiftType: "Morning",
-    days: "Mon, Tue, Wed, Thu, Fri",
-    hours: "9:00 am - 6:00 pm",
-    avatar: "SL",
-  },
-  {
-    id: "5",
-    name: "Sarah Lim",
-    role: "Admin",
-    department: "IT",
-    status: "Active",
-    shiftType: "Morning",
-    days: "Mon, Tue, Wed, Thu, Fri",
-    hours: "9:00 am - 6:00 pm",
-    avatar: "SL",
-  },
-  {
-    id: "6",
-    name: "Sarah Lim",
-    role: "Admin",
-    department: "IT",
-    status: "Active",
-    shiftType: "Morning",
-    days: "Mon, Tue, Wed, Thu, Fri",
-    hours: "9:00 am - 6:00 pm",
-    avatar: "SL",
-  },
-  {
-    id: "7",
-    name: "Sarah Lim",
-    role: "Admin",
-    department: "IT",
-    status: "Active",
-    shiftType: "Morning",
-    days: "Mon, Tue, Wed, Thu, Fri",
-    hours: "9:00 am - 6:00 pm",
-    avatar: "SL",
-  },
-  {
-    id: "8",
-    name: "Michelle Zoobrado",
-    role: "Manager",
-    department: "HR",
-    status: "Active",
-    shiftType: "Morning",
-    days: "Mon, Tue, Wed, Thu, Fri",
-    hours: "8:30 am - 5:30 pm",
-    avatar: "MZ",
-  },
-  {
-    id: "9",
-    name: "Mike Arthur Minoza",
-    role: "Employee",
-    department: "Engineering",
-    status: "Inactive",
-    shiftType: "Night",
-    days: "Mon, Tue, Wed, Thu, Fri",
-    hours: "10:00 pm - 7:00 am",
-    avatar: "MM",
-  },
-  {
-    id: "10",
-    name: "Cherry Ann Debby",
-    role: "Employee",
-    department: "Marketing",
-    status: "Active",
-    shiftType: "Flexible",
-    days: "Mon, Wed, Fri",
-    hours: "9:00 am - 3:00 pm",
-    avatar: "CD",
-  },
-]
+function formatHour24To12(time24?: string) {
+  if (!time24) return "-";
+  const [hourStr, minuteStr] = time24.split(":");
+  let hour = parseInt(hourStr, 10);
+  const ampm = hour >= 12 ? "pm" : "am";
+  hour = hour % 12;
+  if (hour === 0) hour = 12;
+  return `${hour}${ampm}`;
+}
 
-export function UserAccountsList() {
-  const isMobile = useIsMobile()
-  const [currentPage, setCurrentPage] = useState(1)
-  const [editingUser, setEditingUser] = useState<string | null>(null)
-  const [removingUser, setRemovingUser] = useState<string | null>(null)
-  const [showFilters, setShowFilters] = useState(false)
-  const [activeTab, setActiveTab] = useState("all")
+const roleDisplayMap: Record<string, string> = {
+  super_admin: "Super Admin",
+  admin: "Admin",
+  employee: "Employee",
+};
+
+const dayAbbreviationMap: Record<string, string> = {
+  monday: "Mon",
+  tuesday: "Tue",
+  wednesday: "Wed",
+  thursday: "Thu",
+  friday: "Fri",
+  saturday: "Sat",
+  sunday: "Sun",
+};
+
+export function AdminUserAccountsList() {
+  const isMobile = useIsMobile();
+  const { user: currentUser } = useAuth();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
   const [filters, setFilters] = useState({
     search: "",
-    role: "all",
     department: "all",
     status: "all",
-    shiftType: "all",
-  })
+    jobPosition: "all",
+  });
+  const [sortField, setSortField] = useState<string>("name");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
-  const pageSize = 7
-  const totalItems = userAccounts.length
-  const totalPages = Math.ceil(totalItems / pageSize)
+  const { users, isLoadingUsers, isErrorUsers, activate, deactivate, remove } =
+    useUserManagement();
+
+  const userAccounts = (users ?? [])
+    .filter((user) => user.roles.includes("employee"))
+    .filter((user) => user.user_id !== currentUser?.user_id);
+
+  // Get unique job positions for filter dropdown
+  const jobPositions = Array.from(new Set(userAccounts.map(u => u.employee?.job_position).filter((jp): jp is string => typeof jp === 'string' && jp.length > 0)));
+
+  const pageSize = 7;
+  const totalItems = userAccounts.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
 
   const handlePreviousPage = () => {
-    setCurrentPage((prev) => Math.max(1, prev - 1))
-  }
+    setCurrentPage((prev) => Math.max(1, prev - 1));
+  };
 
   const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-  }
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+  };
 
-  const handlePageClick = (page: number) => {
-    setCurrentPage(page)
-  }
-
-  const getUserById = (id: string) => {
-    return userAccounts.find((user) => user.id === id) || userAccounts[0]
-  }
-
-  // Filter users based on active tab and filters
   const filteredUsers = userAccounts.filter((user) => {
-    // Tab filters
-    if (activeTab === "admins" && user.role !== "Admin") return false
-    if (activeTab === "active" && user.status !== "Active") return false
-    if (activeTab === "inactive" && user.status !== "Inactive") return false
+    // Tabs
+    if (activeTab === "active" && !user.is_active) return false;
+    if (activeTab === "inactive" && user.is_active) return false;
 
-    // Search filter
+    const searchTerm = filters.search.toLowerCase();
     if (
       filters.search &&
-      !user.name.toLowerCase().includes(filters.search.toLowerCase()) &&
-      !user.role.toLowerCase().includes(filters.search.toLowerCase()) &&
-      !user.department.toLowerCase().includes(filters.search.toLowerCase())
+      !user.name.toLowerCase().includes(searchTerm) &&
+      !user.roles.some((r) => r.toLowerCase().includes(searchTerm)) &&
+      !(user.employee?.department?.toLowerCase().includes(searchTerm) ?? false)
     ) {
-      return false
+      return false;
     }
 
-    // Role filter
-    if (filters.role !== "all" && user.role !== filters.role) {
-      return false
-    }
-
-    // Department filter
-    if (filters.department !== "all" && user.department !== filters.department) {
-      return false
-    }
+    // Department filter (case-insensitive)
+    if (
+      filters.department !== "all" &&
+      (!user.employee?.department || user.employee.department.toLowerCase() !== filters.department.toLowerCase())
+    ) return false;
 
     // Status filter
-    if (filters.status !== "all" && user.status !== filters.status) {
-      return false
+    if (
+      filters.status !== "all" &&
+      ((filters.status.toLowerCase() === "active" && !user.is_active) ||
+        (filters.status.toLowerCase() === "inactive" && user.is_active))
+    ) return false;
+
+    // Job Position filter (case-insensitive)
+    if (
+      filters.jobPosition !== "all" &&
+      (!user.employee?.job_position || user.employee.job_position.toLowerCase() !== filters.jobPosition.toLowerCase())
+    ) return false;
+
+    return true;
+  });
+
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  // Sorting logic
+  const sortedUsers = [...paginatedUsers].sort((a, b) => {
+    const getValue = (obj: any, field: string) => {
+      if (field === "name") return obj.name.toLowerCase();
+      if (field === "department") return (obj.employee?.department || "").toLowerCase();
+      if (field === "role") return (obj.roles[0] || "").toLowerCase();
+      return obj[field];
+    };
+    const aValue = getValue(a, sortField);
+    const bValue = getValue(b, sortField);
+    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const renderSortIcon = (field: string) => {
+    if (sortField !== field) return <ArrowUp className="inline w-3 h-3 text-gray-400" />;
+    return sortDirection === "asc"
+      ? <ArrowUp className="inline w-3 h-3 text-orange-500" />
+      : <ArrowDown className="inline w-3 h-3 text-orange-500" />;
+  };
+
+  function getDisplayRole(roles: string[]) {
+    for (const role of roles) {
+      const key = role.toLowerCase().replace(" ", "_");
+      if (roleDisplayMap[key]) {
+        return roleDisplayMap[key];
+      }
     }
+    return roles.join(", ");
+  }
 
-    // Shift Type filter
-    if (filters.shiftType !== "all" && user.shiftType !== filters.shiftType) {
-      return false
-    }
-
-    return true
-  })
-
-  // Paginate the filtered users
-  const paginatedUsers = filteredUsers.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+  function getDayAbbreviation(day?: string) {
+    if (!day) return "-";
+    const key = day.toLowerCase();
+    return dayAbbreviationMap[key] ?? day;
+  }
 
   return (
-    <div>
-      <div className="mb-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <h1 className="text-2xl font-bold">All User Accounts</h1>
-          <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="w-full sm:w-auto">
-            <Filter className="mr-2 h-4 w-4" />
-            {showFilters ? "Hide Filters" : "Show Filters"}
-          </Button>
-        </div>
-
-        <div className="flex overflow-x-auto mb-6 pb-2">
-          <div className="flex space-x-1">
-            <Button
-              variant={activeTab === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveTab("all")}
-              className="whitespace-nowrap"
+    <div className="max-w-6xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+        <div className="flex bg-[#F5F6FA] rounded-xl p-2 space-x-2 shadow-sm">
+          {[
+            { label: "All", value: "all" },
+            { label: "Active", value: "active" },
+            { label: "Inactive", value: "inactive" },
+          ].map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setActiveTab(tab.value)}
+              className={`px-5 py-2 rounded-lg font-medium transition ${
+                activeTab === tab.value
+                  ? "bg-white shadow text-gray-900"
+                  : "bg-transparent text-slate-500 hover:bg-slate-100"
+              }`}
             >
-              All
-            </Button>
-            <Button
-              variant={activeTab === "admins" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveTab("admins")}
-              className="whitespace-nowrap"
-            >
-              Admins
-            </Button>
-            <Button
-              variant={activeTab === "active" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveTab("active")}
-              className="whitespace-nowrap"
-            >
-              Active
-            </Button>
-            <Button
-              variant={activeTab === "inactive" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveTab("inactive")}
-              className="whitespace-nowrap"
-            >
-              Inactive
-            </Button>
-          </div>
-        </div>
-
-        {showFilters && <UserAccountFilters filters={filters} setFilters={setFilters} className="mb-6" />}
-      </div>
-
-      {isMobile ? (
-        // Mobile view with cards
-        <div className="space-y-4">
-          {paginatedUsers.map((user) => (
-            <Card key={user.id}>
-              <CardContent className="p-4">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarFallback>{user.avatar}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-medium">{user.name}</h3>
-                      <p className="text-sm text-muted-foreground">{user.role}</p>
-                    </div>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Open menu</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setEditingUser(user.id)}>Edit Schedule</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setRemovingUser(user.id)}>Remove Schedule</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 mt-3">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Department</p>
-                    <p className="text-sm">{user.department}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Status</p>
-                    <Badge
-                      variant={user.status === "Active" ? "default" : "secondary"}
-                      className={
-                        user.status === "Active"
-                          ? "bg-green-500 hover:bg-green-600 mt-1"
-                          : "bg-gray-500 hover:bg-gray-600 mt-1"
-                      }
-                    >
-                      {user.status}
-                    </Badge>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Shift Type</p>
-                    <p className="text-sm">{user.shiftType}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Days</p>
-                    <p className="text-sm">{user.days}</p>
-                  </div>
-                  <div className="col-span-2">
-                    <p className="text-xs text-muted-foreground">Hours</p>
-                    <p className="text-sm">{user.hours}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+              {tab.label}
+            </button>
           ))}
         </div>
-      ) : (
-        // Desktop view with table
-        <div className="rounded-md border">
+
+        <div className="flex gap-2 w-full sm:w-auto">
+          <div className="relative w-full sm:max-w-xs">
+            <input
+              type="search"
+              placeholder="Type a command or search..."
+              className="pl-10 pr-4 py-2 rounded-lg border border-gray-200 bg-white w-full focus:outline-none focus:ring-2 focus:ring-orange-200"
+              value={filters.search}
+              onChange={(e) =>
+                setFilters({ ...filters, search: e.target.value })
+              }
+            />
+            <svg
+              className="absolute left-3 top-2.5 h-4 w-4 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => setShowFilters(!showFilters)}
+            className="rounded-lg"
+          >
+            <Filter className="mr-2 h-4 w-4" />
+            Sort
+          </Button>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow border">
+        <h2 className="text-xl font-semibold px-6 pt-6 pb-2">
+          Employee Accounts
+        </h2>
+        {showFilters && (
+          <UserAccountFilters
+            filters={filters}
+            setFilters={setFilters}
+            className="mb-6 px-6"
+            jobPositions={jobPositions}
+            hideRoleFilter={true}
+          />
+        )}
+        <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Shift Type</TableHead>
-                <TableHead>Days</TableHead>
-                <TableHead>Hours</TableHead>
-                <TableHead className="w-[50px]">Actions</TableHead>
+              <TableRow className="bg-[#F5F6FA]">
+                <TableHead className="cursor-pointer" onClick={() => {
+                  if (sortField === "name") setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+                  else { setSortField("name"); setSortDirection("asc"); }
+                }}>
+                  Name {renderSortIcon("name")}
+                </TableHead>
+                <TableHead className="cursor-pointer" onClick={() => {
+                  if (sortField === "department") setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+                  else { setSortField("department"); setSortDirection("asc"); }
+                }}>
+                  Department {renderSortIcon("department")}
+                </TableHead>
+                <TableHead className="cursor-pointer" onClick={() => {
+                  if (sortField === "role") setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+                  else { setSortField("role"); setSortDirection("asc"); }
+                }}>
+                  Role {renderSortIcon("role")}
+                </TableHead>
+                <TableHead className="py-3 px-6">Job Position</TableHead>
+                <TableHead className="py-3 px-6">Status</TableHead>
+                <TableHead className="py-3 px-6">Days</TableHead>
+                <TableHead className="py-3 px-6">Hours</TableHead>
+                <TableHead className="py-3 px-6 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedUsers.length > 0 ? (
-                paginatedUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className="text-xs">{user.avatar}</AvatarFallback>
+              {sortedUsers.length > 0 ? (
+                sortedUsers.map((user) => (
+                  <TableRow key={user.user_id} className="hover:bg-[#F5F6FA]">
+                    <TableCell className="py-3 px-6">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8 bg-gray-100 text-gray-500">
+                          <AvatarFallback className="text-xs">
+                            {user.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .toUpperCase()}
+                          </AvatarFallback>
                         </Avatar>
-                        <span className="font-medium">{user.name}</span>
+                        <span className="font-medium">
+                          {user.employee?.first_name}{" "}
+                          {user.employee?.middle_name}{" "}
+                          {user.employee?.last_name}
+                        </span>
                       </div>
                     </TableCell>
-                    <TableCell>{user.role}</TableCell>
-                    <TableCell>{user.department}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={user.status === "Active" ? "default" : "secondary"}
+                    <TableCell className="py-3 px-6">
+                      {user.employee?.department ?? "-"}
+                    </TableCell>
+                    <TableCell className="py-3 px-6">
+                      {getDisplayRole(user.roles)}
+                    </TableCell>
+                    <TableCell className="py-3 px-6">
+                      {user.employee?.job_position ?? "-"}
+                    </TableCell>
+                    <TableCell className="py-3 px-6">
+                      <span
                         className={
-                          user.status === "Active" ? "bg-green-500 hover:bg-green-600" : "bg-gray-500 hover:bg-gray-600"
+                          user.is_active
+                            ? "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200"
+                            : "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200"
                         }
                       >
-                        {user.status}
-                      </Badge>
+                        {user.is_active ? "Active" : "Inactive"}
+                      </span>
                     </TableCell>
-                    <TableCell>{user.shiftType}</TableCell>
-                    <TableCell>{user.days}</TableCell>
-                    <TableCell>{user.hours}</TableCell>
-                    <TableCell>
+                    <TableCell className="py-3 px-6">
+                      {getDayAbbreviation(
+                        user.employee?.assigned_schedule?.schedule?.day
+                      )}
+                    </TableCell>
+                    <TableCell className="py-3 px-6">
+                      {formatHour24To12(
+                        user.employee?.assigned_schedule?.schedule?.start
+                      )}{" "}
+                      -{" "}
+                      {formatHour24To12(
+                        user.employee?.assigned_schedule?.schedule?.end
+                      )}
+                    </TableCell>
+                    <TableCell className="py-3 px-6 text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                          >
                             <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setEditingUser(user.id)}>Edit Schedule</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setRemovingUser(user.id)}>Remove Schedule</DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              user.is_active
+                                ? deactivate(user.user_id)
+                                : activate(user.user_id)
+                            }
+                          >
+                            {user.is_active ? "Set Inactive" : "Set Active"}
+                          </DropdownMenuItem>
+
+                          {!user.is_active && (
+                            <DropdownMenuItem
+                              onClick={() => remove(user.user_id)}
+                              className="text-red-600"
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -382,67 +365,39 @@ export function UserAccountsList() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center">
-                    No users found matching your filters.
+                  <TableCell colSpan={8} className="py-10 text-center">
+                    No employee accounts found.
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
         </div>
-      )}
 
-      <div className="flex items-center justify-between space-x-2 py-4">
-        <div className="text-sm text-muted-foreground">
-          Showing {filteredUsers.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}-
-          {Math.min(currentPage * pageSize, filteredUsers.length)} of {filteredUsers.length} users
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" onClick={handlePreviousPage} disabled={currentPage === 1}>
-            <ChevronLeft className="h-4 w-4" />
-            <span className="sr-only">Previous</span>
+        <div className="flex items-center justify-between px-6 py-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePreviousPage}
+            disabled={currentPage === 1}
+            className="flex items-center gap-2"
+          >
+            <ChevronLeft className="h-4 w-4" /> Previous
           </Button>
-          {!isMobile && (
-            <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(3, totalPages) }).map((_, i) => {
-                const pageNumber = i + 1
-                return (
-                  <Button
-                    key={i}
-                    variant={pageNumber === currentPage ? "default" : "outline"}
-                    size="sm"
-                    className="w-8 h-8"
-                    onClick={() => handlePageClick(pageNumber)}
-                  >
-                    {pageNumber}
-                  </Button>
-                )
-              })}
-              {totalPages > 3 && <span className="px-2">...</span>}
-            </div>
-          )}
-          <Button variant="outline" size="sm" onClick={handleNextPage} disabled={currentPage === totalPages}>
-            <ChevronRight className="h-4 w-4" />
-            <span className="sr-only">Next</span>
+          <span className="text-sm text-gray-600">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages || totalPages === 0}
+            className="flex items-center gap-2"
+          >
+            Next <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
-
-      {editingUser && (
-        <EditScheduleDialog
-          open={!!editingUser}
-          onOpenChange={() => setEditingUser(null)}
-          user={getUserById(editingUser)}
-        />
-      )}
-
-      {removingUser && (
-        <RemoveScheduleDialog
-          open={!!removingUser}
-          onOpenChange={() => setRemovingUser(null)}
-          user={getUserById(removingUser)}
-        />
-      )}
     </div>
-  )
+  );
 }

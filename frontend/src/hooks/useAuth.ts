@@ -7,9 +7,39 @@ import { useState } from "react";
 
 type User = {
   id: number;
+  user_id?: number;
+  emp_id?: number;
   name: string;
   email: string;
-  role: string[];
+  role: "employee" | "admin" | "super_admin";
+  is_active?: boolean;
+  roles?: string[];
+  created_at?: string;
+  updated_at?: string;
+  employee?: {
+    emp_id: number;
+    user_id: number;
+    department: string;
+    job_position: string;
+    address: string;
+    first_name: string;
+    middle_name: string;
+    last_name: string;
+    suffix: string | null;
+    gender: string;
+    dob: string;
+    civil_status: string;
+    nationality: string;
+    phone_number: string;
+    emergency_contact1: string;
+    emergency_contact2: string;
+    date_hired: string;
+    status: string;
+    profile_pic_url: string | null;
+    created_at: string;
+    updated_at: string;
+    assigned_schedule?: any;
+  };
 };
 
 export const useAuth = () => {
@@ -24,7 +54,6 @@ export const useAuth = () => {
     queryFn: async () => {
       try {
         const { data } = await api.get("/auth/me");
-        // Flatten the user object so you get { id, name, email, role }
         return data.original as User;
       } catch {
         Cookies.remove("auth_token");

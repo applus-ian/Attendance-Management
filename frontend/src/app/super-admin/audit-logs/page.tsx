@@ -1,13 +1,8 @@
-
-
-
-
 "use client";
-import { AuditLogsTable } from "@/components/superadmin/audit-logs/audit-logs-table"
+import { AuditLogsTable } from "@/components/superadmin/audit-logs/audit-logs-table";
 import { AppSidebar } from "@/components/superadmin/sidebar/app-sidebar";
 import { SiteHeader } from "@/components/superadmin/dashboard/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-
 
 export default function AuditLogsPage() {
   return (
@@ -30,7 +25,7 @@ export default function AuditLogsPage() {
                   <div className="mb-6">
                     <h1 className="text-2xl font-semibold">Audit Logs</h1>
                   </div>
-        <AuditLogsTable />
+                  <AuditLogsTable />
                 </div>
               </div>
             </div>

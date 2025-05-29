@@ -9,8 +9,10 @@ class JobPositionSeeder extends Seeder
 {
     public function run(): void
     {
-        JobPosition::factory()->create([
-            'title' => 'Manager'
-        ]);
+        JobPosition::create(['title' => 'Manager']);
+        JobPosition::create(['title' => 'Engineer']);
+        JobPosition::create(['title' => 'HR Specialist']);
+        JobPosition::create(['title' => 'Admin Staff']);
+        JobPosition::create(['title' => 'IT Support']);
     }
 }

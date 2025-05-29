@@ -3,14 +3,15 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\HolidayController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\TimelogsController;
 use App\Http\Controllers\AuditLogsController;
 use App\Http\Controllers\SchedulesController;
 use App\Http\Controllers\TimesheetsController;
+use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\AssignedSchedulesController;
 use App\Http\Controllers\ManualTimeRequestsController;
-use App\Http\Controllers\EmployeeController;
-use App\Http\Controllers\NotificationsController;
 
 # Authentication
 Route::controller(AuthController::class)
@@ -26,7 +27,26 @@ Route::controller(AuthController::class)
 # Schedules
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('schedules', SchedulesController::class);
+    Route::put('schedules/{schedules}/update', [SchedulesController::class, 'update']);
+    Route::delete('schedules/{schedules}/delete', [SchedulesController::class, 'destroy']);
+});
 
+# Schedules//Holidays
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('holidays', [HolidayController::class, 'index']);
+    Route::post('holidays', [HolidayController::class, 'store']);
+    Route::put('holidays/{holiday}', [HolidayController::class, 'update']);
+    Route::delete('holidays/{holiday}', [HolidayController::class, 'destroy']);
+    Route::post('holidays/sync', [HolidayController::class, 'sync']);
+});
+
+# Schedules//Holidays
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('holidays', [HolidayController::class, 'index']);
+    Route::post('holidays', [HolidayController::class, 'store']);
+    Route::put('holidays/{holiday}', [HolidayController::class, 'update']);
+    Route::delete('holidays/{holiday}', [HolidayController::class, 'destroy']);
+    Route::post('holidays/sync', [HolidayController::class, 'sync']);
 });
 
 #User Management
@@ -63,13 +83,13 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 # Time Logs
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     Route::post('timelogs/clock-in', [TimelogsController::class, 'clockIn']);
     Route::post('timelogs/clock-out', [TimelogsController::class, 'clockOut']);
     Route::get('employee/current-status', [TimelogsController::class, 'getCurrentStatus']);
 });
 
-Route::middleware(['auth:sanctum', 'role.permission:admin'])->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('timelogs', TimelogsController::class)->except(['create']);
 });
 

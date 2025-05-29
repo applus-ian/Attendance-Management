@@ -6,8 +6,10 @@ use App\Models\Timelogs;
 use App\Services\TimelogService;
 use Illuminate\Http\JsonResponse;
 use App\Services\AuditLogsService;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\TimelogRequest;
 use App\Http\Resources\TimelogResource;
+
 
 class TimelogsController extends Controller
 {
@@ -22,7 +24,11 @@ class TimelogsController extends Controller
     {
         $this->authorize('viewAny', Timelogs::class);
 
-        $timelogs = Timelogs::all();
+        $query = Timelogs::query();
+        if (request()->has('emp_id')) {
+            $query->where('emp_id', request('emp_id'));
+        }
+        $timelogs = $query->get();
 
         $this->auditLogsService->log(
             action: 'View timelogs',
@@ -85,10 +91,59 @@ class TimelogsController extends Controller
         ], 201);
     }
 
+    public function store(TimelogRequest $request)
+    {
+        $this->authorize('create', Timelogs::class);
+        $data = $request->validated();
+        $timelog = $this->timelogService->createTimelog($data);
+        $this->auditLogsService->log(
+            action: 'Add Timelog',
+            type: 'Timelog',
+            targetId: $timelog->timelog_id,
+            description: 'Added a timelog via super-admin.'
+        );
+        return response()->json([
+            'message' => 'Timelog created successfully',
+            'data' => new TimelogResource($timelog),
+        ], 201);
+    }
+
+    public function update(TimelogRequest $request, Timelogs $timelog)
+    {
+        $this->authorize('update', $timelog);
+        $data = $request->validated();
+        $timelog->update($data);
+        $this->auditLogsService->log(
+            action: 'Update Timelog',
+            type: 'Timelog',
+            targetId: $timelog->timelog_id,
+            description: 'Updated a timelog via super-admin.'
+        );
+        return response()->json([
+            'message' => 'Timelog updated successfully',
+            'data' => new TimelogResource($timelog),
+        ]);
+    }
+
+    public function destroy(Timelogs $timelog)
+    {
+        $this->authorize('delete', $timelog);
+        $timelog->delete();
+        $this->auditLogsService->log(
+            action: 'Delete Timelog',
+            type: 'Timelog',
+            targetId: $timelog->timelog_id,
+            description: 'Deleted a timelog via super-admin.'
+        );
+        return response()->json([
+            'message' => 'Timelog deleted successfully',
+        ]);
+    }
+
     public function getCurrentStatus()
     {
         // Get the currently authenticated user
-        $user = auth()->user();
+        $user = Auth::user();
 
         if (!$user || !$user->employee) {
             return response()->json([

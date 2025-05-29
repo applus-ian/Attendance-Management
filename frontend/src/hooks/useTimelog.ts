@@ -1,70 +1,92 @@
-// lib/hooks/useTimelog.ts
-import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 
-export type TimelogStatus = "clocked_in" | "clocked_out" | null;
+export interface Timelog {
+  timelog_id: number;
+  emp_id: number;
+  type: string;
+  time: string;
+  is_present: boolean;
+  is_absent: boolean;
+  is_late: boolean;
+  hrs_worked: number;
+  overtime_hrs: number;
+  comment?: string;
+  created_at?: string;
+}
 
-export default function useTimelog(emp_id: number) {
-  const [status, setStatus] = useState<TimelogStatus>(null);
-  const [lastActivity, setLastActivity] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+export interface TimelogInput {
+  emp_id: number;
+  type: string;
+  time: string;
+  is_present?: boolean;
+  is_absent?: boolean;
+  is_late?: boolean;
+  hrs_worked?: number;
+  overtime_hrs?: number;
+}
 
-  const fetchStatus = async () => {
-    setLoading(true);
-    try {
-      const response = await api.get("/employee/current-status"); // Corrected endpoint
-      setStatus(response.data.status);
-      setLastActivity(response.data.last_activity);
-      setError(null);
-    } catch (err: any) {
-      setError("Failed to fetch timelog status");
-    } finally {
-      setLoading(false);
-    }
-  };
+export function useTimelog(emp_id?: number) {
+  const qc = useQueryClient();
 
-  const clockIn = async (comment: string | null = null) => {
-    try {
-      const response = await api.post("/timelogs/clock-in", {
-        emp_id,
-        timelog_type: "clock_in",
-        
-      });
-      await fetchStatus();
-      return response.data;
-    } catch (err: any) {
-      throw err;
-    }
-  };
+  // Fetch timelogs for a specific employee
+  const {
+    data: timelogs,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery<Timelog[], Error>({
+    queryKey: ["timelogs", emp_id],
+    queryFn: async () => {
+      if (!emp_id) return [];
+      const res = await api.get(`/timelogs?emp_id=${emp_id}`);
+      return res.data.data || res.data;
+    },
+    enabled: !!emp_id,
+  });
 
-  const clockOut = async (comment: string | null = null) => {
-    try {
-      const response = await api.post("/timelogs/clock-out", {
-        emp_id,
-        timelog_type: "clock_out",
-        
-      });
-      await fetchStatus();
-      return response.data;
-    } catch (err: any) {
-      throw err;
-    }
-  };
+  // Create timelog
+  const createTimelog = useMutation({
+    mutationFn: async (input: TimelogInput) => {
+      const res = await api.post("/timelogs", input);
+      return res.data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["timelogs", emp_id] }),
+  });
 
-  useEffect(() => {
-    if (emp_id) {
-      fetchStatus();
-    }
-  }, [emp_id]);
+  // Update timelog
+  const updateTimelog = useMutation({
+    mutationFn: async ({ timelog_id, ...input }: TimelogInput & { timelog_id: number }) => {
+      const res = await api.put(`/timelogs/${timelog_id}`, input);
+      return res.data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["timelogs", emp_id] }),
+  });
+
+  // Delete timelog
+  const deleteTimelog = useMutation({
+    mutationFn: async (timelog_id: number) => {
+      const res = await api.delete(`/timelogs/${timelog_id}`);
+      return res.data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["timelogs", emp_id] }),
+  });
+
+  // Aggregates
+  const totalHoursWorked = timelogs?.reduce((sum, t) => sum + (t.hrs_worked || 0), 0) || 0;
+  const totalOvertimeHours = timelogs?.reduce((sum, t) => sum + (t.overtime_hrs || 0), 0) || 0;
 
   return {
-    status,
-    lastActivity,
-    loading,
+    timelogs: timelogs ?? [],
+    isLoading,
+    isError,
     error,
-    clockIn,
-    clockOut,
-    refreshStatus: fetchStatus,
+    refetch,
+    createTimelog,
+    updateTimelog,
+    deleteTimelog,
+    totalHoursWorked,
+    totalOvertimeHours,
   };
 }

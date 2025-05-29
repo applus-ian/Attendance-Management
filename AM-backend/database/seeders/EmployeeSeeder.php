@@ -24,20 +24,10 @@ class EmployeeSeeder extends Seeder
         // Ensure Department exists
         $engineeringDept = Departments::firstOrCreate(['name' => 'Engineering']);
 
-        // Create Address
-        $address = EmployeeAddress::create([
-            'province' => 'Metro Manila',
-            'city_or_municipality' => 'Quezon City',
-            'barangay' => 'Commonwealth',
-            'street' => '123 Main St',
-            'postal_code' => '1121',
-        ]);
-
         // Create Employee
         $employee = Employee::create([
             'department' => $engineeringDept->name,
             'job_position' => $backendDev->title,
-            'address' => $address->city_or_municipality,
             'first_name' => 'Juan',
             'middle_name' => 'Santos',
             'last_name' => 'Dela Cruz',
@@ -54,8 +44,15 @@ class EmployeeSeeder extends Seeder
             'email' => 'john1@example.com',
             'profile_pic_url' => null,
         ]);
+        EmployeeAddress::create([
+            'employee_id' => $employee->emp_id,
+            'province' => 'Metro Manila',
+            'city_or_municipality' => 'Quezon City',
+            'barangay' => 'Commonwealth',
+            'street' => '123 Main St',
+            'postal_code' => '1121',
+        ]);
 
-        // Create associated User account with role attribute set
         $user = User::create([
             'emp_id' => $employee->emp_id,
             'email' => $employee->email,
@@ -63,6 +60,102 @@ class EmployeeSeeder extends Seeder
             'is_active' => true,
             'name' => $employee->first_name,
             'role' => $role->name,
+        ]);
+
+        // Ensure required Role exists (or create one)
+        $role2 = Role::firstOrCreate(['name' => 'admin']);
+
+        // Ensure JobPosition exists
+        $backendDev2 = JobPosition::firstOrCreate(['title' => '3d Design Engineer']);
+
+        // Ensure Department exists
+        $engineeringDept2 = Departments::firstOrCreate(['name' => 'Engineering']);
+
+        // Create Employee
+        $employee2 = Employee::create([
+            'department' => $engineeringDept2->name,
+            'job_position' => $backendDev2->title,
+            'first_name' => 'Jonathan',
+            'middle_name' => 'Reyes',
+            'last_name' => 'Dela Rama',
+            'suffix' => 'D',
+            'gender' => 'male',
+            'dob' => '1990-05-15',
+            'civil_status' => 'single',
+            'nationality' => 'Filipino',
+            'phone_number' => '09171234567',
+            'emergency_contact1' => '09181234567',
+            'emergency_contact2' => '09191234567',
+            'date_hired' => '2023-01-10',
+            'status' => 'active',
+            'email' => 'john3@example.com',
+            'profile_pic_url' => null,
+        ]);
+        EmployeeAddress::create([
+            'employee_id' => $employee2->emp_id,
+            'province' => 'Cebu',
+            'city_or_municipality' => 'Cebu City',
+            'barangay' => 'Cogon Ramos',
+            'street' => 'Ranudo St',
+            'postal_code' => '6000',
+        ]);
+
+        // Create associated User account with role attribute set
+        $user2 = User::create([
+            'emp_id' => $employee2->emp_id,
+            'email' => $employee2->email,
+            'password' => Hash::make('password123'),
+            'is_active' => true,
+            'name' => $employee2->first_name,
+            'role' => $role2->name,
+        ]);
+
+        // Ensure required Role exists (or create one)
+        $role1 = Role::firstOrCreate(['name' => 'employee']);
+
+        // Ensure JobPosition exists
+        $backendDev1 = JobPosition::firstOrCreate(['title' => 'Frontend Developer']);
+
+        // Ensure Department exists
+        $engineeringDept1 = Departments::firstOrCreate(['name' => 'IT']);
+
+        // Create Employee
+        $employee1 = Employee::create([
+            'department' => $engineeringDept1->name,
+            'job_position' => $backendDev1->title,
+            'first_name' => 'Mario',
+            'middle_name' => 'Santos',
+            'last_name' => 'Dela Calzada',
+            'suffix' => null,
+            'gender' => 'male',
+            'dob' => '1990-05-15',
+            'civil_status' => 'single',
+            'nationality' => 'Filipino',
+            'phone_number' => '09171234567',
+            'emergency_contact1' => '09181234567',
+            'emergency_contact2' => '09191234567',
+            'date_hired' => '2023-01-10',
+            'status' => 'active',
+            'email' => 'john2@example.com',
+            'profile_pic_url' => null,
+        ]);
+        EmployeeAddress::create([
+            'employee_id' => $employee1->emp_id,
+            'province' => 'Cebu',
+            'city_or_municipality' => 'Cebu City',
+            'barangay' => 'Cogon Ramos',
+            'street' => 'Ranudo St',
+            'postal_code' => '6000',
+        ]);
+
+        // Create associated User account with role attribute set
+        $user1 = User::create([
+            'emp_id' => $employee1->emp_id,
+            'email' => $employee1->email,
+            'password' => Hash::make('password123'),
+            'is_active' => true,
+            'name' => $employee1->first_name,
+            'role' => $role1->name,
         ]);
 
         // Ensure required Role exists (or create one)
@@ -164,6 +257,5 @@ class EmployeeSeeder extends Seeder
             'name' => $employee3->first_name,
             'role' => $role3->name,
         ]);
-
     }
 }
