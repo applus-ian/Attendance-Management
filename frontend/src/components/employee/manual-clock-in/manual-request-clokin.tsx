@@ -164,6 +164,14 @@ export default function ManualRequestModal({
             return;
         }
 
+        // Debug logging
+        console.log('Submit Request - User Info:', {
+            userId: auth.user.id,
+            empId: auth.user.emp_id,
+            name: auth.user.name,
+            role: auth.user.role
+        });
+
         try {
             // Format request type to match database enum
             const requestType = formData.requestType.replace('-', '_') as 'clock_in' | 'clock_out' | 'overtime';
@@ -177,12 +185,15 @@ export default function ManualRequestModal({
             };
 
             const formattedData: ManualRequestData = {
-                emp_id: Number(auth.user.id),
+                emp_id: Number(auth.user.emp_id),  // Use emp_id instead of id
                 request_type: requestType,
                 time: `${formatDate(formData.date)} ${formatTimeString(formData.startTime)}`,
                 reason: formData.comment,
                 approval_status: 'pending'
             };
+
+            // Debug logging
+            console.log('Submit Request - Formatted Data:', formattedData);
 
             await createManualRequest.mutateAsync(formattedData);
             setShowPrompt(true); // Show success prompt

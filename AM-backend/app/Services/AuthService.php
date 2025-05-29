@@ -43,6 +43,7 @@ class AuthService
 
         return response()->json([
             'id' => $user->user_id,
+            'emp_id' => $user->emp_id,
             'name' => $user->name,
             'email' => $user->email,
             'role' => $user->getRoleNames()

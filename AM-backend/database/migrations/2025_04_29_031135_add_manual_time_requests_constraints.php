@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('manual_time_requests', function (Blueprint $table) {
             $table->foreign('emp_id')->references('emp_id')->on('employees')->onDelete('cascade');
+            $table->foreign('reviewed_by')->references('emp_id')->on('employees')->onDelete('set null');
         });
     }
 

@@ -27,6 +27,7 @@ interface RequestTableProps {
 
 interface Request {
   id: string
+  emp_id: number
   dateSubmitted: string
   member: string
   type: string
@@ -39,6 +40,7 @@ interface Request {
 function transformManualRequest(raw: any): Request {
   return {
     id: raw.request_id.toString(),
+    emp_id: raw.emp_id,
     dateSubmitted: new Date(raw.created_at).toLocaleDateString(),
     member: raw.employee?.name || "Unknown",
     type: raw.request_type.replace("_", " "),
@@ -111,11 +113,6 @@ export function RequestTable({ searchQuery }: RequestTableProps) {
 
   // Table columns
   const columns: ColumnDef<Request>[] = [
-    { accessorKey: "dateSubmitted", header: "Date Submitted", cell: ({ row }) => <div className="font-medium">{row.getValue("dateSubmitted")}</div> },
-    { accessorKey: "member", header: "Member", cell: ({ row }) => <div>{row.getValue("member")}</div> },
-    { accessorKey: "type", header: "Type", cell: ({ row }) => <div>{row.getValue("type")}</div> },
-    { accessorKey: "dateRequested", header: "Date Requested", cell: ({ row }) => <div>{row.getValue("dateRequested")}</div> },
-    { accessorKey: "comment", header: "Comment", cell: ({ row }) => <div>{row.getValue("comment")}</div> },
     {
       accessorKey: "status", header: "Status", cell: ({ row }) => {
         const status = row.getValue("status") as string

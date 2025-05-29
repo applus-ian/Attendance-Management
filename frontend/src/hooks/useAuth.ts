@@ -59,6 +59,7 @@ import { useState } from "react";
 
 type User = {
   id: number;
+  emp_id: number;
   name: string;
   email: string;
   role: "employee" | "admin" | "super_admin";
@@ -70,14 +71,32 @@ export const useAuth = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const token = Cookies.get("auth_token");
+  console.log('Auth Debug - Token:', { 
+    hasToken: !!token,
+    tokenValue: token?.substring(0, 10) + '...' // Only show first 10 chars for security
+  });
 
   const { data: user } = useQuery<User | null>({
     queryKey: ["user"],
     queryFn: async () => {
       try {
+        console.log('Auth Debug - Fetching user data...');
         const { data } = await api.get("/auth/me");
+        console.log('Auth Debug - User data received:', {
+          hasData: !!data,
+          userId: data?.id,
+          empId: data?.emp_id,
+          role: data?.role,
+          email: data?.email,
+          rawData: data // Log the full response to see what we're getting
+        });
         return data as User;
-      } catch {
+      } catch (error: any) {
+        console.error('Auth Debug - Error fetching user:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status
+        });
         Cookies.remove("auth_token");
         queryClient.invalidateQueries({ queryKey: ["user"] });
         return null;
@@ -85,6 +104,15 @@ export const useAuth = () => {
     },
     enabled: !!token,
     retry: false,
+  });
+
+  // Debug final user state
+  console.log('Auth Debug - Final user state:', {
+    isAuthenticated: !!user,
+    hasEmpId: !!user?.emp_id,
+    empId: user?.emp_id,
+    role: user?.role,
+    fullUser: user // Log the full user object
   });
 
   const login = useMutation({
@@ -123,5 +151,7 @@ export const useAuth = () => {
     },
   });
 
-  return { user, login, logout, isLoggingOut };
+  const employeeId = user?.emp_id;
+
+  return { user, login, logout, isLoggingOut, employeeId };
 };

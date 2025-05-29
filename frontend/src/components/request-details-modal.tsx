@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import { ManualRequest } from "@/hooks/useManualRequest"
 
 interface RequestDetailsModalProps {
   request: ManualRequest;
