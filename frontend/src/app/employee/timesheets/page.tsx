@@ -1,7 +1,7 @@
 "use client";
 
-import Navbar from "@/components/navbar";
-import { EmployeeDataTable } from "@/components/employee-data-table";
+import Navbar from "@/components/employee/navbar";
+import { EmployeeDataTable } from "@/components/employee/employee-data-table";
 import { useState } from "react";
 import { useEmployeeTimesheet } from "@/hooks/useTimesheet";
 
@@ -13,7 +13,35 @@ export default function TimesheetsPage() {
       setSelectedPeriod(event.target.value);
     };
 
-  
+    // Map timesheets to EmployeeDataTable row format
+    const tableData = timesheets.map(ts => {
+      // Find earliest clock_in and latest clock_out
+      let inTime = "-";
+      let outTime = "-";
+      let comment = "";
+      if (ts.timelogs && ts.timelogs.length > 0) {
+        const clockIns = ts.timelogs.filter(log => log.type === "clock_in");
+        const clockOuts = ts.timelogs.filter(log => log.type === "clock_out");
+        if (clockIns.length > 0) {
+          const earliest = clockIns.reduce((a, b) => new Date(a.time) < new Date(b.time) ? a : b);
+          inTime = new Date(earliest.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          comment = earliest.comment || "";
+        }
+        if (clockOuts.length > 0) {
+          const latest = clockOuts.reduce((a, b) => new Date(a.time) > new Date(b.time) ? a : b);
+          outTime = new Date(latest.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+      }
+      return {
+        date: ts.date,
+        inTime,
+        outTime,
+        worked: ts.total_hrs_work?.toFixed(2) ?? "0.00",
+        scheduled: ts.scheduled_hrs?.toFixed(2) ?? "0.00",
+        comment,
+      };
+    });
+
     return (
       <>
         <Navbar />
@@ -33,7 +61,7 @@ export default function TimesheetsPage() {
                   value={selectedPeriod}
                   onChange={handlePeriodChange}
                   className="appearance-none border border-gray-300 rounded-md px-4 py-2 text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  disabled={isLoadingTimesheets}
+                  disabled={isLoading}
                 >
                   <optgroup label="January 2025">
                     <option>Jan 1 - 15, 2025</option>

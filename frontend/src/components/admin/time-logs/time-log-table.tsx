@@ -10,19 +10,7 @@ import { useTimelog } from "@/hooks/useTimelog"
 import TimeLogModal from "@/components/modal/time-logs/time-logs-modal"
 import { useUserList } from "@/hooks/useUserList"
 import { TimeLogDetailsModal } from "./time-log-details-modal"
-
-interface TimeLogTableProps {
-  userId: string
-  filters: {
-    logType: string
-    dateRange: {
-      from: Date | undefined
-      to: Date | undefined
-    }
-    comment: string
-  }
-  onEdit?: (log: any) => void
-}
+import { TimeLogTableProps } from "@/types/timelog"
 
 export function TimeLogTable({ userId, filters, onEdit }: TimeLogTableProps) {
   const isMobile = useIsMobile()

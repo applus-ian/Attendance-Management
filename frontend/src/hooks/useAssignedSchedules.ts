@@ -1,15 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../lib/api";
+import { AssignedSchedule } from "@/types/assignedSchedule";
 
-// Define a type for AssignedSchedule (adjust fields as needed)
-type AssignedSchedule = {
-  id: number;
-  emp_id: number;
-  sched_id: number;
-  assigned_at: string;
-};
-
-// Hook to fetch all assigned schedules
 export function useAssignedSchedules() {
   const [schedules, setSchedules] = useState<AssignedSchedule[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +11,7 @@ export function useAssignedSchedules() {
     setLoading(true);
     try {
       const { data } = await api.get("/assigned-schedules");
-      setSchedules(data.data); // assuming format { data: [...] }
+      setSchedules(data.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch assigned schedules");
     } finally {

@@ -6,23 +6,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-
-export interface Request {
-  id: string
-  dateSubmitted: string
-  member: string
-  type: 'clock_in' | 'clock_out' | 'overtime'
-  dateRequested: string
-  comment: string
-  status: "Approved" | "Pending" | "Denied"
-  feedback: string
-}
-
-interface RequestDetailsModalProps {
-  request: Request
-  isOpen: boolean
-  onClose: () => void
-}
+import { Request, RequestDetailsModalProps } from "@/types/request"
 
 export function RequestDetailsModal({ request, isOpen, onClose }: RequestDetailsModalProps) {
   const handleApprove = () => {

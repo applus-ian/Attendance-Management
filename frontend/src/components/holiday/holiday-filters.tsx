@@ -14,32 +14,7 @@ import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 import type { DateRange } from "react-day-picker"
-
-interface HolidayFiltersProps {
-  filters: {
-    search: string
-    type: string
-    movable: string
-    status: string
-    dateRange: {
-      from: Date | undefined
-      to: Date | undefined
-    }
-  }
-  setFilters: React.Dispatch<
-    React.SetStateAction<{
-      search: string
-      type: string
-      movable: string
-      status: string
-      dateRange: {
-        from: Date | undefined
-        to: Date | undefined
-      }
-    }>
-  >
-  className?: string
-}
+import { HolidayFiltersProps } from "@/types/holiday"
 
 export function HolidayFilters({ filters, setFilters, className }: HolidayFiltersProps) {
   const isMobile = useIsMobile()

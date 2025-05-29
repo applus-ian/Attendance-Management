@@ -1,35 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
-
-export interface Timelog {
-  timelog_id: number;
-  emp_id: number;
-  type: string;
-  time: string;
-  is_present: boolean;
-  is_absent: boolean;
-  is_late: boolean;
-  hrs_worked: number;
-  overtime_hrs: number;
-  comment?: string;
-  created_at?: string;
-}
-
-export interface TimelogInput {
-  emp_id: number;
-  type: string;
-  time: string;
-  is_present?: boolean;
-  is_absent?: boolean;
-  is_late?: boolean;
-  hrs_worked?: number;
-  overtime_hrs?: number;
-}
+import { Timelog, TimelogInput } from "@/types/timelog";
 
 export function useTimelog(emp_id?: number) {
   const qc = useQueryClient();
 
-  // Fetch timelogs for a specific employee
+  
   const {
     data: timelogs,
     isLoading,

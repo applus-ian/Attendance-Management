@@ -20,26 +20,8 @@ import "../../globals.css";
 
 export default function MySchedulePage() {
   const [showClockInModal, setShowClockInModal] = useState(false);
-  const [isClockedIn, setIsClockedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const { schedules, loading, error, refreshSchedule } = useEmployeeSchedule();
-  const { user } = useAuth();
-  const [lastClockTime, setLastClockTime] = useState<string | null>(null);
-
-  // Fetch current clock-in status from backend
-  async function fetchClockStatus() {
-    if (!user?.id) return;
-    try {
-      const res = await api.get("/employee/current-status", {
-        params: { user_id: user.id },
-      });
-      const { status, timestamp } = res.data;
-      setIsClockedIn(status === "clocked_in");
-      setLastClockTime(timestamp);
-    } catch (err) {
-      console.error("Failed to fetch clock-in status", err);
-    }
-  }
+  const { user, clockStatus, isClockLoading, fetchClockStatus, clockIn, clockOut } = useAuth();
 
   useEffect(() => {
     fetchClockStatus();
@@ -70,50 +52,39 @@ export default function MySchedulePage() {
     return `${hour12}:${minutes} ${period}`;
   };
 
-  // Unified clock handler toggling between clock-in and clock-out
+  const hasTodaySchedule = schedules.some((shift) => {
+    if (shift.date) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const scheduleDate = new Date(shift.date);
+      scheduleDate.setHours(0, 0, 0, 0);
+      return scheduleDate.getTime() === today.getTime();
+    } else if (Array.isArray(shift.day) && shift.day.length > 0) {
+      const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const todayDay = daysOfWeek[new Date().getDay()];
+      return shift.day.some((d) => d.toLowerCase() === todayDay.toLowerCase());
+    }
+    return false;
+  });
+
+  const isClockedIn = clockStatus?.status === "clocked_in";
+  const lastClockTime = clockStatus?.last_activity;
   const handleClock = async () => {
     if (!user?.id) {
       toast.error("User not authenticated");
       return;
     }
-  
-    setIsLoading(true);
-  
-    try {
-      let res;
-      if (!isClockedIn) {
-        // Clock in
-        res = await api.post("/timelogs/clock-in", {
-          emp_id: user.id,
-          timelog_type: "clock_in",
-        });
-      } else {
-        // Clock out
-        res = await api.post("/timelogs/clock-out", {
-          emp_id: user.id,
-          timelog_type: "clock_out",
-        });
-      }
-  
-      const { status, timestamp } = res.data;
-      setIsClockedIn(status === "clocked_in");
-      setLastClockTime(timestamp);
-  
-      toast.success(
-        status === "clocked_in"
-          ? "You have successfully clocked in"
-          : "You have successfully clocked out"
-      );
-  
-      setShowClockInModal(false);
-    } catch (error: any) {
-      console.error("Clock action failed:", error);
-      toast.error("Something went wrong while updating clock status.");
-    } finally {
-      setIsLoading(false);
+    if (!hasTodaySchedule) {
+      toast.error("You do not have a schedule for today. Clock in/out is disabled.");
+      return;
     }
+    if (!isClockedIn) {
+      await clockIn();
+    } else {
+      await clockOut();
+    }
+    setShowClockInModal(false);
   };
-  
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -192,10 +163,16 @@ export default function MySchedulePage() {
                     ? "bg-green-500 hover:bg-green-600"
                     : "bg-orange-500 hover:bg-orange-600"
                 } text-white py-3 rounded-md flex items-center justify-center text-lg font-medium`}
-                onClick={() => setShowClockInModal(true)}
-                disabled={isLoading}
+                onClick={() => {
+                  if (!hasTodaySchedule) {
+                    toast.error("You do not have a schedule for today. Clock in/out is disabled.");
+                  } else {
+                    setShowClockInModal(true);
+                  }
+                }}
+                disabled={isClockLoading || !hasTodaySchedule}
               >
-                {isLoading ? (
+                {isClockLoading ? (
                   <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white mr-2"></div>
                 ) : (
                   <Clock className="w-6 h-6 mr-2" />
@@ -214,7 +191,7 @@ export default function MySchedulePage() {
           </div>
         </div>
 
-        {showClockInModal && (
+        {showClockInModal && hasTodaySchedule && (
           <ClockInModal
             show={showClockInModal}
             onClose={() => setShowClockInModal(false)}
@@ -223,6 +200,7 @@ export default function MySchedulePage() {
             shiftTime={schedules.length > 0 ? formatTime(schedules[0]?.start) : ""}
             isClockedIn={isClockedIn}
             userId={user?.id}
+            isLoading={isClockLoading}
           />
         )}
       </main>

@@ -2,21 +2,24 @@
 
 import { useEffect, useState } from "react"
 import { useAuth } from "@/hooks/useAuth"
-
-interface CircularClockProps {
-  greeting?: string
-}
+import { CircularClockProps } from "@/types/clock"
 
 export function CircularClock({ greeting }: CircularClockProps) {
   const [time, setTime] = useState(new Date())
+  const [mounted, setMounted] = useState(false)
   const { user } = useAuth()
 
   useEffect(() => {
+    setMounted(true)
     const timer = setInterval(() => {
       setTime(new Date())
     }, 1000)
     return () => clearInterval(timer)
   }, [])
+
+  if (!mounted) {
+    return null
+  }
 
   // Always extract first name from user.name, fallback to "Employee"
   const firstName = user?.name ? user.name.split(" ")[0] : "Employee"

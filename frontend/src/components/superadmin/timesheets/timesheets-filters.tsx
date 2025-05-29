@@ -13,28 +13,7 @@ import { CalendarIcon, X } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
-
-interface TimesheetsFiltersProps {
-  filters: {
-    date: {
-      from: Date | undefined
-      to: Date | undefined
-    }
-    employee: string
-    status: string
-  }
-  setFilters: React.Dispatch<
-    React.SetStateAction<{
-      date: {
-        from: Date | undefined
-        to: Date | undefined
-      }
-      employee: string
-      status: string
-    }>
-  >
-  className?: string
-}
+import { TimesheetsFiltersProps } from "@/types/timesheet"
 
 export function TimesheetsFilters({ filters, setFilters, className }: TimesheetsFiltersProps) {
   const isMobile = useIsMobile()

@@ -13,11 +13,7 @@ import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-
-interface AddHolidayDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}
+import { AddHolidayDialogProps } from "@/types/holiday"
 
 export function AddHolidayDialog({ open, onOpenChange }: AddHolidayDialogProps) {
   const [holidayType, setHolidayType] = useState("regular")

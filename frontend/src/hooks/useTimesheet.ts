@@ -1,30 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
-
-export interface Timelog {
-  timelog_id: number;
-  type: string;
-  time: string;
-  is_present: boolean;
-  is_absent: boolean;
-  is_late: boolean;
-  hrs_worked: number;
-  overtime_hrs: number;
-}
-
-export interface Timesheet {
-  timesheet_id: number;
-  emp_id: number;
-  date: string;
-  total_hrs_work: number;
-  total_overtime_hrs: number;
-  total_present: number;
-  total_absent: number;
-  total_lates: number;
-  scheduled_hrs: number;
-  timelogs?: Timelog[];
-}
+import { Timelog } from "@/types/timelog";
+import { Timesheet } from "@/types/timesheet";
 
 export function useEmployeeTimesheet() {
   const { user } = useAuth();

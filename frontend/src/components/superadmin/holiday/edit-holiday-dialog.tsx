@@ -13,21 +13,7 @@ import { format, parse } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-
-interface Holiday {
-  id: string
-  name: string
-  date: string
-  type: string
-  isMovable: boolean
-  status: boolean
-}
-
-interface EditHolidayDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  holiday: Holiday
-}
+import { Holiday, EditHolidayDialogProps } from "@/types/holiday"
 
 export function EditHolidayDialog({ open, onOpenChange, holiday }: EditHolidayDialogProps) {
   // Parse the date string to a Date object

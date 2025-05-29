@@ -8,26 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-interface UserAccountFiltersProps {
-  filters: {
-    search: string
-    role: string
-    department: string
-    status: string
-    shiftType: string
-  }
-  setFilters: React.Dispatch<
-    React.SetStateAction<{
-      search: string
-      role: string
-      department: string
-      status: string
-      shiftType: string
-    }>
-  >
-  className?: string
-}
+import { UserAccountFiltersProps } from "@/types/user"
 
 // Mock data for filter options
 const departments = ["IT", "HR", "Engineering", "Marketing", "Finance", "Operations"]

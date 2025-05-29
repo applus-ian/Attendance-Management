@@ -1,4 +1,4 @@
-// types/assignedSchedule.ts
+
 
 export interface Employee {
   id: number;

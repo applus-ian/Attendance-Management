@@ -1,7 +1,7 @@
-import { AppSidebar } from "@/components/App-sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/admin/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { AdminUserAccountsList } from "@/components/user-accounts/user-accounts-list";
+import { AdminUserAccountsList } from "@/components/admin/user-accounts/user-accounts-list";
 
 export default function RequestPage() {
   return (

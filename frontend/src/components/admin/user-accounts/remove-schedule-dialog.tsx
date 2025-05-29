@@ -2,24 +2,7 @@
 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-
-interface User {
-  id: string
-  name: string
-  role: string
-  department: string
-  status: string
-  shiftType: string
-  days: string
-  hours: string
-  avatar: string
-}
-
-interface RemoveScheduleDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  user: User
-}
+import { User, RemoveScheduleDialogProps } from "@/types/user"
 
 export function RemoveScheduleDialog({ open, onOpenChange, user }: RemoveScheduleDialogProps) {
   const handleRemove = () => {

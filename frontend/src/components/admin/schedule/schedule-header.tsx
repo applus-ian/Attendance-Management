@@ -3,15 +3,16 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { PlusCircle } from "lucide-react"
-import { ShiftManagementModal } from "@/components/modal/schedule/shift-management"
-import { ScheduleList } from "@/components/admin/schedule/schedule-list"
+import { ShiftManagementModal } from "@/components/schedule/shift-management"
+import ScheduleList from "@/components/schedule/schedule-list"
 import { HolidayList } from "@/components/holiday/holiday-list"
-import { AddHolidayDialog } from "@/components/holiday/Add-holiday-dialog"
+import { AddHolidayDialog } from "@/components/holiday/add-holiday-dialog"
 
 export function ScheduleHeader() {
   const [activeTab, setActiveTab] = useState("schedules")
   const [isAddScheduleDialogOpen, setIsAddScheduleDialogOpen] = useState(false)
   const [isAddHolidayDialogOpen, setIsAddHolidayDialogOpen] = useState(false)
+  const [isShiftModalOpen, setIsShiftModalOpen] = useState(false)
 
   return (
     <div className="mb-6">
@@ -66,7 +67,7 @@ export function ScheduleHeader() {
         <HolidayList />
       )}
 
-      <ShiftManagementModal />
+      <ShiftManagementModal open={isShiftModalOpen} onOpenChange={setIsShiftModalOpen} />
       <AddHolidayDialog open={isAddHolidayDialogOpen} onOpenChange={setIsAddHolidayDialogOpen} />
     </div>
   )

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { UserListProps } from "@/types/user"
 
 const users = [
 	{
@@ -66,11 +67,6 @@ const users = [
 	},
 ]
 
-interface UserListProps {
-	selectedUserId: string
-	users: typeof users
-}
-
 export function UserList({ selectedUserId, users }: UserListProps) {
 	const router = useRouter()
 
@@ -80,7 +76,7 @@ export function UserList({ selectedUserId, users }: UserListProps) {
 
 	return (
 		<div className="space-y-1 max-h-[calc(100vh-120px)] overflow-y-auto">
-			{users.map((user) => (
+			{users?.map((user) => (
 				<div
 					key={user.id}
 					className={cn(

@@ -1,11 +1,6 @@
 import { SearchIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
-
-interface SearchProps {
-  placeholder: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}
+import { SearchProps } from "@/types/user"
 
 export function Search({ placeholder, value, onChange }: SearchProps) {
   return (

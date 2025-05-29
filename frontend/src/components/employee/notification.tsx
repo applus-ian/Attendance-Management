@@ -2,14 +2,7 @@
 
 import { useState } from "react";
 import { Bell, X } from "lucide-react";
-
-interface NotificationProps {
-  id: number;
-  title: string;
-  description: string;
-  type?: "info" | "success" | "error" | "warning";
-  onClose: (id: number) => void; // Callback to handle closing the notification
-}
+import { NotificationProps } from "@/types/user"
 
 export default function Notification({ id, title, description, type = "info", onClose }: NotificationProps) {
   const typeStyles = {

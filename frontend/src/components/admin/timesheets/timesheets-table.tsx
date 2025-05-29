@@ -8,7 +8,7 @@ import { MoreHorizontal, ChevronLeft, ChevronRight, Filter, Search, ArrowUp, Arr
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Card, CardContent } from "@/components/ui/card"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { TimesheetsFilters } from "@/components/timesheets/timesheets-filters"
+import { TimesheetsFilters } from "@/components/admin/timesheets/timesheets-filters"
 import { useTimesheet, useTimesheetDetails } from "@/hooks/useTimesheet"
 import { useUserManagement } from "@/hooks/useUserManagement"
 import { TimesheetDetailsModal } from "@/components/superadmin/timesheets/timesheet-details-modal"

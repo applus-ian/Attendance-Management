@@ -26,7 +26,7 @@ function formatTimeTo12Hour(time: string): string {
   return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
 }
 
-export default function ScheduleTable() {
+export default function ScheduleList() {
   const { schedules, loading, error, deleteSchedule, updateSchedule, fetchSchedules } = useSchedules()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null)
@@ -258,3 +258,5 @@ export default function ScheduleTable() {
     </>
   )
 }
+
+export { ScheduleList };

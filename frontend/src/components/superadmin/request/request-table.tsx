@@ -20,21 +20,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { RequestDetailsModal } from "@/components/request-details-modal"
 import { MobileRequestView } from "@/components/mobile-request-view"
 import { RequestFilters } from "./request-filter"
-
-interface RequestTableProps {
-  searchQuery: string
-}
-
-interface Request {
-  id: string
-  dateSubmitted: string
-  member: string
-  type: string
-  dateRequested: string
-  comment: string
-  status: "Approved" | "Pending" | "Denied"
-  feedback: string
-}
+import { Request, RequestTableProps } from "@/types/request"
 
 function transformManualRequest(raw: any): Request {
   return {

@@ -4,7 +4,7 @@ import { AppSidebar } from "@/components/superadmin/sidebar/app-sidebar";
 import { SiteHeader } from "@/components/superadmin/dashboard/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useState } from "react";
-import { ScheduleHeader } from "@/components/superadmin/schedule/schedule-header";
+import { ScheduleHeader } from "@/components/schedule/schedule-header";
 
 export default function RequestPage() {
   const [searchQuery, setSearchQuery] = useState("");

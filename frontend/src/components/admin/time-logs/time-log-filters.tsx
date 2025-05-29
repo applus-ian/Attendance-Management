@@ -13,28 +13,7 @@ import { CalendarIcon, X } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
-
-interface TimeLogFiltersProps {
-  filters: {
-    logType: string
-    dateRange: {
-      from: Date | undefined
-      to: Date | undefined
-    }
-    comment: string
-  }
-  setFilters: React.Dispatch<
-    React.SetStateAction<{
-      logType: string
-      dateRange: {
-        from: Date | undefined
-        to: Date | undefined
-      }
-      comment: string
-    }>
-  >
-  className?: string
-}
+import { TimeLogFiltersProps } from "@/types/timelog"
 
 export function TimeLogFilters({ filters, setFilters, className }: TimeLogFiltersProps) {
   const isMobile = useIsMobile()

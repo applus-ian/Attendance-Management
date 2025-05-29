@@ -16,29 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Check, ChevronDown, CalendarIcon, Filter, SortAsc, SortDesc } from "lucide-react"
 import { format } from "date-fns"
 import { useIsMobile } from "@/hooks/use-mobile"
-
-interface RequestFiltersProps {
-  filters: {
-    status: string
-    type: string
-    dateRange: {
-      from: Date | undefined
-      to: Date | undefined
-    }
-  }
-  setFilters: (filters: {
-    status: string
-    type: string
-    dateRange: {
-      from: Date | undefined
-      to: Date | undefined
-    }
-  }) => void
-  sortField: string
-  sortDirection: "asc" | "desc"
-  setSortField: (field: string) => void
-  setSortDirection: (direction: "asc" | "desc") => void
-}
+import { RequestFiltersProps } from "@/types/request"
 
 export function RequestFilters({
   filters,

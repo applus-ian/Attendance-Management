@@ -2,15 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDe
 import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
 import React from "react"
-
-interface TimeLogDetailsModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  timelog: any
-  getEmployee: (emp_id: number) => any
-  onEdit: () => void
-  onDelete: () => void
-}
+import { TimeLogDetailsModalProps } from "@/types/timelog"
 
 export const TimeLogDetailsModal: React.FC<TimeLogDetailsModalProps> = ({ open, onOpenChange, timelog, getEmployee, onEdit, onDelete }) => {
   return (

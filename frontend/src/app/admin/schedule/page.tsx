@@ -1,12 +1,12 @@
 "use client";
 
-import { AppSidebar } from "@/components/App-sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/admin/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { RequestTable } from "@/components/request-table";
 import { Search } from "@/components/search";
 import { useState } from "react";
-import { ScheduleHeader } from "@/components/admin/schedule/schedule-header";
+import { ScheduleHeader } from "@/components/schedule/schedule-header";
 
 export default function RequestPage() {
   const [searchQuery, setSearchQuery] = useState("");

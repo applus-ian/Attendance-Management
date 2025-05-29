@@ -1,20 +1,13 @@
 "use client"
 
+import React from "react"
 import { useState } from "react"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-
-interface AddScheduleDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}
-
-interface TimeInputsProps {
-  day: string
-}
+import { AddScheduleDialogProps, TimeInputsProps } from "@/types/schedule"
 
 function TimeInputs({ day }: TimeInputsProps) {
   return (

@@ -2,21 +2,7 @@
 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-
-interface Holiday {
-  id: string
-  name: string
-  date: string
-  type: string
-  isMovable: boolean
-  status: boolean
-}
-
-interface DeleteHolidayDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  holiday: Holiday
-}
+import { Holiday, DeleteHolidayDialogProps } from "@/types/holiday"
 
 export function DeleteHolidayDialog({ open, onOpenChange, holiday }: DeleteHolidayDialogProps) {
   const handleDelete = () => {

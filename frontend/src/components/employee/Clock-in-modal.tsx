@@ -1,16 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-
-interface ClockInModalProps {
-  show: boolean;
-  onClose: () => void;
-  onClockIn: () => Promise<void>;
-  currentTime: string;
-  shiftTime: string;
-  isClockedIn: boolean;
-  userId?: string | number;
-}
+import { ClockInModalProps } from "@/types/clockInModal"
 
 export default function ClockInModal({
   show,
@@ -19,6 +10,7 @@ export default function ClockInModal({
   currentTime,
   shiftTime,
   isClockedIn,
+  isLoading = false,
 }: ClockInModalProps) {
   if (!show) return null;
 
@@ -58,10 +50,14 @@ export default function ClockInModal({
                 type="button"
                 onClick={onClose}
                 className="py-2 px-4"
+                disabled={isLoading}
               >
                 Cancel
               </Button>
-              <Button type="submit" className="py-2 px-4">
+              <Button type="submit" className="py-2 px-4" disabled={isLoading}>
+                {isLoading ? (
+                  <span className="animate-spin mr-2">⏳</span>
+                ) : null}
                 {isClockedIn ? "Clock Out" : "Clock In"}
               </Button>
             </div>

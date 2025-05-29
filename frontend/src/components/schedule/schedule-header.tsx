@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { PlusCircle } from "lucide-react"
-import { AddScheduleDialog } from "@/components/superadmin/schedule/add-schedule-dialog"
+import { AddScheduleDialog } from "@/components/schedule/add-schedule-dialog"
 import ScheduleList from "./schedule-list"
 import { HolidayList } from "@/components/superadmin/holiday/holiday-list"
 import { AddHolidayDialog } from "@/components/superadmin/holiday/add-holiday-dialog"

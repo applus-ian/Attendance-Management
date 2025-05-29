@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { UserListProps } from "@/types/user"
 
 // Expanded mock user data with more details
 const users = [
@@ -17,12 +18,9 @@ const users = [
   { id: "10", name: "James Wilson", position: "Data Analyst", department: "Analytics" },
 ]
 
-interface UserListProps {
-  selectedUserId: string
-}
-
-export function UserList({ selectedUserId }: UserListProps) {
+export function UserList({ selectedUserId, users }: UserListProps) {
   const router = useRouter()
+  const userList = users ?? []
 
   const handleSelectUser = (userId: string) => {
     router.push(`/admin/time-logs/${userId}`)
@@ -30,7 +28,7 @@ export function UserList({ selectedUserId }: UserListProps) {
 
   return (
     <div className="space-y-1 max-h-[calc(100vh-120px)] overflow-y-auto">
-      {users.map((user) => (
+      {userList.map((user) => (
         <div
           key={user.id}
           className={cn(

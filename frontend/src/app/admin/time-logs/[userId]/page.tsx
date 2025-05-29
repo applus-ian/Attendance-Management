@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
-import { SiteHeader } from "@/components/site-header";
+import { SiteHeader } from "@/components/admin/site-header";
 import { TimeLogTable } from "@/components/admin/time-logs/time-log-table";
 import { TimeLogFilters } from "@/components/admin/time-logs/time-log-filters";
 import { useUserManagement } from "@/hooks/useUserManagement";
