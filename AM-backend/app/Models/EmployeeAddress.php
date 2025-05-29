@@ -12,6 +12,7 @@ class EmployeeAddress extends Model
     protected $primaryKey = 'address_id';
 
     protected $fillable = [
+        'employee_id',
         'province',
         'city_or_municipality',
         'barangay',

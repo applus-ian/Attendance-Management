@@ -88,7 +88,7 @@ class EmployeeSeeder extends Seeder
             'emergency_contact2' => '09191234567',
             'date_hired' => '2023-01-10',
             'status' => 'active',
-            'email' => 'john3@example.com',
+            'email' => 'john2@example.com',
             'profile_pic_url' => null,
         ]);
         EmployeeAddress::create([
@@ -136,7 +136,7 @@ class EmployeeSeeder extends Seeder
             'emergency_contact2' => '09191234567',
             'date_hired' => '2023-01-10',
             'status' => 'active',
-            'email' => 'john2@example.com',
+            'email' => 'john3@example.com',
             'profile_pic_url' => null,
         ]);
         EmployeeAddress::create([
@@ -167,20 +167,10 @@ class EmployeeSeeder extends Seeder
         // Ensure Department exists
         $engineeringDept2 = Departments::where('name', 'Engineering')->first();
 
-        // Create Address
-        $address2 = EmployeeAddress::create([
-            'province' => 'Metro Manila',
-            'city_or_municipality' => 'Quezon City',
-            'barangay' => 'Commonwealth',
-            'street' => '123 Main St',
-            'postal_code' => '1121',
-        ]);
-
         // Create Employee
         $employee2 = Employee::create([
             'department' => $engineeringDept2->name,
             'job_position' => $backendDev2->title,
-            'address' => $address2->city_or_municipality,
             'first_name' => 'shiela',
             'middle_name' => 'arcillo',
             'last_name' => 'Dela Cruz',
@@ -194,8 +184,18 @@ class EmployeeSeeder extends Seeder
             'emergency_contact2' => '09191234567',
             'date_hired' => '2023-01-10',
             'status' => 'active',
-            'email' => 'john2@example.com',
+            'email' => 'john4@example.com',
             'profile_pic_url' => null,
+        ]);
+
+        // Create Address
+        $address2 = EmployeeAddress::create([
+            'employee_id' => $employee2->emp_id,
+            'province' => 'Metro Manila',
+            'city_or_municipality' => 'Quezon City',
+            'barangay' => 'Commonwealth',
+            'street' => '123 Main St',
+            'postal_code' => '1121',
         ]);
 
         // Create associated User account with role attribute set
@@ -217,20 +217,10 @@ class EmployeeSeeder extends Seeder
         // Ensure Department exists for admin
         $adminDept = Departments::firstOrCreate(['name' => 'Administration']);
 
-        // Create Address for admin
-        $address3 = EmployeeAddress::create([
-            'province' => 'Metro Manila',
-            'city_or_municipality' => 'Makati',
-            'barangay' => 'Bel-Air',
-            'street' => '789 Admin St',
-            'postal_code' => '1209',
-        ]);
-
         // Create Employee for admin
         $employee3 = Employee::create([
             'department' => $adminDept->name,
             'job_position' => $adminJob->title,
-            'address' => $address3->city_or_municipality,
             'first_name' => 'Ana',
             'middle_name' => 'Lopez',
             'last_name' => 'Reyes',
@@ -246,6 +236,16 @@ class EmployeeSeeder extends Seeder
             'status' => 'active',
             'email' => 'admin@example.com',
             'profile_pic_url' => null,
+        ]);
+
+        // Create Address for admin
+        $address3 = EmployeeAddress::create([
+            'employee_id' => $employee3->emp_id,
+            'province' => 'Metro Manila',
+            'city_or_municipality' => 'Makati',
+            'barangay' => 'Bel-Air',
+            'street' => '789 Admin St',
+            'postal_code' => '1209',
         ]);
 
         // Create associated User account with role attribute set
