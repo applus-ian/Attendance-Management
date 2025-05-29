@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Timelogs;
 use App\Services\TimelogService;
 use Illuminate\Http\JsonResponse;
@@ -141,8 +143,7 @@ class TimelogsController extends Controller
     }
 
     public function getCurrentStatus()
-    {
-        // Get the currently authenticated user
+    {   
         $user = Auth::user();
 
         if (!$user || !$user->employee) {
@@ -152,25 +153,41 @@ class TimelogsController extends Controller
             ], 404);
         }
 
-        $employee = $user->employee;
-        $today = \Carbon\Carbon::now()->toDateString();
+        $employee = User::where('user_id', $user->user_id)->first();
+        $today = Carbon::now()->toDateString();
 
-        // Check if there's a clock-in record for today without a corresponding clock-out
-        $latestTimelog = Timelogs::where('emp_id', $employee->emp_id)
+        $clockIn = Timelogs::where('emp_id', $employee->emp_id)
             ->whereDate('time', $today)
-            ->latest('time')
+            ->where('timelog_type', 'clock_in')
+            ->orderBy('time', 'desc')->first();
+
+        $clockOut = Timelogs::where('emp_id', $employee->emp_id)
+            ->whereDate('time', $today)
+            ->where('timelog_type', 'clock_out')
+            ->orderBy('time', 'desc')
             ->first();
 
-        $status = 'clocked_out'; // Default status
+        $allLogs = Timelogs::where('emp_id', $employee->emp_id)
+            ->whereDate('time', $today)
+            ->get();
 
-        if ($latestTimelog && $latestTimelog->timelog_type === 'clock_in') {
+        $status = 'clocked_out';
+        $last_activity = null;
+
+        if ($clockIn && (!$clockOut || $clockIn->time > $clockOut->time)) {
             $status = 'clocked_in';
+            $last_activity = $clockIn->time;
+        } elseif ($clockOut) {
+            $last_activity = $clockOut->time;
         }
 
         return response()->json([
             'success' => true,
             'status' => $status,
-            'last_activity' => $latestTimelog ? $latestTimelog->time : null
+            'last_activity' => $last_activity,
+            'debug_timelogs' => $allLogs,
+            'debug_emp_id' => $employee->emp_id,
+            'debug_today' => $today
         ]);
     }
 }

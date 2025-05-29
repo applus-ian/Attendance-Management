@@ -51,6 +51,18 @@ class TimelogService
             ->with('schedule')
             ->first()?->schedule;
 
+        if (!$schedule) {
+            $this->auditLogsService->log(
+                action: 'Clock In Blocked',
+                type: 'Timelog',
+                targetId: $employee->emp_id,
+                description: "Attempted clock‑in with no schedule assigned for {$today}"
+            );
+            throw ValidationException::withMessages([
+                'timelog' => ["Cannot clock in: No schedule assigned for today ({$today})."],
+            ]);
+        }
+
         $isLate = $schedule
             ? $now->greaterThan(Carbon::parse("{$today} {$schedule->start}"))
             : false;
