@@ -5,12 +5,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { MoreHorizontal, ChevronLeft, ChevronRight, Users, Filter } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { EditScheduleDialog } from "@/components/schedule/edit-schedule-dialog"
-import { DeleteScheduleDialog } from "@/components/schedule/delete-schedule-dialog"
-import { AssignMembersDialog } from "@/components/schedule/assign-members-dialog"
+import { EditScheduleDialog } from "@/components/admin/schedule/edit-schedule-dialog"
+import { DeleteScheduleDialog } from "@/components/admin/schedule/delete-schedule-dialog"
+import { AssignMembersDialog } from "@/components/admin/schedule/assign-members-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { ScheduleFilters } from "@/components/schedule/schedule-filters"
+import { ScheduleFilters } from "@/components/admin/schedule/schedule-filters"
 
 
 const schedules = [

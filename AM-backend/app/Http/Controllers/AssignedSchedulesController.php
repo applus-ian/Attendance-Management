@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\AssignedSchedules;
 use Illuminate\Http\JsonResponse;
 use App\Services\AuditLogsService;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\BulkAssignRequest;
 use App\Services\AssignedScheduleService;
 use App\Http\Requests\AssignedSchedulesRequest;
 use App\Http\Resources\AssignedScheduleResource;
@@ -20,7 +21,7 @@ class AssignedSchedulesController extends Controller
         protected AuditLogsService $auditLogsService
     ) {}
 
-    public function index()
+    public function index(): \Illuminate\Http\Resources\Json\AnonymousResourceCollection
     {
         $this->authorize('viewAny', AssignedSchedules::class);
 
@@ -34,9 +35,12 @@ class AssignedSchedulesController extends Controller
         return AssignedScheduleResource::collection(
             AssignedSchedules::with(['schedule', 'employee', 'createdBy', 'updatedBy'])->get()
         );
+        return AssignedScheduleResource::collection(
+            AssignedSchedules::with(['schedule', 'employee', 'createdBy', 'updatedBy'])->get()
+        );
     }
 
-    public function store(AssignedSchedulesRequest $request)
+    public function store(AssignedSchedulesRequest $request): JsonResponse
     {
         $this->authorize('create', AssignedSchedules::class);
 
@@ -56,6 +60,8 @@ class AssignedSchedulesController extends Controller
     {
         $this->authorize('update', $assignedSchedule);
 
+        $this->authorize('update', $assignedSchedule);
+
         $updated = $this->assignedScheduleService->update($assignedSchedule, $request->validated());
 
         $this->auditLogsService->log(
@@ -68,8 +74,10 @@ class AssignedSchedulesController extends Controller
         return response()->json(new AssignedScheduleResource($updated));
     }
 
-    public function destroy(AssignedSchedules $assignedSchedule)
+    public function destroy(AssignedSchedules $assignedSchedule): JsonResponse
     {
+        $this->authorize('delete', $assignedSchedule);
+
         $this->authorize('delete', $assignedSchedule);
 
         $this->assignedScheduleService->delete($assignedSchedule);
@@ -84,9 +92,48 @@ class AssignedSchedulesController extends Controller
         return response()->json(['message' => 'Assignment deleted successfully.'], 200);
     }
 
-    public function bulkAssign(Request $request): JsonResponse
+    public function getEmployeeSchedules(): JsonResponse
     {
-        $this->authorize('create', AssignedSchedules::class);
+        // Get the currently authenticated user
+        $user = Auth::user();
+
+        // Find the employee record associated with this user
+        $employee = $user->employee;
+
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No employee record found for this user'
+            ], 404);
+        }
+
+        // Get assigned schedules for this employee, including the schedule details
+        $assignedSchedules = AssignedSchedules::where('emp_id', $employee->emp_id)
+            ->with('schedule')
+            ->get();
+
+        // Format the data for the frontend
+        $formattedSchedules = $assignedSchedules->map(function ($assignedSchedule) {
+            $schedule = $assignedSchedule->schedule;
+
+            return [
+                'id' => $assignedSchedule->assigned_id,
+                'title' => $schedule->title,
+                'day' => $schedule->day,
+                'start' => $schedule->start,
+                'end' => $schedule->end,
+                'date' => $assignedSchedule->assigned_at->toDateString(), // corrected to assigned_at
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $formattedSchedules
+        ]);
+    }
+    public function bulkAssign(BulkAssignRequest $request): JsonResponse
+    {
+        $this->authorize('bulkAssign', AssignedSchedules::class);
 
         $data = $request->validated();
         $assignedAt = $data['assigned_at'] ?? now();
@@ -105,5 +152,14 @@ class AssignedSchedulesController extends Controller
         );
 
         return response()->json(AssignedScheduleResource::collection($assigned), 201);
+    }
+
+    public function show($id)
+    {
+        $assigned = AssignedSchedules::find($id);
+        if (!$assigned) {
+            return response()->json(['message' => 'Assigned schedule not found'], 404);
+        }
+        return response()->json(new AssignedScheduleResource($assigned));
     }
 }

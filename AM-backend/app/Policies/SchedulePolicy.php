@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Policies;
 
 use App\Models\User;
@@ -9,26 +8,28 @@ class SchedulePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->can('view schedules');
+        return true;
     }
 
     public function view(User $user, Schedules $schedule): bool
     {
-        return $user->can('view schedule');
+        return true;
     }
 
     public function create(User $user): bool
     {
-        return $user->can('create schedule');
+        return $user->hasRole(['admin', 'super_admin']);
     }
 
     public function update(User $user, Schedules $schedule): bool
     {
-        return $user->can('update schedule');
+        return $user->hasRole(['admin', 'super_admin']);
     }
 
     public function delete(User $user, Schedules $schedule): bool
     {
-        return $user->can('delete schedule');
+        return $user->hasRole(['admin', 'super_admin']);
     }
+
 }
+

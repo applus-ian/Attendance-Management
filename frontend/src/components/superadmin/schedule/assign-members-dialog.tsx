@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,41 +13,55 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useUsers, User as ApiUser } from "@/hooks/useUsers";
+import { useBulkAssignSchedules } from "@/hooks/useAssignedSchedules";
+import { Loader2 } from "lucide-react";
 
 type Member = {
   id: string;
   name: string;
-  department: "Malaysia" | "Australia" | "Spain";
+  department: string;
   role: string;
   selected: boolean;
 };
 
-const mockMembers: Member[] = [
-  { id: '1', name: 'Shiela Marie Arcillo', department: 'Malaysia', role: 'Manager', selected: false },
-  { id: '2', name: 'Valey Austin Senoy', department: 'Australia', role: 'Developer', selected: false },
-  { id: '3', name: 'Michelle Zozobrado', department: 'Spain', role: 'Accountant', selected: false },
-  { id: '4', name: 'Cherry Ann deloy', department: 'Malaysia', role: 'Specialist', selected: false },
-  { id: '5', name: 'Sayde Marie Elegino', department: 'Australia', role: 'Coordinator', selected: false },
-  { id: '6', name: 'Mike Arthur Minoza', department: 'Spain', role: 'Designer', selected: false },
-  { id: '7', name: 'Arnulfo Estenzo IV', department: 'Malaysia', role: 'Representative', selected: false },
-  { id: '8', name: 'Donna May Alcos', department: 'Australia', role: 'Agent', selected: false },
-  { id: '9', name: 'Yestin Roy Prado', department: 'Spain', role: 'Recruiter', selected: false },
-  { id: '10', name: 'John Doe', department: 'Malaysia', role: 'CEO', selected: false },
-];
-
 type AssignShiftModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  scheduleId?: string;
+  scheduleId: number; // Changed from optional string|number to required number
 };
 
 export function AssignShiftModal({ open, onOpenChange, scheduleId }: AssignShiftModalProps) {
+  console.log("AssignShiftModal received scheduleId:", scheduleId, "type:", typeof scheduleId);
+  
+  const { users, loading: loadingUsers, error: usersError } = useUsers();
+  const { bulkAssign, loading: bulkAssigning, error: bulkAssignError } = useBulkAssignSchedules();
   const [searchTerm, setSearchTerm] = useState("");
-  const [members, setMembers] = useState([...mockMembers]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [filterOption, setFilterOption] = useState<"Role" | "Department">("Role");
-  const [selectedDepartment, setSelectedDepartment] = useState<"Malaysia" | "Australia" | "Spain" | "All">("All");
+  const [selectedDepartment, setSelectedDepartment] = useState<string | "All">("All");
   const [selectedRole, setSelectedRole] = useState<string | "All">("All");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Convert API users to members when users are loaded
+  useEffect(() => {
+    if (users && users.length > 0) {
+      console.log("Loading users from API:", users.length, "users found");
+      const convertedMembers = users.map((user: ApiUser) => ({
+        id: user.user_id.toString(),
+        name: user.name,
+        department: user.department || 'Unassigned',
+        role: user.role || 'Unassigned',
+        selected: false
+      }));
+      setMembers(convertedMembers);
+    } else if (users) {
+      console.log("No users found in API response");
+      setMembers([]);
+    }
+  }, [users]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -80,18 +94,42 @@ export function AssignShiftModal({ open, onOpenChange, scheduleId }: AssignShift
 
   const selectedCount = members.filter(m => m.selected).length;
 
-  const handleSubmit = () => {
-    const selectedMembers = members.filter(m => m.selected);
-    console.log("Members assigned:", selectedMembers, "to schedule:", scheduleId);
+ const handleSubmit = async () => {
+  const selectedMembers = members.filter(m => m.selected);
+  if (typeof scheduleId !== 'number' || isNaN(scheduleId)) {
+    setSubmitError("Cannot assign members: Invalid schedule ID");
+    return;
+  }
+  if (selectedMembers.length === 0) {
+    setSubmitError("Please select at least one member to assign");
+    return;
+  }
+  try {
+    setSubmitting(true);
+    setSubmitError(null);
+    await bulkAssign({
+      sched_id: scheduleId,
+      emp_ids: selectedMembers.map(m => Number(m.id)),
+    });
     onOpenChange(false);
-  };
+  } catch (error: any) {
+    setSubmitError(error.message || "Failed to assign users to schedule");
+  } finally {
+    setSubmitting(false);
+  }
+};
+useEffect(() => {
+  console.log("AssignShiftModal rendered with scheduleId:", scheduleId);
+  console.log("scheduleId type:", typeof scheduleId);
+  console.log("scheduleId is valid number:", !isNaN(Number(scheduleId)));
+}, [scheduleId]);
 
   const handleFilterSelect = (option: "Role" | "Department") => {
     setFilterOption(option);
     setIsFilterOpen(true);
   };
 
-  const handleDepartmentSelect = (department: "Malaysia" | "Australia" | "Spain" | "All") => {
+  const handleDepartmentSelect = (department: string | "All") => {
     setSelectedDepartment(department);
     setIsFilterOpen(false);
   };
@@ -101,13 +139,15 @@ export function AssignShiftModal({ open, onOpenChange, scheduleId }: AssignShift
     setIsFilterOpen(false);
   };
 
+  // Get unique departments from real data
+  const uniqueDepartments = ["All", ...new Set(members.map(member => member.department))];
+  
+  // Get unique roles from real data
   const uniqueRoles = ["All", ...new Set(members.map(member => member.role))];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button>Assign Members</Button>
-      </DialogTrigger>
+      
       <DialogContent className="sm:max-w-[450px]">
         <DialogHeader>
           <DialogTitle>Assigned Members</DialogTitle>
@@ -154,30 +194,15 @@ export function AssignShiftModal({ open, onOpenChange, scheduleId }: AssignShift
 
                 {filterOption === "Department" && (
                   <div>
-                    <div
-                      className="px-4 py-2 cursor-pointer hover:bg-gray-100 pl-6 text-sm"
-                      onClick={() => handleDepartmentSelect("All")}
-                    >
-                      All Departments
-                    </div>
-                    <div
-                      className="px-4 py-2 cursor-pointer hover:bg-gray-100 pl-10 text-sm"
-                      onClick={() => handleDepartmentSelect("Malaysia")}
-                    >
-                      Malaysia
-                    </div>
-                    <div
-                      className="px-4 py-2 cursor-pointer hover:bg-gray-100 pl-10 text-sm"
-                      onClick={() => handleDepartmentSelect("Australia")}
-                    >
-                      Australia
-                    </div>
-                    <div
-                      className="px-4 py-2 cursor-pointer hover:bg-gray-100 pl-10 text-sm"
-                      onClick={() => handleDepartmentSelect("Spain")}
-                    >
-                      Spain
-                    </div>
+                    {uniqueDepartments.map(department => (
+                      <div
+                        key={department}
+                        className={`px-4 py-2 cursor-pointer hover:bg-gray-100 ${department === "All" ? "pl-6" : "pl-10"} text-sm`}
+                        onClick={() => handleDepartmentSelect(department)}
+                      >
+                        {department === "All" ? "All Departments" : department}
+                      </div>
+                    ))}
                   </div>
                 )}
 
@@ -200,47 +225,86 @@ export function AssignShiftModal({ open, onOpenChange, scheduleId }: AssignShift
           </div>
 
           <div className="space-y-3">
-            <div className="flex items-center">
-              <Checkbox
-                id="select-all"
-                className="border-gray-300 rounded-sm"
-                checked={selectedCount === filteredMembers.length && filteredMembers.length > 0}
-                onCheckedChange={handleSelectAll}
-              />
-              <label htmlFor="select-all" className="ml-3 text-sm font-medium">
-                Select All
-              </label>
-            </div>
-
-            <div className="mt-1 space-y-1 max-h-[350px] overflow-y-auto">
-              {filteredMembers.map(member => (
-                <div key={member.id} className="flex items-center py-1">
+            {loadingUsers ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                <span className="mt-2 text-gray-600">Loading users from database...</span>
+              </div>
+            ) : usersError ? (
+              <div className="py-8 text-center text-red-500">
+                <p>Error loading users: {usersError}</p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.location.reload()}
+                  className="mt-2"
+                >
+                  Try Again
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center">
                   <Checkbox
-                    id={`member-${member.id}`}
+                    id="select-all"
                     className="border-gray-300 rounded-sm"
-                    checked={member.selected}
-                    onCheckedChange={(checked) => handleMemberToggle(member.id, checked)}
+                    checked={selectedCount === filteredMembers.length && filteredMembers.length > 0}
+                    onCheckedChange={handleSelectAll}
                   />
-                  <label htmlFor={`member-${member.id}`} className="ml-3 text-sm font-medium">
-                    {member.name}
+                  <label htmlFor="select-all" className="ml-3 text-sm font-medium">
+                    Select All
                   </label>
                 </div>
-              ))}
-              {filteredMembers.length === 0 && (
-                <div className="py-2 text-center text-gray-500">No members found</div>
-              )}
-            </div>
+
+                <div className="mt-1 space-y-1 max-h-[350px] overflow-y-auto">
+                  {filteredMembers.map(member => (
+                    <div key={member.id} className="flex items-center py-1">
+                      <Checkbox
+                        id={`member-${member.id}`}
+                        className="border-gray-300 rounded-sm"
+                        checked={member.selected}
+                        onCheckedChange={(checked) => handleMemberToggle(member.id, checked)}
+                      />
+                      <label htmlFor={`member-${member.id}`} className="ml-3 text-sm font-medium">
+                        {member.name}
+                      </label>
+                    </div>
+                  ))}
+                  {filteredMembers.length === 0 && members.length > 0 && (
+                    <div className="py-2 text-center text-gray-500">No users found matching your search</div>
+                  )}
+                  {members.length === 0 && !loadingUsers && !usersError && (
+                    <div className="py-4 text-center text-gray-500">
+                      <p>No users available in the database</p>
+                      <p className="text-xs mt-1">Please add users to the system first</p>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
         <DialogFooter className="flex justify-between sm:justify-between">
+          {submitError && (
+            <p className="text-sm text-red-500 mb-2">{submitError}</p>
+          )}
           <Button
             className="bg-orange-500 hover:bg-orange-600 text-white"
             onClick={handleSubmit}
-            disabled={selectedCount === 0}
+            disabled={selectedCount === 0 || submitting || bulkAssigning}
           >
-            Assign
+            {submitting || bulkAssigning ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Assigning...
+              </>
+            ) : (
+              "Assign"
+            )}
           </Button>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          {bulkAssignError && (
+            <p className="text-sm text-red-500 mb-2">{bulkAssignError}</p>
+          )}
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
             Cancel
           </Button>
         </DialogFooter>

@@ -1,157 +1,111 @@
 "use client"
 
+import { Schedule, useSchedules } from "@/hooks/useSchedules"
+import { User, MoreHorizontal } from "lucide-react"
 import { useState } from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { DeleteScheduleDialog } from "./delete-schedule-dialog"
+import { EditScheduleV2Dialog } from "./editv2"
+import { AssignUserModal } from "./assign-user-dialog"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal, ChevronLeft, ChevronRight, Users, Filter } from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { EditScheduleDialog } from "@/components/superadmin/schedule/edit-schedule-dialog"
-import { DeleteScheduleDialog } from "@/components/superadmin/schedule/delete-schedule-dialog"
-import { AssignShiftModal } from "@/components/superadmin/schedule/assign-members-dialog"
-import { Card, CardContent } from "@/components/ui/card"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { ScheduleFilters } from "@/components/superadmin/schedule/schedule-filters"
 
+// Helper function to convert 24-hour time to 12-hour formatas
+function formatTimeTo12Hour(time: string): string {
+  if (!time) return '';
+  
+  // Parse the hours and minutes
+  const [hours, minutes] = time.split(':').map(Number);
+  
+  // Determine AM or PM
+  const period = hours >= 12 ? 'PM' : 'AM';
+  
+  // Convert hours to 12-hour format
+  const hours12 = hours % 12 || 12; // Converts 0 to 12 for midnight
+  
+  // Format the time string
+  return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
 
-const schedules = [
-  {
-    id: "1",
-    name: "Malaysia Schedule",
-    days: "Mon, Tue, Wed, Thu, Fri",
-    hours: "8:00 am - 5:00 pm",
-    assigned: 0,
-    break: "30 mins",
-  },
-  {
-    id: "2",
-    name: "Malaysia Schedule",
-    days: "Mon, Tue, Wed, Thu, Fri",
-    hours: "8:00 am - 5:00 pm",
-    assigned: 20,
-    break: "30 mins",
-  },
-  {
-    id: "3",
-    name: "Philippines Schedule",
-    days: "Mon, Tue, Wed, Thu, Fri",
-    hours: "9:00 am - 6:00 pm",
-    assigned: 15,
-    break: "1 hour",
-  },
-  {
-    id: "4",
-    name: "Night Shift Schedule",
-    days: "Mon, Tue, Wed, Thu, Fri",
-    hours: "10:00 pm - 7:00 am",
-    assigned: 8,
-    break: "45 mins",
-  },
-  {
-    id: "5",
-    name: "Weekend Schedule",
-    days: "Sat, Sun",
-    hours: "10:00 am - 7:00 pm",
-    assigned: 5,
-    break: "1 hour",
-  },
-  {
-    id: "6",
-    name: "Flexible Schedule",
-    days: "Mon, Tue, Wed, Thu, Fri",
-    hours: "Flexible",
-    assigned: 12,
-    break: "As needed",
-  },
-  {
-    id: "7",
-    name: "Part-time Schedule",
-    days: "Mon, Wed, Fri",
-    hours: "1:00 pm - 5:00 pm",
-    assigned: 7,
-    break: "15 mins",
-  },
-]
+export default function ScheduleTable() {
+  const { schedules, loading, error, deleteSchedule, updateSchedule, fetchSchedules } = useSchedules()
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [assignUserDialogOpen, setAssignUserDialogOpen] = useState(false);
+  const [assignUserSchedule, setAssignUserSchedule] = useState<Schedule | null>(null);
 
-export function ScheduleList() {
-  const isMobile = useIsMobile()
-  const [currentPage, setCurrentPage] = useState(1)
-  const [editingSchedule, setEditingSchedule] = useState<string | null>(null)
-  const [deletingSchedule, setDeletingSchedule] = useState<string | null>(null)
-  const [assigningSchedule, setAssigningSchedule] = useState<string | null>(null)
-  const [showFilters, setShowFilters] = useState(false)
-  const [filters, setFilters] = useState({
-    search: "",
-    days: "all",
-    assignedStatus: "all",
-  })
-
-  const totalPages = 3 // Mock total pages
-  const totalItems = 32 // Mock total items
-
-  const handlePreviousPage = () => {
-    setCurrentPage((prev) => Math.max(1, prev - 1))
-  }
-
-  const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-  }
-
-  const handlePageClick = (page: number) => {
-    setCurrentPage(page)
-  }
-
-  const getScheduleById = (id: string) => {
-    return schedules.find((schedule) => schedule.id === id) || schedules[0]
-  }
-
-  // Filter schedules based on current filters
-  const filteredSchedules = schedules.filter((schedule) => {
-    // Search filter
-    if (
-      filters.search &&
-      !schedule.name.toLowerCase().includes(filters.search.toLowerCase()) &&
-      !schedule.hours.toLowerCase().includes(filters.search.toLowerCase())
-    ) {
-      return false
+  const itemsPerPage = 5
+  const pageCount = Math.ceil(schedules.length / itemsPerPage)
+  const paginatedSchedules = schedules.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  )
+  const handleDeleteClick = (schedule: Schedule) => {
+    if (!schedule.sched_id) {
+      console.error("Attempted to delete a schedule with missing sched_id:", schedule);
+      return;
     }
+    setSelectedSchedule(schedule);
+    setDeleteDialogOpen(true);
+  };
 
-    // Days filter
-    if (filters.days !== "all" && !schedule.days.toLowerCase().includes(filters.days.toLowerCase())) {
-      return false
+  const handleConfirmDelete = async () => {
+    if (!selectedSchedule || !selectedSchedule.sched_id) {
+      console.error("No schedule selected or sched_id is missing!", selectedSchedule);
+      return;
     }
-
-    // Assigned status filter
-    if (filters.assignedStatus === "assigned" && schedule.assigned === 0) {
-      return false
-    } else if (filters.assignedStatus === "unassigned" && schedule.assigned > 0) {
-      return false
+    setIsDeleting(true);
+    try {
+      await deleteSchedule(selectedSchedule.sched_id);
+      setDeleteDialogOpen(false);
+      setSelectedSchedule(null);
+    } finally {
+      setIsDeleting(false);
     }
+  };
 
-    return true
-  })
+  const handleEditClick = (schedule: Schedule) => {
+    setSelectedSchedule(schedule);
+    setEditDialogOpen(true);
+  };
+
+  const handleAssignClick = (schedule: Schedule) => {
+    setAssignUserSchedule(schedule);
+    setAssignUserDialogOpen(true);
+  };
+
+
+  if (loading) return <p>Loading schedules...</p>
+  if (error) return <p className="text-red-500">{error}</p>
 
   return (
-    <div>
-      <div className="mb-4 flex flex-col sm:flex-row justify-between gap-4">
-        <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="w-full sm:w-auto">
-          <Filter className="mr-2 h-4 w-4" />
-          {showFilters ? "Hide Filters" : "Show Filters"}
-        </Button>
-      </div>
-
-      {showFilters && <ScheduleFilters filters={filters} setFilters={setFilters} className="mb-6" />}
-
-      {isMobile ? (
-        // Mobile view with cards
-        <div className="space-y-4">
-          {filteredSchedules.map((schedule) => (
-            <Card key={schedule.id}>
-              <CardContent className="p-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium">{schedule.name}</h3>
-                    <p className="text-sm text-muted-foreground">{schedule.hours}</p>
+    <>
+      <div className="w-full h-screen overflow-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="border-b">
+              <th className="py-4 px-6 text-left font-medium text-sm">Name</th>
+              <th className="py-4 px-6 text-left font-medium text-sm">Days</th>
+              <th className="py-4 px-6 text-left font-medium text-sm">Hours</th>
+              <th className="py-4 px-6 text-left font-medium text-sm">Assigned</th>
+              <th className="py-4 px-6 text-right font-medium text-sm">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedSchedules.map((sched, index) => (
+              <tr key={sched.sched_id ?? index} className="border-b hover:bg-gray-50">
+                <td className="py-4 px-6 text-sm">{sched.title}</td>
+                <td className="py-4 px-6 text-sm">{sched.day.join(", ")}</td>
+                <td className="py-4 px-6 text-sm">{`${formatTimeTo12Hour(sched.start)} - ${formatTimeTo12Hour(sched.end)}`}</td>
+                <td className="py-4 px-6 text-sm">
+                  <div className="flex items-center">
+                    <span className="mr-2">{sched.num_assigned || 0}</span>
+                    <User size={16} className="text-gray-400" />
                   </div>
+                </td>
+                <td className="py-4 px-6 text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="h-8 w-8 p-0">
@@ -160,154 +114,147 @@ export function ScheduleList() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setAssigningSchedule(schedule.id)}>Assigned</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setEditingSchedule(schedule.id)}>Edit</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setDeletingSchedule(schedule.id)}>Delete</DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleAssignClick(sched)} 
+                        disabled={sched.sched_id == null}
+                        className="cursor-pointer hover:bg-orange-500 hover:text-white"
+                      >
+                        Assigned
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleEditClick(sched)} 
+                        disabled={sched.sched_id == null}
+                        className="cursor-pointer hover:bg-orange-500 hover:text-white"
+                      >
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleDeleteClick(sched)} 
+                        disabled={sched.sched_id == null}
+                        className="cursor-pointer text-red-500 hover:bg-orange-500 hover:text-white"
+                      >
+                        Delete
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Days</p>
-                    <p className="text-sm">{schedule.days}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Break</p>
-                    <p className="text-sm">{schedule.break}</p>
-                  </div>
-                  <div className="col-span-2 mt-2">
-                    <p className="text-xs text-muted-foreground">Assigned</p>
-                    <div className="flex items-center mt-1">
-                      <span className="text-sm">{schedule.assigned}</span>
-                      {schedule.assigned > 0 && <Users className="ml-2 h-4 w-4 text-muted-foreground" />}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        // Desktop view with table
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Days</TableHead>
-                <TableHead>Hours</TableHead>
-                <TableHead>Assigned</TableHead>
-                <TableHead>Break</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredSchedules.length > 0 ? (
-                filteredSchedules.map((schedule) => (
-                  <TableRow key={schedule.id}>
-                    <TableCell className="font-medium">{schedule.name}</TableCell>
-                    <TableCell>{schedule.days}</TableCell>
-                    <TableCell>{schedule.hours}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        {schedule.assigned}
-                        {schedule.assigned > 0 && <Users className="ml-2 h-4 w-4 text-muted-foreground" />}
-                      </div>
-                    </TableCell>
-                    <TableCell>{schedule.break}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setAssigningSchedule(schedule.id)}>
-                            Assigned
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setEditingSchedule(schedule.id)}>Edit</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setDeletingSchedule(schedule.id)}>Delete</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
-                    No schedules found matching your filters.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-
-      <div className="flex items-center justify-between space-x-2 py-4">
-        <div className="text-sm text-muted-foreground">
-          Showing{" "}
-          {filteredSchedules.length > 0
-            ? `1-${Math.min(10, filteredSchedules.length)} of ${filteredSchedules.length}`
-            : "0"}{" "}
-          schedules
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" onClick={handlePreviousPage} disabled={currentPage === 1}>
-            <ChevronLeft className="h-4 w-4" />
-            <span className="sr-only">Previous</span>
-          </Button>
-          {!isMobile && (
-            <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(3, totalPages) }).map((_, i) => {
-                const pageNumber = i + 1
-                return (
-                  <Button
-                    key={i}
-                    variant={pageNumber === currentPage ? "default" : "outline"}
-                    size="sm"
-                    className="w-8 h-8"
-                    onClick={() => handlePageClick(pageNumber)}
-                  >
-                    {pageNumber}
-                  </Button>
-                )
-              })}
-              {totalPages > 3 && <span className="px-2">...</span>}
-            </div>
-          )}
-          <Button variant="outline" size="sm" onClick={handleNextPage} disabled={currentPage === totalPages}>
-            <ChevronRight className="h-4 w-4" />
-            <span className="sr-only">Next</span>
-          </Button>
-        </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {editingSchedule && (
-        <EditScheduleDialog
-          open={!!editingSchedule}
-          onOpenChange={() => setEditingSchedule(null)}
-          schedule={getScheduleById(editingSchedule)}
-        />
+      {/* Pagination */}
+      {pageCount > 1 && (
+        <div className="flex justify-between items-center border-t pt-4 mt-4">
+          <div className="text-sm text-gray-600">
+            Showing {currentPage * itemsPerPage + 1} to{" "}
+            {Math.min((currentPage + 1) * itemsPerPage, schedules.length)} of{" "}
+            {schedules.length} schedules
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              className={`px-3 py-1 border rounded ${
+                currentPage === 0
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white hover:bg-gray-50"
+              }`}
+              onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
+              disabled={currentPage === 0}
+            >
+              Previous
+            </button>
+
+            <div className="flex space-x-1">
+              {Array.from({ length: Math.min(5, pageCount) }).map((_, i) => {
+                let pageNum = i
+                if (pageCount > 5) {
+                  if (currentPage < 2) {
+                    pageNum = i
+                  } else if (currentPage > pageCount - 3) {
+                    pageNum = pageCount - 5 + i
+                  } else {
+                    pageNum = currentPage - 2 + i
+                  }
+                }
+
+                return (
+                  <button
+                    key={pageNum}
+                    className={`w-8 h-8 flex items-center justify-center rounded ${
+                      currentPage === pageNum
+                        ? "bg-orange-500 text-white"
+                        : "bg-white hover:bg-gray-50"
+                    }`}
+                    onClick={() => setCurrentPage(pageNum)}
+                  >
+                    {pageNum + 1}
+                  </button>
+                )
+              })}
+            </div>
+
+            <button
+              className={`px-3 py-1 border rounded ${
+                currentPage === pageCount - 1
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white hover:bg-gray-50"
+              }`}
+              onClick={() =>
+                setCurrentPage((p) => Math.min(pageCount - 1, p + 1))
+              }
+              disabled={currentPage === pageCount - 1}
+            >
+              Next
+            </button>
+          </div>
+        </div>
       )}
 
-      {deletingSchedule && (
+      {/* Delete Dialog */}
+      {selectedSchedule && (
         <DeleteScheduleDialog
-          open={!!deletingSchedule}
-          onOpenChange={() => setDeletingSchedule(null)}
-          schedule={getScheduleById(deletingSchedule)}
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          schedule={selectedSchedule}
+          onConfirmDelete={handleConfirmDelete}
+          isDeleting={isDeleting}
         />
       )}
 
-      {assigningSchedule && (
-        <AssignShiftModal
-          open={!!assigningSchedule}
-          onOpenChange={() => setAssigningSchedule(null)}
+      {/* Edit Dialog */}
+      {selectedSchedule && (
+        <EditScheduleV2Dialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          schedule={{
+            sched_id: selectedSchedule.sched_id,
+            name: selectedSchedule.title,
+            days: selectedSchedule.day,
+            start: selectedSchedule.start,
+            end: selectedSchedule.end,
+          }}
         />
       )}
-    </div>
+
+      {/* Assign Members Dialog (old, now commented out) */}
+      {/*assignSchedule && (
+        <AssignShiftModal
+          open={assignDialogOpen}
+          onOpenChange={setAssignDialogOpen}
+          scheduleId={assignSchedule.sched_id}
+          onAssigned={fetchSchedules}
+        />
+      )*/}
+      {/* Assign User Dialog (new) */}
+      {assignUserSchedule && (
+        <AssignUserModal
+          open={assignUserDialogOpen}
+          onOpenChange={setAssignUserDialogOpen}
+          scheduleId={assignUserSchedule.sched_id}
+          onAssigned={fetchSchedules}
+        />
+      )}
+    </>
   )
 }

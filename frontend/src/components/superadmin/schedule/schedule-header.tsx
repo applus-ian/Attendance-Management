@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { PlusCircle } from "lucide-react"
-import { ShiftManagementModal } from "@/components/superadmin/modal/schedule/shift-management"
-import { ScheduleList } from "@/components/superadmin/schedule/schedule-list"
+import { AddScheduleDialog } from "@/components/superadmin/schedule/add-schedule-dialog"
+import ScheduleList from "./schedule-list"
 import { HolidayList } from "@/components/superadmin/holiday/holiday-list"
 import { AddHolidayDialog } from "@/components/superadmin/holiday/add-holiday-dialog"
 
@@ -61,12 +61,12 @@ export function ScheduleHeader() {
 
       {/* Tab Content */}
       {activeTab === "schedules" ? (
-        <ScheduleList />
+        <ScheduleList/>
       ) : (
         <HolidayList />
       )}
 
-      <ShiftManagementModal open={isAddScheduleDialogOpen} onOpenChange={() => setIsAddScheduleDialogOpen(false)} />
+      <AddScheduleDialog open={isAddScheduleDialogOpen} onOpenChange={setIsAddScheduleDialogOpen} />
       <AddHolidayDialog open={isAddHolidayDialogOpen} onOpenChange={setIsAddHolidayDialogOpen} />
     </div>
   )

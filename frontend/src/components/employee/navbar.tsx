@@ -1,47 +1,63 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { Bell, Menu, ChevronDown } from "lucide-react";
-import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
-import { useState } from "react";
-import Notification from "@/components/employee/notification";
-
+import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { Bell, Menu, ChevronDown } from "lucide-react"
+import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet"
+import { useState } from "react"
+import Notification from "@/components/notification"
+import { useAuth } from "@/hooks/useAuth"
+import RoleSwitch from "../RoleSwitch"
 
 export default function Navbar() {
-  const pathname = usePathname(); // Get the current route
-  const [showNotifications, setShowNotifications] = useState(false);
+  const pathname = usePathname()
+  const router = useRouter()
+  const [showNotifications, setShowNotifications] = useState(false)
+  const { logout, isLoggingOut, user } = useAuth() // Make sure user object is available
+  console.log("user", user)
 
-  
-  // Initial notifications
-  const [notifications, setNotifications] = useState<{
-    id: number;
-    title: string;
-    description: string;
-    type: "info" | "success" | "error" | "warning";
-  }[]>([
-    { id: 1, title: "New Message", description: "You have a new message from HR.", type: "info" },
-    { id: 2, title: "Shift Reminder", description: "Your shift starts at 9:00 AM.", type: "success" },
-    { id: 3, title: "System Alert", description: "System maintenance at midnight.", type: "warning" },
-  ]);
+  const [notifications, setNotifications] = useState<
+    {
+      id: number
+      title: string
+      description: string
+      type: "info" | "success" | "error" | "warning"
+    }[]
+  >([
+    {
+      id: 1,
+      title: "New Message",
+      description: "You have a new message from HR.",
+      type: "info",
+    },
+    {
+      id: 2,
+      title: "Shift Reminder",
+      description: "Your shift starts at 9:00 AM.",
+      type: "success",
+    },
+    {
+      id: 3,
+      title: "System Alert",
+      description: "System maintenance at midnight.",
+      type: "warning",
+    },
+  ])
 
-  // Function to dismiss a notification
   const dismissNotification = (id: number) => {
-    setNotifications((prev) => prev.filter((notification) => notification.id !== id));
-  };
+    setNotifications((prev) => prev.filter((notification) => notification.id !== id))
+  }
+
+  const isAdmin = Array.isArray(user?.role) && user.role.includes("admin")
+  const isSuperAdmin = Array.isArray(user?.role) && user.role.includes("super_admin")
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white dark:border-gray-800 dark:bg-gray-950">
       <div className="flex h-16 items-center justify-between px-4 md:px-6">
         {/* Logo Section */}
         <Link href="/" className="flex items-center gap-1 pl-2 md:pl-0" prefetch={false}>
-          <img
-            src="/LOGO1.svg" // Replace with your logo path
-            alt="Acme Inc Logo"
-            className="h-10 w-auto"
-          />
-          
+          <img src="/LOGO1.svg" alt="Acme Inc Logo" className="h-10 w-auto" />
         </Link>
 
         {/* Navigation Links */}
@@ -83,6 +99,9 @@ export default function Navbar() {
 
         {/* Right Section */}
         <div className="flex items-center space-x-4">
+          {/* Integrated RoleSwitch component */}
+          <RoleSwitch isAdmin={isAdmin} isSuperAdmin={isSuperAdmin} currentPath={pathname} />
+
           <button
             className="text-gray-600 hover:text-gray-900"
             onClick={() => setShowNotifications(!showNotifications)}
@@ -90,7 +109,6 @@ export default function Navbar() {
             <Bell size={20} />
           </button>
 
-          {/* Notifications */}
           {showNotifications && (
             <div className="absolute top-16 right-4 w-80 bg-white shadow-lg rounded-lg p-4 z-50">
               {notifications.length > 0 ? (
@@ -114,26 +132,28 @@ export default function Navbar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-                {/* Profile Picture */}
                 <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                  <img
-                    src="/avatar.svg" // Replace with the actual profile picture path
-                    alt="Employee Profile"
-                    className="w-full h-full object-cover"
-                  />
+                  <img src="/avatar.svg" alt="Employee Profile" className="w-full h-full object-cover" />
                 </div>
                 <span className="hidden md:inline">Employee</span>
                 <ChevronDown size={16} />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              
               <DropdownMenuItem asChild>
                 <Link href="/employee/profile">Profile</Link>
               </DropdownMenuItem>
 
-      
-              <DropdownMenuItem>Logout</DropdownMenuItem>
+              {/* ✅ Logout item with onClick handler */}
+              <DropdownMenuItem
+                onClick={() => {
+                  if (!isLoggingOut) {
+                    logout.mutate()
+                  }
+                }}
+              >
+                Logout
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -185,5 +205,5 @@ export default function Navbar() {
         </div>
       </div>
     </header>
-  );
+  )
 }

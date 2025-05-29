@@ -13,21 +13,17 @@ export default function TimesheetsPage() {
       setSelectedPeriod(event.target.value);
     };
 
-    // Map API timesheet data to EmployeeDataTable format
-    const tableData = timesheets.map((t) => ({
-      date: t.date,
-      inTime: t.timelogs && t.timelogs.length > 0 ? t.timelogs[0].time : "-",
-      outTime: t.timelogs && t.timelogs.length > 1 ? t.timelogs[t.timelogs.length - 1].time : "-",
-      worked: t.total_hrs_work + " h",
-      scheduled: t.scheduled_hrs + " h",
-      comment: '', // You can enhance this if you have comments in your data
-    }));
-
+  
     return (
       <>
         <Navbar />
         <main className="p-6 bg-gray-100 min-h-screen">
-          <h1 className="text-2xl font-bold mb-6">Timesheets</h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold">Timesheets</h1>
+            
+           
+          </div>
+          
           <div className="bg-white shadow-md rounded-lg p-4">
             {/* Pay Period Section */}
             <div className="flex justify-end items-center mb-4">
@@ -37,6 +33,7 @@ export default function TimesheetsPage() {
                   value={selectedPeriod}
                   onChange={handlePeriodChange}
                   className="appearance-none border border-gray-300 rounded-md px-4 py-2 text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  disabled={isLoadingTimesheets}
                 >
                   <optgroup label="January 2025">
                     <option>Jan 1 - 15, 2025</option>

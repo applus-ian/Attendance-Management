@@ -15,11 +15,14 @@ class AssignedScheduleResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'assigned_id' => $this->assigned_id,
+            'id' => $this->assigned_id,
             'emp_id' => $this->emp_id,
+            'employee' => $this->employee ? [
+                'id' => $this->employee->emp_id,
+                'name' => $this->employee->first_name . ' ' . $this->employee->last_name,
+            ] : null,
+            'schedule' => $this->schedule ? new ScheduleResource($this->schedule) : null,
             'assigned_at' => $this->assigned_at,
-            'schedule' => new ScheduleResource($this->schedule),
-
             'created_by' => $this->createdBy ? [
                 'user_id' => $this->createdBy->user_id,
                 'email' => $this->createdBy->email,

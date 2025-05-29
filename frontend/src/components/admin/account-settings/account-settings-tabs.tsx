@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { AccountProfile } from "@/components/account-settings/account-profile"
-import { ChangePassword } from "@/components/account-settings/change-password"
+import { AccountProfile } from "@/components/admin/account-settings/account-profile"
+import { ChangePassword } from "@/components/admin/account-settings/change-password"
 
 export function AccountSettingsTabs() {
   const [activeTab, setActiveTab] = useState("profile")

@@ -30,7 +30,7 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        $data = $this->authService->me($request->user());
+        $data = $this->authService->me();
         return response()->json($data, 200);
     }
 }

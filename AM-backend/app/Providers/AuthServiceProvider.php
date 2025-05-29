@@ -18,7 +18,9 @@ use App\Policies\TimesheetPolicy;
 use App\Models\ManualTimeRequests;
 use App\Policies\AssignedSchedulePolicy;
 use App\Policies\ManualTimeRequestPolicy;
+
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+
 
 class AuthServiceProvider extends ServiceProvider
 {

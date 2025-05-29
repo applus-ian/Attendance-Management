@@ -3,10 +3,20 @@
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import type { Request } from "@/components/superadmin/request/request-table"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+
+export interface Request {
+  id: string
+  dateSubmitted: string
+  member: string
+  type: 'clock_in' | 'clock_out' | 'overtime'
+  dateRequested: string
+  comment: string
+  status: "Approved" | "Pending" | "Denied"
+  feedback: string
+}
 
 interface RequestDetailsModalProps {
   request: Request

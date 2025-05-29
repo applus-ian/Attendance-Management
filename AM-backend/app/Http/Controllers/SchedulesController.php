@@ -46,48 +46,51 @@ class SchedulesController extends Controller
         );
         return new ScheduleResource($schedule);
     }
-
-    public function show(Schedules $schedules)
+    public function show(Schedules $schedule)
     {
-        $this->authorize('view', $schedules);
+        $this->authorize('view', $schedule);
 
         $this->auditLogsService->log(
             action: 'View Schedule',
             type: 'Schedule',
-            targetId: $schedules->sched_id,
+            targetId: $schedule->sched_id,
             description: "View a Schedule"
         );
 
-        return new ScheduleResource($schedules);
+        return new ScheduleResource($schedule);
     }
 
-
-    public function update(ScheduleRequest $request, Schedules $schedules)
+    public function update(ScheduleRequest $request, Schedules $schedule)
     {
-        $this->authorize('update', $schedules);
+        \Log::info('Schedule to update', ['schedule' => $schedule]);
 
-        $updatedSchedule = $this->scheduleService->update($schedules, $request->validated());
+        $this->authorize('update', $schedule);
+
+        $updatedSchedule = $this->scheduleService->update($schedule, $request->validated());
+
         $this->auditLogsService->log(
             action: 'Edit Schedule',
             type: 'Schedule',
             targetId: $updatedSchedule->sched_id,
             description: "Update a schedule."
         );
+
         return new ScheduleResource($updatedSchedule);
     }
 
-
-    public function destroy(Schedules $schedules)
+    public function destroy(Schedules $schedule)
     {
-        $this->authorize('delete', $schedules);
+        $this->authorize('delete', $schedule);
 
-        $schedules->delete();
+        $schedule->delete();
+
         $this->auditLogsService->log(
             action: 'Delete Schedule',
             type: 'Schedule',
-            targetId: $schedules->sched_id,
+            targetId: $schedule->sched_id,
             description: "Delete a schedule."
         );
+
         return response()->json(['message' => 'Schedule has been deleted successfully.']);
     }
 }

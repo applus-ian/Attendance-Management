@@ -15,10 +15,14 @@ class Schedules extends Model
         'start',
         'end',
         'day',
+        'num_assigned',
     ];
 
     protected $casts = [
         'day' => 'array',
+        'start' => 'string',
+        'end' => 'string',
+        
     ];
 
     public function assignedEmployees()
@@ -30,4 +34,8 @@ class Schedules extends Model
     {
         return in_array($weekday, $this->day);
     }
+    public function getRouteKeyName()
+{
+    return 'sched_id';
+}
 }

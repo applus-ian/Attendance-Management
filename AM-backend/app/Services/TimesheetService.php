@@ -17,6 +17,7 @@ class TimesheetService
         $timelogs = Timelogs::where('emp_id', $empId)
             ->whereDate('time', $today);
 
+
         $schedule = AssignedSchedules::where('emp_id', $empId)
             ->whereDate('assigned_at', $today)
             ->with('schedule')
@@ -25,13 +26,13 @@ class TimesheetService
         $scheduleHours = 0;
         if ($schedule && $schedule->start && $schedule->end) {
             $start = Carbon::parse($today->format('Y-m-d') . ' ' . $schedule->start);
-            $end   = Carbon::parse($today->format('Y-m-d') . ' ' . $schedule->end);
+            $end = Carbon::parse($today->format('Y-m-d') . ' ' . $schedule->end);
 
             if ($end->lessThanOrEqualTo($start)) {
                 $end->addDay();
             }
 
-            $scheduleHours = max(0, $end->diffInMinutes($start) / 60);
+            $scheduleHours = $end->diffInMinutes($start) / 60;
         }
 
         $timesheet = Timesheets::updateOrCreate(

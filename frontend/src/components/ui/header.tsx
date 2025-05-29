@@ -1,22 +1,10 @@
-import { useState, useRef, useEffect } from "react";
-import { FaUserTie, FaUser } from "react-icons/fa";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import { ModeToggle } from "./light-dark-mode";
 
-interface SiteHeaderProps {
-  role: string;
-  setRole: (role: string) => void;
-}
-
-export function SiteHeader({ role, setRole }: SiteHeaderProps) {
+export function SiteHeader() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!role) {
-      setRole("Employee");
-    }
-  }, []);
 
   return (
     <header className="fixed top-0 z-50 flex items-center justify-between px-6 py-4 w-full text-black dark:text-white">

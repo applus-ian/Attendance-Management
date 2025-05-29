@@ -40,6 +40,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('holidays/sync', [HolidayController::class, 'sync']);
 });
 
+# Schedules//Holidays
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('holidays', [HolidayController::class, 'index']);
+    Route::post('holidays', [HolidayController::class, 'store']);
+    Route::put('holidays/{holiday}', [HolidayController::class, 'update']);
+    Route::delete('holidays/{holiday}', [HolidayController::class, 'destroy']);
+    Route::post('holidays/sync', [HolidayController::class, 'sync']);
+});
+
 #User Management
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users', [UserController::class, 'index']);
@@ -62,9 +71,11 @@ Route::middleware('auth:sanctum')->group(function () {
 # Assigned Schedules
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('assigned-schedules', AssignedSchedulesController::class);
-    Route::delete('assigned-schedules/{assigned_schedule}', [AssignedSchedulesController::class, 'destroy']);
     Route::post('assigned-schedules/bulk', [AssignedSchedulesController::class, 'bulkAssign']);
+
+    Route::get('assigned-schedules/employee', [AssignedSchedulesController::class, 'getEmployeeSchedules']);
 });
+
 
 # Audit Logs
 Route::middleware('auth:sanctum')->group(function () {
@@ -75,6 +86,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('timelogs/clock-in', [TimelogsController::class, 'clockIn']);
     Route::post('timelogs/clock-out', [TimelogsController::class, 'clockOut']);
+    Route::get('employee/current-status', [TimelogsController::class, 'getCurrentStatus']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -84,6 +96,11 @@ Route::middleware('auth:sanctum')->group(function () {
 # Time Sheets
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('timesheets', TimesheetsController::class);
+});
+
+# Employee Schedules
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('employee/schedules', [AssignedSchedulesController::class, 'getEmployeeSchedules']);
 });
 
 # Employees

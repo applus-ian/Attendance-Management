@@ -43,6 +43,7 @@ class PermissionSeeder extends Seeder
             'view auditlogs',
             'view auditlog',
             'create auditlogs',
+            'create assigned schedule',
             'view holidays',
             'create custom holiday',
             'edit holiday',

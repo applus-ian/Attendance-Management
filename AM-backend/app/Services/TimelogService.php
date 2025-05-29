@@ -7,8 +7,8 @@ use App\Models\Holiday;
 use App\Models\Employee;
 use App\Models\Timelogs;
 use App\Models\AssignedSchedules;
-use App\Models\ManualTimeRequests;
 use Illuminate\Support\Facades\Auth;
+use App\Models\ManualTimeRequests;
 use Illuminate\Validation\ValidationException;
 
 class TimelogService
@@ -60,9 +60,9 @@ class TimelogService
         if ($employeeUser) {
             $fullName = trim(
                 $employeeUser->first_name . ' ' .
-                ($employeeUser->middle_name ? $employeeUser->middle_name . ' ' : '') .
-                $employeeUser->last_name .
-                ($employeeUser->suffix ? ' ' . $employeeUser->suffix : '')
+                    ($employeeUser->middle_name ? $employeeUser->middle_name . ' ' : '') .
+                    $employeeUser->last_name .
+                    ($employeeUser->suffix ? ' ' . $employeeUser->suffix : '')
             );
         } else {
             $fullName = $user->name ?? ($user->email ?? 'Unknown');
@@ -101,9 +101,9 @@ class TimelogService
         if ($employeeUser) {
             $fullName = trim(
                 $employeeUser->first_name . ' ' .
-                ($employeeUser->middle_name ? $employeeUser->middle_name . ' ' : '') .
-                $employeeUser->last_name .
-                ($employeeUser->suffix ? ' ' . $employeeUser->suffix : '')
+                    ($employeeUser->middle_name ? $employeeUser->middle_name . ' ' : '') .
+                    $employeeUser->last_name .
+                    ($employeeUser->suffix ? ' ' . $employeeUser->suffix : '')
             );
         } else {
             $fullName = $user->name ?? ($user->email ?? 'Unknown');
@@ -135,7 +135,7 @@ class TimelogService
             : 0;
 
         $timelog = Timelogs::create([
-            'emp_id'       => $employee->emp_id,
+            'emp_id' => $employee->emp_id,
             'timelog_type' => 'clock_out',
             'time'        => $now,
             'created_by'  => $fullName,
@@ -163,7 +163,8 @@ class TimelogService
                 $as = $employee->assignedSchedules
                     ->first(fn($a) => $a->assigned_at->toDateString() === $today);
 
-                if (!$as) return;
+                if (!$as)
+                    return;
 
                 $schedule = $as->schedule;
                 $exists = Timelogs::where('emp_id', $employee->emp_id)
@@ -186,7 +187,6 @@ class TimelogService
                 }
             });
     }
-
     public function createTimelog(array $data): Timelogs
     {
         $type = $data['timelog_type'] ?? $data['type'] ?? null;

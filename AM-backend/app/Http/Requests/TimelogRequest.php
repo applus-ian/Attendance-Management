@@ -9,7 +9,7 @@ class TimelogRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // Adjust authorization logic if needed
+        return true;
     }
 
     public function rules(): array
