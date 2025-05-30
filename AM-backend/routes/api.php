@@ -96,6 +96,7 @@ Route::middleware('auth:sanctum')->group(function () {
 # Time Sheets
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('timesheets', TimesheetsController::class);
+    Route::get('/users/me/timesheets', [TimesheetsController::class, 'show']);
 });
 
 # Employee Schedules

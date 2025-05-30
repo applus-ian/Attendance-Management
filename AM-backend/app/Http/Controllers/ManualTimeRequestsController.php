@@ -9,6 +9,8 @@ use App\Http\Requests\ManualTimeRequest;
 use App\Services\ManualTimeRequestService;
 use App\Http\Resources\ManualTimeRequestResource;
 use App\Services\TimelogService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class ManualTimeRequestsController extends Controller
 {
@@ -67,35 +69,46 @@ class ManualTimeRequestsController extends Controller
         return new ManualTimeRequestResource($manualRequest);
     }
 
-    public function approve(ManualTimeRequests $manualTimeRequest, Employee $reviewer)
+    public function approve(ManualTimeRequests $manualTimeRequest)
     {
         $this->authorize('approve', $manualTimeRequest);
 
-        $updated = $this->service->approve($manualTimeRequest, $reviewer);
-
-        if (in_array($updated->request_type, ['clock_in', 'clock_out'])) {
-            $this->timelogsService->clockIn([
-                'emp_id' => $updated->emp_id,
-                'time'   => $updated->requested_time,
-                'type'   => $updated->request_type,
-                'comment' => $updated->reason,
-            ]);
+        $reviewer = Auth::user()->employee;
+        if (!$reviewer) {
+            abort(403, 'Reviewer must be an employee.');
         }
 
-        $this->auditLogsService->log(
-            action: 'Manual Request Approval',
-            type: 'Manual Time Request',
-            targetId: $manualTimeRequest->request_id,
-            description: 'Request Approved.'
-        );
+        return DB::transaction(function () use ($manualTimeRequest, $reviewer) {
+            if (in_array($manualTimeRequest->request_type, ['clock_in', 'clock_out'])) {
+                $this->timelogsService->clockIn([
+                    'emp_id' => $manualTimeRequest->emp_id,
+                    'time'   => $manualTimeRequest->time,
+                    'type'   => $manualTimeRequest->request_type,
+                    'comment' => $manualTimeRequest->reason,
+                ]);
+            }
 
-        return new ManualTimeRequestResource($updated);
+            $updated = $this->service->approve($manualTimeRequest, $reviewer);
+
+            $this->auditLogsService->log(
+                action: 'Manual Request Approval',
+                type: 'Manual Time Request',
+                targetId: $manualTimeRequest->request_id,
+                description: 'Request Approved.'
+            );
+
+            return new ManualTimeRequestResource($updated);
+        });
     }
 
-
-    public function reject(ManualTimeRequests $manualTimeRequest, Employee $reviewer)
+    public function reject(ManualTimeRequests $manualTimeRequest)
     {
-        $this->authorize('reject', ManualTimeRequests::class);
+        $this->authorize('reject', $manualTimeRequest);
+
+        $reviewer = Auth::user()->employee;
+        if (!$reviewer) {
+            abort(403, 'Reviewer must be an employee.');
+        }
 
         $updated = $this->service->reject($manualTimeRequest, $reviewer);
 

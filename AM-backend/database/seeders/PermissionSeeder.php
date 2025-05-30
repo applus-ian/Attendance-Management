@@ -53,7 +53,9 @@ class PermissionSeeder extends Seeder
             'view assigned schedule',
             'create assigned schedule',
             'update assigned schedule',
-            'delete assigned schedule'
+            'delete assigned schedule',
+            'update request',
+            'delete request',
         ];
 
         foreach ($permissions as $permission) {
@@ -102,7 +104,9 @@ class PermissionSeeder extends Seeder
             'view assigned schedule',
             'create assigned schedule',
             'update assigned schedule',
-            'delete assigned schedule'
+            'delete assigned schedule',
+            'update request',
+            'delete request'
 
         ]);
         $employeeRole->syncPermissions([
@@ -110,10 +114,13 @@ class PermissionSeeder extends Seeder
             'clock in',
             'clock out',
             'view timesheet',
-            'view request',
-            'create requests',
             'view timelog',
-            'create auditlogs'
+            'create auditlogs',
+            'create requests',
+            'view request',
+            'view requests',
+            'update request',
+            'delete request'
         ]);
 
         $superAdmin = User::where('email', 'john1@example.com')->first();

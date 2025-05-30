@@ -15,13 +15,19 @@ class ManualTimeRequestResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'request_id' => $this->request_id,
             'emp_id' => $this->emp_id,
+            'created_at' => $this->created_at,
             'request_type' => $this->request_type,
             'time' => $this->time,
             'reason' => $this->reason,
             'approval_status' => $this->approval_status,
             'reviewed_by' => $this->reviewed_by,
             'reviewed_at' => $this->reviewed_at,
+            'employee' => [
+                'first_name' => $this->employee?->first_name ?? '',
+                'last_name' => $this->employee?->last_name ?? '',
+            ],
         ];
     }
 }

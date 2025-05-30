@@ -59,6 +59,7 @@ return new class extends Migration
                 'Delete Holiday',
                 'Update Holiday',
                 'Create Holiday',
+                'Clock In Blocked',
             ]);
             $table->string('target_type', 50)->nullable();
             $table->unsignedBigInteger('target_id')->nullable();

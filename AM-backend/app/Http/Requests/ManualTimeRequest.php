@@ -19,8 +19,9 @@ class ManualTimeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // 'request_type' => 'required|in:clock_in,clock_out,overtime',
-            // 'reason' => 'nullable|string|max:500',
+            'request_type' => 'required|in:clock_in,clock_out,overtime',
+            'time' => 'required|date',
+            'reason' => 'required|string|max:255',
         ];
     }
 }

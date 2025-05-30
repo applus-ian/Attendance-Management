@@ -32,20 +32,6 @@ class TimesheetsController extends Controller
         return TimesheetResource::collection(Timesheets::with('timelogs')->get());
     }
 
-    public function show(Timesheets $timesheet)
-    {
-        $this->authorize('view', $timesheet);
-
-        $this->auditLogsService->log(
-            action: 'View Own Timesheet',
-            type: 'Timesheets',
-            targetId: $timesheet->timesheet_id,
-            description: "View Own Timesheets."
-        );
-
-        return new TimesheetResource($timesheet->load('timelogs'));
-    }
-
     public function store(Request $request)
     {
         $timesheet = $this->timesheetService->store($request->validated());
@@ -58,5 +44,27 @@ class TimesheetsController extends Controller
         );
 
         return new TimesheetResource($timesheet);
+    }
+
+    public function show(Request $request)
+    {
+        $user = $request->user();
+
+        $empId = $user->employee->emp_id ?? $user->emp_id ?? $user->id;
+
+        $timesheets = Timesheets::where('emp_id', $empId)->with('timelogs')->get();
+        
+        foreach ($timesheets as $timesheet) {
+            $this->authorize('view', $timesheet);
+        }
+
+        $this->auditLogsService->log(
+            action: 'View Own Timesheet',
+            type: 'Timesheets',
+            targetId: $user->timesheet_id,
+            description: "View Own Timesheets."
+        );
+
+        return TimesheetResource::collection($timesheets);
     }
 }

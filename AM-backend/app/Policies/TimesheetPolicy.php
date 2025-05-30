@@ -14,7 +14,7 @@ class TimesheetPolicy
 
     public function view(User $user, Timesheets $timesheet): bool
     {
-        return $user->can('view timesheet') || $user->id === $timesheet->emp_id;
+        return $user->can('view timesheet') || $user->user_id === $timesheet->emp_id;
     }
 
     public function create(User $user): bool
