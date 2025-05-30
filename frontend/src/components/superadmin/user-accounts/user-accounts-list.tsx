@@ -160,11 +160,23 @@ export function UserAccountsList() {
     return roles.join(", ");
   }
 
-  // Helper to get day abbreviation from schedule day string
-  function getDayAbbreviation(day?: string) {
+  // Helper to get day abbreviation from schedule day string or array
+  function getDayAbbreviation(day?: string | string[]) {
     if (!day) return "-";
-    const key = day.toLowerCase();
-    return dayAbbreviationMap[key] ?? day;
+    if (Array.isArray(day)) {
+      return day.map(d => {
+        if (typeof d === 'string') {
+          const key = d.toLowerCase();
+          return dayAbbreviationMap[key] ?? d;
+        }
+        return d;
+      }).join(", ");
+    }
+    if (typeof day === 'string') {
+      const key = day.toLowerCase();
+      return dayAbbreviationMap[key] ?? day;
+    }
+    return "-";
   }
 
   // Get unique job positions from filteredAccounts
@@ -260,7 +272,7 @@ export function UserAccountsList() {
             <TableBody>
               {paginatedUsers.length > 0 ? (
                 paginatedUsers.map((user) => (
-                  <TableRow key={user.user_id} className="hover:bg-[#F5F6FA]">
+                  <TableRow key={String(user.user_id)} className="hover:bg-[#F5F6FA]">
                     <TableCell className="py-3 px-6">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8 bg-gray-100 text-gray-500">

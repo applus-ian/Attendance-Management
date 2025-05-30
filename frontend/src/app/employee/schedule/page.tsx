@@ -1,31 +1,67 @@
 "use client";
 
-import {
-  FileText,
-  Clock,
-  AlertCircle,
-  RefreshCw,
-} from "lucide-react";
 import { useState, useEffect } from "react";
-import ClockInModal from "@/components/employee/Clock-in-modal";
+import { Bell, FileText, Menu, User, Clock, AlertCircle, RefreshCw } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import Navbar from "@/components/employee/navbar";
 import { CircularClock } from "@/components/employee/Clock";
 import Footer from "@/components/Footer";
-import { useEmployeeSchedule } from "@/hooks/useEmployeeSchedule";
+import "../../globals.css";
+import ManualRequestModal from "@/components/employee/manual-clock-in/manual-request-clockin";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import ClockInModal from "@/components/employee/Clock-in-modal";
+import { useEmployeeSchedule } from "@/hooks/useEmployeeSchedule";
 import api from "@/lib/api";
-import "../../globals.css";
 
 export default function MySchedulePage() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { clockIn, clockOut, isClockLoading, clockStatus, fetchClockStatus } = useAuth();
+  const [showClockModal, setShowClockModal] = useState<null | 'in' | 'out'>(null);
   const [showClockInModal, setShowClockInModal] = useState(false);
   const { schedules, loading, error, refreshSchedule } = useEmployeeSchedule();
-  const { user, clockStatus, isClockLoading, fetchClockStatus, clockIn, clockOut } = useAuth();
+  const { user } = useAuth();
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
 
   useEffect(() => {
     fetchClockStatus();
   }, [user]);
+
+  const handleManualRequest = async (formData: {
+    requestType: string;
+    startTime: string;
+    endTime: string;
+    date: string;
+    comment: string;
+  }) => {
+    try {
+      console.log('Form submitted:', formData);
+      // Add your form submission logic here
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      // Add error handling (e.g., showing an error toast)
+    }
+  };
+
+  const handleConfirmClock = async () => {
+    try {
+      if (showClockModal === 'in') {
+        await clockIn();
+        toast.success("You have successfully clocked in.");
+      } else if (showClockModal === 'out') {
+        await clockOut();
+        toast.success("You have successfully clocked out.");
+      }
+      fetchClockStatus();
+      setShowClockModal(null);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to clock in/out.");
+      setShowClockModal(null);
+    }
+  };
 
   const formatDate = (dateString?: string) => {
     if (!dateString) {
@@ -183,6 +219,7 @@ export default function MySchedulePage() {
               <Button
                 variant="outline"
                 className="w-full border hover:bg-orange-600 hover:text-white border-orange-500 text-gray-700 py-3 rounded-md flex items-center justify-center text-lg font-medium group"
+                onClick={() => setIsManualModalOpen(true)}
               >
                 <FileText className="w-6 h-6 mr-2 group-hover:text-white" />
                 Manual Request
@@ -202,6 +239,10 @@ export default function MySchedulePage() {
             userId={user?.id}
             isLoading={isClockLoading}
           />
+        )}
+
+        {isManualModalOpen && (
+          <ManualRequestModal isOpen={isManualModalOpen} onClose={() => setIsManualModalOpen(false)} />
         )}
       </main>
       <Footer />

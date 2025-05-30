@@ -4,10 +4,12 @@ import Navbar from "@/components/employee/navbar";
 import { EmployeeDataTable } from "@/components/employee/employee-data-table";
 import { useState } from "react";
 import { useEmployeeTimesheet } from "@/hooks/useTimesheet";
+import { useEmployeeSchedules } from "@/hooks/useAssignedSchedules";
 
 export default function TimesheetsPage() {
     const [selectedPeriod, setSelectedPeriod] = useState("Jan 1 - 15, 2025");
     const { timesheets, isLoading, isError, error } = useEmployeeTimesheet();
+    const { schedules: assignedSchedules } = useEmployeeSchedules();
 
     const handlePeriodChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
       setSelectedPeriod(event.target.value);
@@ -19,6 +21,7 @@ export default function TimesheetsPage() {
       let inTime = "-";
       let outTime = "-";
       let comment = "";
+      let worked = 0;
       if (ts.timelogs && ts.timelogs.length > 0) {
         const clockIns = ts.timelogs.filter(log => log.type === "clock_in");
         const clockOuts = ts.timelogs.filter(log => log.type === "clock_out");
@@ -31,13 +34,36 @@ export default function TimesheetsPage() {
           const latest = clockOuts.reduce((a, b) => new Date(a.time) > new Date(b.time) ? a : b);
           outTime = new Date(latest.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
+        // Sum hrs_worked for the day
+        worked = ts.timelogs.reduce((sum, log) => sum + (log.hrs_worked || 0), 0);
+      }
+      // Find assigned schedule for this date
+      const scheduleForDay = assignedSchedules.find(s => {
+        // Compare date part only
+        const assignedDate = new Date(s.assigned_at).toISOString().slice(0, 10);
+        return assignedDate === ts.date;
+      });
+      let scheduled = "-";
+      if (scheduleForDay && scheduleForDay.schedule) {
+        // Calculate scheduled hours from start and end time
+        const start = scheduleForDay.schedule.start;
+        const end = scheduleForDay.schedule.end;
+        if (start && end) {
+          const [startH, startM] = start.split(":").map(Number);
+          const [endH, endM] = end.split(":").map(Number);
+          let diff = (endH * 60 + endM) - (startH * 60 + startM);
+          if (diff < 0) diff += 24 * 60; // handle overnight shifts
+          scheduled = (diff / 60).toFixed(2);
+        }
+      } else {
+        scheduled = typeof ts.scheduled_hrs === 'number' ? ts.scheduled_hrs.toFixed(2) : (ts.scheduled_hrs || "0.00");
       }
       return {
         date: ts.date,
         inTime,
         outTime,
-        worked: ts.total_hrs_work?.toFixed(2) ?? "0.00",
-        scheduled: ts.scheduled_hrs?.toFixed(2) ?? "0.00",
+        worked: worked.toFixed(2),
+        scheduled,
         comment,
       };
     });

@@ -7,7 +7,6 @@ import { Timesheet } from "@/types/timesheet";
 export function useEmployeeTimesheet() {
   const { user } = useAuth();
 
-  // Try to get emp_id from user, or from user.employee, or fallback to id
   const empId = user?.emp_id || user?.employee?.emp_id || user?.id;
 
   const {
@@ -20,7 +19,7 @@ export function useEmployeeTimesheet() {
     queryKey: ["employee-timesheets", empId],
     queryFn: async () => {
       if (!empId) return [];
-      const res = await api.get(`/timesheets?emp_id=${empId}`);
+      const res = await api.get(`/users/me/timesheets`);
       // If the API returns { data: Timesheet[] }
       return res.data.data || res.data;
     },

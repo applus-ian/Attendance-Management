@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Bell, Menu, ChevronDown } from "lucide-react"
-import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet"
+import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { useState } from "react"
 import Notification from "@/components/notification"
 import { useAuth } from "@/hooks/useAuth"
@@ -165,6 +165,9 @@ export default function Navbar() {
               </button>
             </SheetTrigger>
             <SheetContent side="left" className="md:hidden">
+              <SheetHeader>
+                <SheetTitle>Navigation Menu</SheetTitle>
+              </SheetHeader>
               <div className="grid gap-4 p-4">
                 <Link
                   href="/employee/schedule"

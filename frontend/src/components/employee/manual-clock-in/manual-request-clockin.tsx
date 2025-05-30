@@ -168,20 +168,10 @@ export default function ManualRequestModal({
             // Format request type to match database enum
             const requestType = formData.requestType.replace('-', '_') as 'clock_in' | 'clock_out' | 'overtime';
 
-            type ManualRequestData = {
-                emp_id: number;
-                request_type: 'clock_in' | 'clock_out' | 'overtime';
-                time: string;
-                reason: string;
-                approval_status: 'pending' | 'approved' | 'rejected';
-            };
-
-            const formattedData: ManualRequestData = {
-                emp_id: Number(auth.user.id),
+            const formattedData = {
                 request_type: requestType,
                 time: `${formatDate(formData.date)} ${formatTimeString(formData.startTime)}`,
-                reason: formData.comment,
-                approval_status: 'pending'
+                reason: formData.comment
             };
 
             await createManualRequest.mutateAsync(formattedData);

@@ -49,7 +49,7 @@ export const useAuth = () => {
     mutationFn: async () => {
       if (!user?.emp_id) throw new Error("User not authenticated");
       const now = new Date();
-      const time = now.toTimeString().slice(0, 5); // "HH:MM"
+      const time = now.toTimeString().slice(0, 5);
       await api.post("/timelogs/clock-in", {
         emp_id: user.emp_id,
         timelog_type: "clock_in",

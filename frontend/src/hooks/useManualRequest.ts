@@ -3,43 +3,65 @@ import api from '@/lib/api';
 
 export interface ManualRequest {
     request_id: string;
+    emp_id: number;
     created_at: string;
     request_type: string;
     time: string;
     reason: string;
     approval_status: string;
     employee?: {
-        name: string;
+        first_name: string;
+        last_name: string;
     };
+    reviewed_by?: string | null;
+    reviewed_at?: string | null;
 }
 
 interface ManualRequestData {
-    emp_id: number;
     request_type: 'clock_in' | 'clock_out' | 'overtime';
+    time: string;
     reason: string;
-    approval_status: 'pending' | 'approved' | 'rejected';
 }
 
-export const useManualRequest = () => {
+export const useManualRequest = (emp_id?: number) => {
     const queryClient = useQueryClient();
 
     const { data, isLoading, error, refetch } = useQuery({
-        queryKey: ['manualRequests'],
+        queryKey: ['manualRequests', emp_id],
         queryFn: async () => {
-            const response = await api.get('/manual-requests');
-            // Handle different possible response shapes
-            if (Array.isArray(response.data)) return response.data;
-            if (Array.isArray(response.data.data)) return response.data.data;
-            if (Array.isArray(response.data.requests)) return response.data.requests;
-            return [];
-        }
+            try {
+                const response = await api.get('/manual-requests', {
+                    params: emp_id ? { emp_id } : {},
+                    timeout: 10000,
+                });
+                console.log('Manual Requests Debug - Response:', {
+                    status: response.status,
+                    data: response.data,
+                    emp_id
+                });
+                // Handle different possible response shapes
+                if (Array.isArray(response.data)) return response.data;
+                if (Array.isArray(response.data.data)) return response.data.data;
+                if (Array.isArray(response.data.requests)) return response.data.requests;
+                return [];
+            } catch (error: any) {
+                throw error;
+            }
+        },
+        retry: 2,
+        staleTime: 30000, // Consider data fresh for 30 seconds
     });
 
     // Create request
     const createManualRequest = useMutation({
         mutationFn: async (data: ManualRequestData) => {
-            const response = await api.post('/manual-requests', data);
-            return response.data;
+            try {
+                const response = await api.post('/manual-requests', data);
+                return response.data;
+            } catch (error: any) {
+
+                throw error;
+            }
         },
         onSuccess: () => {
             // Invalidate and refetch the requests query after successful creation
@@ -54,4 +76,30 @@ export const useManualRequest = () => {
         refetch,
         createManualRequest
     };
+};
+
+export const useApproveManualRequest = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (requestId: string) => {
+            const response = await api.put(`/manual-requests/${requestId}/approve`);
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['manualRequests'] });
+        }
+    });
+};
+
+export const useRejectManualRequest = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (requestId: string) => {
+            const response = await api.put(`/manual-requests/${requestId}/reject`);
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['manualRequests'] });
+        }
+    });
 };

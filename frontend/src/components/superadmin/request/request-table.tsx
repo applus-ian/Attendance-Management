@@ -11,7 +11,7 @@ import {
   getSortedRowModel,
 } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
-import { useManualRequest } from "@/hooks/useManualRequest"
+import { useManualRequest, useApproveManualRequest, useRejectManualRequest } from "@/hooks/useManualRequest"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -20,31 +20,38 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { RequestDetailsModal } from "@/components/request-details-modal"
 import { MobileRequestView } from "@/components/mobile-request-view"
 import { RequestFilters } from "./request-filter"
-import { Request, RequestTableProps } from "@/types/request"
+import type { ManualRequest } from "@/hooks/useManualRequest"
 
-function transformManualRequest(raw: any): Request {
+interface RequestTableProps {
+  searchQuery: string
+}
+
+function transformManualRequest(raw: ManualRequest) {
   return {
-    id: raw.request_id.toString(),
-    dateSubmitted: new Date(raw.created_at).toLocaleDateString(),
-    member: raw.employee?.name || "Unknown",
+    id: raw.request_id ? raw.request_id.toString() : `${raw.emp_id}_${raw.time}`,
+    emp_id: raw.emp_id,
+    member: raw.employee ? `${raw.employee.first_name} ${raw.employee.last_name}` : `Employee #${raw.emp_id}`,
     type: raw.request_type.replace("_", " "),
-    dateRequested: new Date(raw.time).toLocaleDateString(),
-    comment: raw.reason,
-    status: raw.approval_status.toLowerCase() === "rejected"
-      ? "Denied"
-      : (raw.approval_status.charAt(0).toUpperCase() + raw.approval_status.slice(1)) as Request["status"],
-    feedback: raw.feedback || "",
+    time: raw.time,
+    reason: raw.reason,
+    approval_status: raw.approval_status,
+    created_at: raw.created_at,
+    reviewed_by: raw.reviewed_by,
+    reviewed_at: raw.reviewed_at,
+    raw, // keep the full ManualRequest object for actions
   }
 }
 
 export function RequestTable({ searchQuery }: RequestTableProps) {
   const { requests: manualRequests, isLoading, error } = useManualRequest()
+  const approveManualRequest = useApproveManualRequest();
+  const rejectManualRequest = useRejectManualRequest();
   const isMobile = useIsMobile()
   const [currentPage, setCurrentPage] = useState(0)
   const [sorting, setSorting] = useState<SortingState>([])
   const [sortField, setSortField] = useState<string>("dateSubmitted")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
-  const [selectedRequest, setSelectedRequest] = useState<Request | null>(null)
+  const [selectedRequest, setSelectedRequest] = useState<ManualRequest | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [filters, setFilters] = useState({
     status: "all",
@@ -55,38 +62,51 @@ export function RequestTable({ searchQuery }: RequestTableProps) {
     },
   })
 
-  const handleViewRequest = (request: Request) => {
-    setSelectedRequest(request)
+  const handleViewRequest = (raw: ManualRequest) => {
+    setSelectedRequest(raw)
     setIsModalOpen(true)
   }
 
   // Transform and filter data
   const filteredAndSortedRequests = useMemo(() => {
-    let data: Request[] = (manualRequests || [])
-      .filter((raw: any) => raw && raw.request_id !== undefined && raw.created_at !== undefined)
-      .map(transformManualRequest)
+    let data = (manualRequests || [])
+      .filter((raw: any) => raw && raw.emp_id !== undefined && raw.time !== undefined)
+      .map((raw: ManualRequest) => {
+        const transformed = transformManualRequest(raw)
+        return { ...transformed, raw }
+      })
 
     // Filtering
-    data = data.filter((request) => {
-      if (searchQuery && !request.member.toLowerCase().includes(searchQuery.toLowerCase())) return false
-      if (filters.status !== "all" && request.status.toLowerCase() !== filters.status.toLowerCase()) return false
-      if (filters.type !== "all" && request.type.toLowerCase() !== filters.type.toLowerCase()) return false
+    data = data.filter((request: ReturnType<typeof transformManualRequest>) => {
+      if (searchQuery && !request.member.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      // Status filter
+      if (filters.status !== "all") {
+        let status = request.approval_status?.toLowerCase();
+        let filterStatus = filters.status.toLowerCase();
+        if (filterStatus === "denied") filterStatus = "rejected";
+        if (status !== filterStatus) return false;
+      }
+      // Type filter
+      if (filters.type !== "all") {
+        if (request.type.toLowerCase() !== filters.type.toLowerCase()) return false;
+      }
+      // Date range filter
       if (filters.dateRange.from || filters.dateRange.to) {
-        const requestDate = new Date(request.dateRequested)
-        if (filters.dateRange.from && requestDate < filters.dateRange.from) return false
+        const reqDate = new Date(request.created_at);
+        if (filters.dateRange.from && reqDate < filters.dateRange.from) return false;
         if (filters.dateRange.to) {
-          const endDate = new Date(filters.dateRange.to)
-          endDate.setHours(23, 59, 59, 999)
-          if (requestDate > endDate) return false
+          const endDate = new Date(filters.dateRange.to);
+          endDate.setHours(23, 59, 59, 999);
+          if (reqDate > endDate) return false;
         }
       }
-      return true
-    })
+      return true;
+    });
 
     // Sorting
     return [...data].sort((a, b) => {
-      const aValue = a[sortField as keyof Request]
-      const bValue = b[sortField as keyof Request]
+      const aValue = a[sortField as keyof typeof a]
+      const bValue = b[sortField as keyof typeof b]
       if (aValue == null && bValue == null) return 0
       if (aValue == null) return 1
       if (bValue == null) return -1
@@ -96,36 +116,27 @@ export function RequestTable({ searchQuery }: RequestTableProps) {
   }, [manualRequests, searchQuery, filters, sortField, sortDirection])
 
   // Table columns
-  const columns: ColumnDef<Request>[] = [
-    { accessorKey: "dateSubmitted", header: "Date Submitted", cell: ({ row }) => <div className="font-medium">{row.getValue("dateSubmitted")}</div> },
-    { accessorKey: "member", header: "Member", cell: ({ row }) => <div>{row.getValue("member")}</div> },
-    { accessorKey: "type", header: "Type", cell: ({ row }) => <div>{row.getValue("type")}</div> },
-    { accessorKey: "dateRequested", header: "Date Requested", cell: ({ row }) => <div>{row.getValue("dateRequested")}</div> },
-    { accessorKey: "comment", header: "Comment", cell: ({ row }) => <div>{row.getValue("comment")}</div> },
-    {
-      accessorKey: "status", header: "Status", cell: ({ row }) => {
-        const status = row.getValue("status") as string
-        return <Badge variant={status === "Approved" ? "secondary" : status === "Pending" ? "default" : "destructive"} className="rounded-md">{status}</Badge>
-      }
+  const columns: ColumnDef<any>[] = [
+    { accessorKey: "emp_id", header: () => <span className="text-center w-full block">Employee ID</span>, cell: ({ row }) => <span className="text-center w-full block">{row.getValue("emp_id")}</span> },
+    { accessorKey: "member", header: "Full Name", cell: ({ row }) => row.getValue("member") },
+    { accessorKey: "type", header: "Request Type", cell: ({ row }) => row.getValue("type") },
+    { accessorKey: "time", header: "Time", cell: ({ row }) => row.original.raw.time },
+    { accessorKey: "reason", header: "Reason", cell: ({ row }) => row.getValue("reason") },
+    { accessorKey: "approval_status", header: "Approval Status", cell: ({ row }) => {
+      const status = row.original.raw.approval_status?.toLowerCase();
+      let color = "";
+      if (status === "approved") color = "bg-green-500 text-white";
+      else if (status === "pending") color = "bg-yellow-400 text-black";
+      else if (status === "rejected") color = "bg-red-500 text-white";
+      else color = "bg-gray-300 text-black";
+      return (
+        <Badge className={color + " capitalize"}>{row.original.raw.approval_status}</Badge>
+      );
+    }
     },
-    { accessorKey: "feedback", header: "Feedback", cell: ({ row }) => <div>{row.getValue("feedback") || "-"}</div> },
-    {
-      id: "actions",
-      cell: ({ row }) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0" onClick={e => e.stopPropagation()}>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => handleViewRequest(row.original)}>View Request</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => alert(`Approve Request: ${row.original.id}`)}>Approve Request</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => alert(`Deny Request: ${row.original.id}`)}>Deny Request</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
+    { accessorKey: "created_at", header: "Created At", cell: ({ row }) => new Date(row.original.raw.created_at).toLocaleString() },
+    { accessorKey: "reviewed_by", header: "Reviewed By", cell: ({ row }) => row.original.raw.reviewed_by || "-" },
+    { accessorKey: "reviewed_at", header: "Reviewed At", cell: ({ row }) => row.original.raw.reviewed_at ? new Date(row.original.raw.reviewed_at).toLocaleString() : "-" },
   ]
 
   // Table instance
@@ -176,7 +187,7 @@ export function RequestTable({ searchQuery }: RequestTableProps) {
             </TableHeader>
             <TableBody>
               {table.getRowModel().rows.map(row => (
-                <TableRow key={row.id}>
+                <TableRow key={row.id} className="cursor-pointer hover:bg-orange-50" onClick={() => handleViewRequest(row.original.raw)}>
                   {row.getVisibleCells().map(cell => (
                     <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -218,7 +229,19 @@ export function RequestTable({ searchQuery }: RequestTableProps) {
       </div>
 
       {selectedRequest && (
-        <RequestDetailsModal request={selectedRequest} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+        <RequestDetailsModal 
+          request={selectedRequest} 
+          isOpen={isModalOpen} 
+          onClose={() => setIsModalOpen(false)}
+          onApprove={() => approveManualRequest.mutate(selectedRequest.request_id, {
+            onSuccess: () => { setIsModalOpen(false); alert("Request approved!"); },
+            onError: () => alert("Failed to approve request")
+          })}
+          onReject={() => rejectManualRequest.mutate(selectedRequest.request_id, {
+            onSuccess: () => { setIsModalOpen(false); alert("Request denied!"); },
+            onError: () => alert("Failed to deny request")
+          })}
+        />
       )}
     </div>
   )
