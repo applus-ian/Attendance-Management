@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useSchedules } from "@/hooks/useSchedules"
+import { toast } from "react-hot-toast"
 
 export interface EditScheduleV2DialogProps {
   open: boolean
@@ -18,9 +19,10 @@ export interface EditScheduleV2DialogProps {
     start: string
     end: string
   }
+  onScheduleUpdated?: () => void 
 }
 
-export function EditScheduleV2Dialog({ open, onOpenChange, schedule }: EditScheduleV2DialogProps) {
+export function EditScheduleV2Dialog({ open, onOpenChange, schedule, onScheduleUpdated }: EditScheduleV2DialogProps) {
   const { updateSchedule } = useSchedules()
 
   const [scheduleName, setScheduleName] = useState(schedule.name)
@@ -102,9 +104,11 @@ export function EditScheduleV2Dialog({ open, onOpenChange, schedule }: EditSched
         start,
         end,
       })
-
+      toast.success("Schedule updated!");
       onOpenChange(false)
+      if (onScheduleUpdated) onScheduleUpdated(); 
     } catch (error) {
+      toast.error("Failed to update schedule.");
       console.error("Error updating schedule:", error)
     } finally {
       setIsSubmitting(false)
@@ -138,6 +142,7 @@ export function EditScheduleV2Dialog({ open, onOpenChange, schedule }: EditSched
                       id={`day-${key}`}
                       checked={selectedDays[key] || false}
                       onCheckedChange={checked => handleDayChange(day, !!checked)}
+                      className="border-orange-500 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
                     />
                     <Label htmlFor={`day-${key}`} className="text-sm font-medium">{day}</Label>
                   </div>
@@ -160,10 +165,19 @@ export function EditScheduleV2Dialog({ open, onOpenChange, schedule }: EditSched
           </div>
         </div>
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+            className="border-orange-500 text-orange-500 hover:bg-orange-50"
+          >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} className="bg-orange-500 hover:bg-orange-600" disabled={isSubmitting}>
+          <Button
+            onClick={handleSubmit}
+            className="bg-orange-500 hover:bg-orange-600 text-white"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? "Updating..." : "Update"}
           </Button>
         </DialogFooter>

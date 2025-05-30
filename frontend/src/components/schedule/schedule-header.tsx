@@ -7,11 +7,25 @@ import { AddScheduleDialog } from "@/components/schedule/add-schedule-dialog"
 import ScheduleList from "./schedule-list"
 import { HolidayList } from "@/components/superadmin/holiday/holiday-list"
 import { AddHolidayDialog } from "@/components/superadmin/holiday/add-holiday-dialog"
+import { useSchedules } from "@/hooks/useSchedules"
+import toast from "react-hot-toast"
+
+
+
 
 export function ScheduleHeader() {
   const [activeTab, setActiveTab] = useState("schedules")
   const [isAddScheduleDialogOpen, setIsAddScheduleDialogOpen] = useState(false)
   const [isAddHolidayDialogOpen, setIsAddHolidayDialogOpen] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  
+  const handleAddScheduleDialogChange = (open: boolean) => {
+    setIsAddScheduleDialogOpen(open);
+    if (!open) {
+      setRefreshKey(prev => prev + 1); 
+    }
+  };
 
   return (
     <div className="mb-6">
@@ -61,12 +75,12 @@ export function ScheduleHeader() {
 
       {/* Tab Content */}
       {activeTab === "schedules" ? (
-        <ScheduleList/>
+        <ScheduleList key={refreshKey} />
       ) : (
         <HolidayList />
       )}
 
-      <AddScheduleDialog open={isAddScheduleDialogOpen} onOpenChange={setIsAddScheduleDialogOpen} />
+      <AddScheduleDialog open={isAddScheduleDialogOpen}   onOpenChange={handleAddScheduleDialogChange}/>
       <AddHolidayDialog open={isAddHolidayDialogOpen} onOpenChange={setIsAddHolidayDialogOpen} />
     </div>
   )

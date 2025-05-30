@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { Search, Clock, Users, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/superadmin/sidebar/app-sidebar"
 import { SiteHeader } from "@/components/superadmin/dashboard/site-header"
@@ -15,6 +14,7 @@ import { useUserList } from "@/hooks/useUserList"
 import { useTimelog } from "@/hooks/useTimelog"
 import { use as usePromise } from "react"
 import TimeLogModal from "@/components/modal/time-logs/time-logs-modal"
+import { toast } from "react-hot-toast";
 
 export default function UserTimeLogs({ params }: { params: { userId: string } | Promise<{ userId: string }> }) {
   const router = useRouter()
@@ -94,11 +94,23 @@ export default function UserTimeLogs({ params }: { params: { userId: string } | 
       timelog_type: data.logType || data.timelog_type || data.type,
     };
     if (modalMode === 'add') {
-      createTimelog.mutate({ emp_id: selectedUser?.emp_id, ...normalized })
+      createTimelog.mutate(
+        { emp_id: selectedUser?.emp_id, ...normalized },
+        {
+          onSuccess: () => toast.success("Time log added!"),
+          onError: () => toast.error("Failed to add time log."),
+        }
+      );
     } else if (modalMode === 'edit' && editLog) {
-      updateTimelog.mutate({ timelog_id: editLog.timelog_id, emp_id: selectedUser?.emp_id, ...normalized })
+      updateTimelog.mutate(
+        { timelog_id: editLog.timelog_id, emp_id: selectedUser?.emp_id, ...normalized },
+        {
+          onSuccess: () => toast.success("Time log updated!"),
+          onError: () => toast.error("Failed to update time log."),
+        }
+      );
     }
-    setShowTimeLogsModal(false)
+    setShowTimeLogsModal(false);
   }
 
   return (

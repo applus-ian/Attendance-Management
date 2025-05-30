@@ -8,6 +8,7 @@ import { EditScheduleV2Dialog } from "./editv2"
 import { AssignUserModal } from "./assign-user-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button"
+import { Toaster, toast } from "react-hot-toast";
 
 // Helper function to convert 24-hour time to 12-hour formatas
 function formatTimeTo12Hour(time: string): string {
@@ -36,7 +37,7 @@ export default function ScheduleList() {
   const [assignUserDialogOpen, setAssignUserDialogOpen] = useState(false);
   const [assignUserSchedule, setAssignUserSchedule] = useState<Schedule | null>(null);
 
-  const itemsPerPage = 5
+  const itemsPerPage = 7
   const pageCount = Math.ceil(schedules.length / itemsPerPage)
   const paginatedSchedules = schedules.slice(
     currentPage * itemsPerPage,
@@ -59,8 +60,11 @@ export default function ScheduleList() {
     setIsDeleting(true);
     try {
       await deleteSchedule(selectedSchedule.sched_id);
+      toast.success("Schedule deleted successfully!"); 
       setDeleteDialogOpen(false);
       setSelectedSchedule(null);
+    } catch (e) {
+      toast.error("Failed to delete schedule."); 
     } finally {
       setIsDeleting(false);
     }
@@ -82,7 +86,8 @@ export default function ScheduleList() {
 
   return (
     <>
-      <div className="w-full h-screen overflow-auto">
+    <Toaster position="top-right" />
+    <div className="w-full max-h-[80vh] overflow-auto">
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b">
@@ -234,6 +239,7 @@ export default function ScheduleList() {
             start: selectedSchedule.start,
             end: selectedSchedule.end,
           }}
+          onScheduleUpdated={fetchSchedules}
         />
       )}
 

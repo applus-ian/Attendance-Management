@@ -130,7 +130,7 @@ export default function MySchedulePage() {
       <main className="flex-grow container mx-auto px-4 py-6 md:py-10">
         <div className="md:grid md:grid-cols-2 md:gap-12">
           <div className="flex flex-col items-center md:items-start mb-8 md:mb-0 order-2 md:order-1 md:pl-20">
-            <CircularClock greeting="Good Morning, Employee!" />
+          <CircularClock greeting={`Good Morning, ${user?.name || "Employee"}!`} />
           </div>
 
           <div className="order-1 md:order-2 md:mr-8">

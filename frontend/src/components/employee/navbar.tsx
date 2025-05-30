@@ -135,7 +135,8 @@ export default function Navbar() {
                 <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
                   <img src="/avatar.svg" alt="Employee Profile" className="w-full h-full object-cover" />
                 </div>
-                <span className="hidden md:inline">Employee</span>
+                <span className="hidden md:inline">{user?.name}</span>
+                
                 <ChevronDown size={16} />
               </button>
             </DropdownMenuTrigger>
