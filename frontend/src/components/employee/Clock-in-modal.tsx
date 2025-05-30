@@ -1,7 +1,14 @@
 "use client";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ClockInModalProps } from "@/types/clockInModal"
+import { ClockInModalProps } from "@/types/clockInModal";
 
 export default function ClockInModal({
   show,
@@ -12,7 +19,9 @@ export default function ClockInModal({
   isClockedIn,
   isLoading = false,
 }: ClockInModalProps) {
-  if (!show) return null;
+  const handleClose = () => {
+    if (!isLoading) onClose();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,50 +29,43 @@ export default function ClockInModal({
   };
 
   return (
-    <>
-      {/* Overlay */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40"
-        onClick={onClose}
-      ></div>
-
-      {/* Modal */}
-      <div className="fixed z-50 inset-0 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative">
-          <h3 className="text-xl font-semibold mb-4">
-            {isClockedIn ? "Clock Out" : "Clock In"}
-          </h3>
-
-          <p className="mb-2">
-            Current Time: <strong>{currentTime}</strong>
-          </p>
-          {shiftTime && (
-            <p className="mb-4 text-sm text-gray-600">
-              Scheduled Shift Start: {shiftTime}
-            </p>
-          )}
-
-          <form onSubmit={handleSubmit}>
-            <div className="flex justify-end space-x-3">
-              <Button
-                variant="outline"
-                type="button"
-                onClick={onClose}
-                className="py-2 px-4"
-                disabled={isLoading}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" className="py-2 px-4" disabled={isLoading}>
-                {isLoading ? (
-                  <span className="animate-spin mr-2">⏳</span>
-                ) : null}
-                {isClockedIn ? "Clock Out" : "Clock In"}
-              </Button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </>
+    <Dialog open={show} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>
+            {isClockedIn
+              ? `Clock out at ${currentTime}`
+              : `Clock in at ${currentTime}`}
+          </DialogTitle>
+        </DialogHeader>
+        {shiftTime && (
+          <div className="mb-6 text-gray-700">
+            Your shift starts at {shiftTime}.
+          </div>
+        )}
+        <form onSubmit={handleSubmit}>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              type="button"
+              onClick={handleClose}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <span className="animate-spin mr-2">⏳</span>
+              ) : null}
+              {isClockedIn ? "Clock Out" : "Clock In"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

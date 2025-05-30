@@ -237,16 +237,6 @@ export default function ScheduleList() {
         />
       )}
 
-      {/* Assign Members Dialog (old, now commented out) */}
-      {/*assignSchedule && (
-        <AssignShiftModal
-          open={assignDialogOpen}
-          onOpenChange={setAssignDialogOpen}
-          scheduleId={assignSchedule.sched_id}
-          onAssigned={fetchSchedules}
-        />
-      )*/}
-      {/* Assign User Dialog (new) */}
       {assignUserSchedule && (
         <AssignUserModal
           open={assignUserDialogOpen}

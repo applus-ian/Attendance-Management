@@ -2,19 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { Bell, FileText, Menu, User, Clock, AlertCircle, RefreshCw } from "lucide-react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import Navbar from "@/components/employee/navbar";
 import { CircularClock } from "@/components/employee/Clock";
 import Footer from "@/components/Footer";
 import "../../globals.css";
 import ManualRequestModal from "@/components/employee/manual-clock-in/manual-request-clockin";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
-import ClockInModal from "@/components/employee/Clock-in-modal";
-import { useEmployeeSchedule } from "@/hooks/useEmployeeSchedule";
-import api from "@/lib/api";
+import { Toaster, toast } from "react-hot-toast";
+
+
 
 export default function MySchedulePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -116,27 +113,22 @@ export default function MySchedulePage() {
     }
     if (!isClockedIn) {
       await clockIn();
+      toast.success("Clocked in successfully!");
     } else {
       await clockOut();
+      toast.success("Clocked out successfully!");
     }
     setShowClockInModal(false);
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
+      <Toaster position="top-right" /> 
       <Navbar />
       <main className="flex-grow container mx-auto px-4 py-6 md:py-10">
         <div className="md:grid md:grid-cols-2 md:gap-12">
           <div className="flex flex-col items-center md:items-start mb-8 md:mb-0 order-2 md:order-1 md:pl-20">
             <CircularClock greeting="Good Morning, Employee!" />
-
-            {isClockedIn && lastClockTime && (
-              <div className="mt-4 bg-green-100 p-3 rounded-md text-green-700">
-                <p className="text-sm">
-                  You clocked in at {new Date(lastClockTime).toLocaleTimeString()}
-                </p>
-              </div>
-            )}
           </div>
 
           <div className="order-1 md:order-2 md:mr-8">
@@ -155,6 +147,14 @@ export default function MySchedulePage() {
                 )}
               </div>
 
+              {isClockedIn && lastClockTime && (
+              <div className="mt-4 bg-orange-100 p-3 rounded-md text-orange-700">
+                <p className="text-sm">
+                  You clocked in at {new Date(lastClockTime).toLocaleTimeString()}
+                </p>
+              </div>
+            )}
+
               {loading ? (
                 <div className="flex justify-center items-center h-20">
                   <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
@@ -167,7 +167,7 @@ export default function MySchedulePage() {
               ) : schedules.length === 0 ? (
                 <div className="text-gray-500">No upcoming shifts</div>
               ) : (
-                <ul className="space-y-4">
+                <ul className="space-y-4 mt-5">
                   {schedules.map((shift) => (
                     <li key={shift.id} className="flex items-center">
                       <div className="w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center mr-4">
@@ -196,7 +196,7 @@ export default function MySchedulePage() {
               <Button
                 className={`w-full ${
                   isClockedIn
-                    ? "bg-green-500 hover:bg-green-600"
+                    ? "bg-orange-500 hover:bg-orange-600"
                     : "bg-orange-500 hover:bg-orange-600"
                 } text-white py-3 rounded-md flex items-center justify-center text-lg font-medium`}
                 onClick={() => {
