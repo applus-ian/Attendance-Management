@@ -10,6 +10,8 @@ import "../../globals.css";
 import ManualRequestModal from "@/components/employee/manual-clock-in/manual-request-clockin";
 import { useAuth } from "@/hooks/useAuth";
 import { Toaster, toast } from "react-hot-toast";
+import { useEmployeeSchedule } from "@/hooks/useEmployeeSchedule";
+import ClockInModal from "@/components/employee/Clock-in-modal";
 
 
 
